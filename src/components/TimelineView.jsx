@@ -1,17 +1,64 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Reorder, useDragControls } from 'framer-motion';
 import { useCollection } from '../hooks/useCollection';
 import { Clock, Calendar, GripVertical } from 'lucide-react';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase';
 import AssignmentConflictModal from './AssignmentConflictModal';
 import { addScrollTestData } from '../utils/addTestData';
+import TimelineRow from './TimelineRow';
+import TimelineFilters from './TimelineFilters';
 
 const TimelineView = () => {
     const { data: tasks } = useCollection('tasks', 'dueDate');
     const { data: colleagues } = useCollection('colleagues');
+    const { data: projectsData } = useCollection('projects');
 
-    const [scale, setScale] = useState('week');
+    // Filter State
+    const [filterText, setFilterText] = useState('');
+
+    // Order state
+    const [orderedColleagues, setOrderedColleagues] = useState([]);
+
+    // Sync colleagues with local storage order
+    useEffect(() => {
+        if (colleagues.length === 0) return;
+
+        const savedOrder = JSON.parse(localStorage.getItem('colleagueOrder') || '[]');
+
+        // Create map for quick lookup
+        const colleagueMap = new Map(colleagues.map(c => [c.id, c]));
+
+        // Reconstruct list based on saved order
+        const newOrder = [];
+        const seenIds = new Set();
+
+        // Add existing colleagues in saved order
+        savedOrder.forEach(id => {
+            if (colleagueMap.has(id)) {
+                newOrder.push(colleagueMap.get(id));
+                seenIds.add(id);
+            }
+        });
+
+        // Append any new colleagues not in saved order
+        colleagues.forEach(c => {
+            if (!seenIds.has(c.id)) {
+                newOrder.push(c);
+            }
+        });
+
+        setOrderedColleagues(newOrder);
+    }, [colleagues]);
+
+    const handleReorder = (newOrder) => {
+        setOrderedColleagues(newOrder);
+        const ids = newOrder.map(c => c.id);
+        localStorage.setItem('colleagueOrder', JSON.stringify(ids));
+    };
+
+    // View State
+    const [scale, setScale] = useState('3w'); // '1w', '3w', '5w'
     const scrollContainerRef = useRef(null);
     const [isDraggingTimeline, setIsDraggingTimeline] = useState(false);
     const [startX, setStartX] = useState(0);
@@ -43,6 +90,7 @@ const TimelineView = () => {
     const days = useMemo(() => {
         const result = [];
         const start = new Date();
+        start.setHours(0, 0, 0, 0); // Normalize to local midnight
         start.setDate(start.getDate() - 90);
         for (let i = 0; i < 180; i++) {
             const date = new Date(start);
@@ -52,29 +100,90 @@ const TimelineView = () => {
         return result;
     }, []);
 
-    const columnWidth = useMemo(() => {
-        if (scale === 'day') return 400;
-        if (scale === 'week') return 200;
-        return 80;
-    }, [scale]);
+    const getColumnWidth = (date) => {
+        const baseWidth = scale === '1w' ? 240 : scale === '3w' ? 90 : 60;
+        return isWeekend(date) ? baseWidth * 0.7 : baseWidth;
+    };
 
     const isWeekend = (date) => [0, 6].includes(date.getDay());
-    const isToday = (date) => date.toDateString() === new Date().toDateString();
+    const isToday = (date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return date.getTime() === today.getTime();
+    };
+
+    // Derived Data for Filters
+
+
+    const filteredTasks = useMemo(() => {
+        if (!filterText) return tasks;
+        const tokens = filterText.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+
+        // Map projects for easy lookup
+        const projectMap = new Map(projectsData?.map(p => [p.id, p.title?.toLowerCase() || '']) || []);
+        // Map colleagues for easy lookup
+        const colleagueMap = new Map(colleagues?.map(c => [c.id, c.name?.toLowerCase() || '']) || []);
+
+        return tasks.filter(t => {
+            // Every token must match SOME attribute of the task
+            return tokens.every(token => {
+                const matchesTask = t.title?.toLowerCase().includes(token);
+                const matchesProject = t.projectId && projectMap.get(t.projectId)?.includes(token);
+                const matchesPriority = t.priority?.toLowerCase().includes(token);
+                const matchesColleague = t.assignedTo?.some(uid => colleagueMap.get(uid)?.includes(token));
+
+                return matchesTask || matchesProject || matchesPriority || matchesColleague;
+            });
+        });
+    }, [tasks, filterText, projectsData, colleagues]);
+
+    const visibleColleagues = useMemo(() => {
+        // If no filter, return all ordered
+        if (!filterText) return orderedColleagues;
+
+        const tokens = filterText.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+
+        // Use filteredTasks as the source of truth for visibility
+        const activeVisibleIds = new Set();
+        filteredTasks.forEach(t => {
+            t.assignedTo?.forEach(uid => activeVisibleIds.add(uid));
+        });
+
+        // Also include colleagues whose NAME matches ALL tokens
+        const matchesByName = orderedColleagues.filter(c => {
+            const name = c.name?.toLowerCase() || '';
+            return tokens.every(token => name.includes(token));
+        });
+
+        // Build composite set
+        const unionIds = new Set([
+            ...matchesByName.map(c => c.id),
+            ...[...activeVisibleIds]
+        ]);
+
+        return orderedColleagues.filter(c => unionIds.has(c.id));
+    }, [orderedColleagues, filteredTasks, filterText]);
+
+    const isFiltering = !!filterText;
 
     const getTasksForDay = (colleagueId, date) => {
         const dateStr = date.toISOString().split('T')[0];
-        return tasks.filter(t => t.assignedTo?.includes(colleagueId) && t.dueDate.split('T')[0] === dateStr);
+        // Use filteredTasks here to hide irrelevant tasks
+        return filteredTasks.filter(t => t.assignedTo?.includes(colleagueId) && t.dueDate.split('T')[0] === dateStr);
     };
 
     const handleToday = () => {
         const todayIdx = days.findIndex(d => isToday(d));
         if (todayIdx !== -1 && scrollContainerRef.current) {
-            const left = todayIdx * columnWidth - 100;
-            scrollContainerRef.current.scrollTo({ left, behavior: 'smooth' });
+            // Calculate total width up to today
+            const widthBeforeToday = days.slice(0, todayIdx).reduce((acc, day) => acc + getColumnWidth(day), 0);
+            scrollContainerRef.current.scrollTo({ left: widthBeforeToday - 100, behavior: 'smooth' });
         }
     };
 
-    useEffect(() => { setTimeout(handleToday, 100); }, [columnWidth]);
+    useEffect(() => {
+        setTimeout(handleToday, 100);
+    }, [scale]);
 
     const handleMouseDown = (e) => {
         if (e.target.closest('.no-pan') || e.target.closest('.task-card')) return;
@@ -146,24 +255,38 @@ const TimelineView = () => {
 
     return (
         <div className="p-8 h-full flex flex-col space-y-6 overflow-hidden select-none">
-            <header className="flex items-center justify-between">
-                <div>
+            <header className="flex items-center justify-between gap-8">
+                <div className="shrink-0">
                     <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Timeline Directory</h2>
                     <p className="text-slate-500 mt-1 text-lg">Drag tasks to reschedule and reassign.</p>
                 </div>
-                <div className="flex items-center gap-4">
+
+                <div className="flex-1 flex justify-center">
+                    <TimelineFilters
+                        filterText={filterText}
+                        setFilterText={setFilterText}
+                    />
+                </div>
+
+                <div className="flex items-center gap-4 shrink-0">
                     <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-                        {['day', 'week', 'month'].map((s) => (
-                            <button key={s} onClick={() => setScale(s)} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${scale === s ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
-                                {s}
+                        {[
+                            { id: '1w', label: '1 Week' },
+                            { id: '3w', label: '3 Weeks' },
+                            { id: '5w', label: '5 Weeks' }
+                        ].map((s) => (
+                            <button
+                                key={s.id}
+                                onClick={() => setScale(s.id)}
+                                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${scale === s.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                {s.label}
                             </button>
                         ))}
                     </div>
-                    <button onClick={addScrollTestData} className="px-4 py-2 bg-amber-100 text-amber-800 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-amber-200 transition-colors">
-                        SEED TEST DATA
-                    </button>
-                    <button onClick={handleToday} className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-800 hover:bg-slate-50 transition-all shadow-sm group">
-                        <Calendar size={18} className="text-teal-500 group-hover:scale-110 transition-transform" />
+
+                    <button onClick={handleToday} className="flex items-center gap-2 px-6 py-3 bg-teal-100 border border-teal-200 rounded-2xl text-sm font-black text-teal-900 hover:bg-teal-200 transition-all shadow-sm group">
+                        <Calendar size={18} className="text-teal-600 group-hover:scale-110 transition-transform" />
                         TODAY
                     </button>
                 </div>
@@ -184,56 +307,54 @@ const TimelineView = () => {
                         </div>
                         <div className="flex">
                             {days.map((day, i) => (
-                                <div key={i} style={{ minWidth: columnWidth }} className={`p-6 text-center border-r border-slate-200 last:border-0 ${isToday(day) ? 'bg-teal-100/70' : isWeekend(day) ? 'bg-slate-200/70' : ''}`}>
-                                    <p className={`text-[10px] font-black uppercase tracking-widest leading-none ${isToday(day) ? 'text-teal-700' : 'text-slate-500'}`}>{day.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                                    <p className={`text-lg font-black mt-1 ${isToday(day) ? 'text-teal-950' : 'text-slate-900'}`}>{day.getDate()} {day.toLocaleDateString('en-US', { month: 'short' })}</p>
+                                <div
+                                    key={i}
+                                    style={{ width: getColumnWidth(day), minWidth: getColumnWidth(day) }}
+                                    className={`flex flex-col items-center justify-center py-4 border-r border-slate-200 last:border-0 relative shrink-0 ${isToday(day) ? 'bg-teal-100/70' : isWeekend(day) ? 'bg-slate-200/70' : ''}`}
+                                >
+                                    {day.getDate() === 1 && i > 0 && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.3)] z-50" />
+                                    )}
+                                    <p className={`text-[9px] font-black uppercase tracking-tight leading-none ${isToday(day) ? 'text-teal-700' : 'text-slate-500'}`}>
+                                        {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                                    </p>
+                                    <p className={`text-base font-black mt-0.5 ${isToday(day) ? 'text-teal-950' : 'text-slate-900'}`}>
+                                        {day.getDate()}
+                                    </p>
+                                    {scale === '1w' && (
+                                        <p className={`text-[8px] font-bold opacity-40 uppercase tracking-widest ${isToday(day) ? 'text-teal-800' : 'text-slate-500'}`}>
+                                            {day.toLocaleDateString('en-US', { month: 'short' })}
+                                        </p>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="flex flex-col min-w-max">
-                        {colleagues.map((colleague, cIdx) => (
-                            <div key={colleague.id} className="flex border-b border-slate-200 group hover:bg-slate-50/30 transition-colors last:border-0 h-48 relative">
-                                <div className="sticky left-0 z-20 w-56 p-6 bg-white border-r border-slate-200 flex items-center gap-4 shrink-0 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.1)]">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-sm font-black text-white uppercase shadow-lg shadow-slate-200">{colleague.avatar}</div>
-                                    <div className="overflow-hidden">
-                                        <p className="font-bold text-slate-900 text-sm truncate uppercase tracking-tight">{colleague.name}</p>
-                                        <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest truncate">{colleague.role}</p>
-                                    </div>
-                                </div>
-                                <div className="flex relative shrink-0">
-                                    <div className="absolute top-1/2 left-0 w-full h-[4px] bg-slate-400/50 -translate-y-1/2 z-0" />
-                                    {days.map((day, dIdx) => (
-                                        <div key={dIdx} style={{ minWidth: columnWidth }} className={`h-full border-r border-slate-200/50 flex items-center justify-center relative last:border-0 ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}>
-                                            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[4px] h-8 z-0 rounded-full ${isToday(day) ? 'bg-teal-600/70' : 'bg-slate-400/70'}`} />
-                                            <div className="w-full h-full relative flex items-center justify-center pointer-events-none">
-                                                {getTasksForDay(colleague.id, day).map((task, tIdx) => (
-                                                    <TaskCard
-                                                        key={task.id}
-                                                        task={task}
-                                                        index={tIdx}
-                                                        currentDate={day}
-                                                        currentColleagueId={colleague.id}
-                                                        colleagues={colleagues}
-                                                        colleagueIndex={cIdx}
-                                                        columnWidth={columnWidth}
-                                                        onUpdate={handleUpdateTask}
-                                                        setScrollDirection={setScrollDirection}
-                                                        scrollContainerRef={scrollContainerRef}
-                                                        draggingTask={draggingTask}
-                                                        setDraggingTask={setDraggingTask}
-                                                        ghostRef={ghostRef}
-                                                        onReassign={handleReassignRequest}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                    <Reorder.Group axis="y" values={visibleColleagues} onReorder={handleReorder} className="flex flex-col min-w-max">
+                        {visibleColleagues.map((colleague, cIdx) => (
+                            <TimelineRowWrapper
+                                key={colleague.id}
+                                colleague={colleague}
+                                cIdx={cIdx}
+                                isDragDisabled={isFiltering}
+                                // Pass other props
+                                colleagues={colleagues}
+                                days={days}
+                                getColumnWidth={getColumnWidth}
+                                isToday={isToday}
+                                isWeekend={isWeekend}
+                                getTasksForDay={getTasksForDay}
+                                onUpdate={handleUpdateTask}
+                                setScrollDirection={setScrollDirection}
+                                scrollContainerRef={scrollContainerRef}
+                                draggingTask={draggingTask}
+                                setDraggingTask={setDraggingTask}
+                                ghostRef={ghostRef}
+                                onReassign={handleReassignRequest}
+                            />
                         ))}
-                    </div>
+                    </Reorder.Group>
                 </div>
             </div>
 
@@ -276,163 +397,14 @@ const TimelineView = () => {
     );
 };
 
-const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, colleagueIndex, columnWidth, onUpdate, setScrollDirection, scrollContainerRef, draggingTask, setDraggingTask, ghostRef, onReassign }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const cardRef = useRef(null);
-
-    const xOffset = index * 12;
-    const yOffset = index * -12;
-    const rowHeight = 192;
-    const personnelColWidth = 224;
-
-    // Use ref to store drag data so event handlers can access current values
-    const dragDataRef = useRef(null);
-
-    const handleMouseDown = (e) => {
-        e.stopPropagation();
-
-        // Calculate offset from top-left of card
-        const rect = cardRef.current.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const offsetY = e.clientY - rect.top;
-
-        dragDataRef.current = {
-            taskId: task.id,
-            startX: e.clientX,
-            startY: e.clientY,
-            startScrollLeft: scrollContainerRef.current.scrollLeft,
-            startDate: currentDate,
-            startColleagueId: currentColleagueId,
-            startColleagueIndex: colleagueIndex,
-            offsetX,
-            offsetY
-        };
-
-        setDraggingTask({
-            task,
-            x: e.clientX,
-            y: e.clientY,
-            startDate: currentDate,
-            startColleagueId: currentColleagueId,
-            startColleagueIndex: colleagueIndex,
-            offsetX,
-            offsetY
-        });
-
-        document.addEventListener('mousemove', handleGlobalMouseMove);
-        document.addEventListener('mouseup', handleGlobalMouseUp);
-    };
-
-    const handleGlobalMouseMove = (e) => {
-        // Update ghost position directly via DOM for smooth 60fps movement
-        if (ghostRef.current && dragDataRef.current) {
-            const { offsetX, offsetY } = dragDataRef.current;
-            ghostRef.current.style.left = `${e.clientX - offsetX}px`;
-            ghostRef.current.style.top = `${e.clientY - offsetY}px`;
-        }
-
-        // Auto-scroll logic
-        if (!scrollContainerRef.current) return;
-        const rect = scrollContainerRef.current.getBoundingClientRect();
-        const relativeX = e.clientX - rect.left;
-        const leftLimit = personnelColWidth + 80;
-        const rightLimit = rect.width - 80;
-
-        if (relativeX < leftLimit) {
-            setScrollDirection(-1);
-        } else if (relativeX > rightLimit) {
-            setScrollDirection(1);
-        } else {
-            setScrollDirection(0);
-        }
-    };
-
-    const handleGlobalMouseUp = (e) => {
-        setScrollDirection(0);
-        document.removeEventListener('mousemove', handleGlobalMouseMove);
-        document.removeEventListener('mouseup', handleGlobalMouseUp);
-
-        if (!scrollContainerRef.current || !dragDataRef.current) {
-            dragDataRef.current = null;
-            setDraggingTask(null);
-            return;
-        }
-
-        const { taskId, startX, startY, startScrollLeft, startDate, startColleagueId, startColleagueIndex } = dragDataRef.current;
-        // Calculate movement
-        const totalScrollDelta = scrollContainerRef.current.scrollLeft - startScrollLeft;
-        const pointerDeltaX = e.clientX - startX;
-        const pointerDeltaY = e.clientY - startY;
-
-        const totalGridDeltaX = pointerDeltaX + totalScrollDelta;
-
-        const dayDelta = Math.round(totalGridDeltaX / columnWidth);
-        const newDate = new Date(startDate);
-        newDate.setDate(newDate.getDate() + dayDelta);
-
-        const colleagueDelta = Math.round(pointerDeltaY / rowHeight);
-        let newColleagueId = startColleagueId;
-        const newIdx = startColleagueIndex + colleagueDelta;
-        if (newIdx >= 0 && newIdx < colleagues.length) {
-            newColleagueId = colleagues[newIdx].id;
-        }
-
-        dragDataRef.current = null;
-
-        if (newColleagueId !== startColleagueId) {
-            // Colleague changed - trigger reassign flow
-            onReassign(taskId, newColleagueId, newDate);
-            setDraggingTask(null);
-        } else if (dayDelta !== 0) {
-            // Only date changed - implicit update
-            onUpdate(taskId, newDate, null);
-            // Keep ghost visible briefly to prevent flash while Firestore updates
-            setTimeout(() => setDraggingTask(null), 100);
-        } else {
-            setDraggingTask(null);
-        }
-    };
-
-    // Hide if this is the dragged task
-    const isDragged = draggingTask?.task.id === task.id;
-
-    return (
-        <motion.div
-            ref={cardRef}
-            onMouseDown={handleMouseDown}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-                opacity: isDragged ? 0 : 1,
-                scale: 1,
-                x: xOffset,
-                y: yOffset,
-                zIndex: isHovered ? 1000 : 10 + index
-            }}
-            whileHover={{ scale: 1.05 }}
-            className={`absolute pointer-events-auto task-card cursor-grab p-3 rounded-xl border-[2.5px] border-slate-900 shadow-[6px_6px_0_0_rgba(0,0,0,1)] min-w-[140px] max-w-[180px] ${task.priority === 'high' ? 'bg-amber-100' :
-                task.priority === 'medium' ? 'bg-blue-100' : 'bg-teal-100'
-                } group transition-all`}
-        >
-            <div className="flex flex-col gap-2 relative">
-                <div className="absolute -left-1.5 -top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GripVertical size={12} className="text-slate-400" />
-                </div>
-                <div className="flex items-center gap-1.5 font-black text-[8px] uppercase tracking-[0.1em]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                    {task.priority || 'Task'}
-                </div>
-                <h4 className="font-black text-slate-900 text-[10px] leading-tight uppercase tracking-tight line-clamp-2">{task.title}</h4>
-                <div className="flex items-center justify-between mt-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-1">
-                        <Clock size={10} className="text-slate-900" />
-                        <span className="text-[8px] font-black text-slate-900 uppercase">Deliverable</span>
-                    </div>
-                </div>
-            </div>
-        </motion.div>
-    );
-};
 
 export default TimelineView;
+
+const TimelineRowWrapper = ({ colleague, cIdx, ...props }) => {
+    const controls = useDragControls();
+    return (
+        <Reorder.Item value={colleague} dragListener={false} dragControls={controls}>
+            <TimelineRow colleague={colleague} colleagueIndex={cIdx} dragControls={controls} {...props} />
+        </Reorder.Item>
+    );
+};
