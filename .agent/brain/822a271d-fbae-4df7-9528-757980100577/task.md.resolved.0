@@ -1,0 +1,13 @@
+# AliManager Project Initialization
+
+- [/] Planning Project Structure
+    - [ ] Create Implementation Plan
+    - [ ] Define Tech Stack (Vite, React, Firebase)
+- [ ] Initializing Frontend
+    - [ ] Run Vite boilerplate
+    - [ ] Install dependencies (Tailwind, Framer Motion, Lucid React)
+- [ ] Setting up Design System
+    - [ ] Define color palette and typography
+    - [ ] Create base layout and components
+- [ ] Backend Integration
+    - [ ] Initialize Firebase if needed
