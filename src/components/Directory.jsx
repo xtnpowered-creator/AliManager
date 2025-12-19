@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useCollection } from '../hooks/useCollection';
+import { useApiData } from '../hooks/useApiData';
 import { Users, Mail, Phone, MoreHorizontal, ShieldCheck } from 'lucide-react';
 
 const Directory = () => {
-    const { data: colleagues, loading } = useCollection('colleagues');
-    const { data: tasks } = useCollection('tasks');
+    const { data: colleagues, loading } = useApiData('/colleagues');
+    const { data: tasks } = useApiData('/tasks');
 
     return (
         <div className="p-8 h-full flex flex-col space-y-6">

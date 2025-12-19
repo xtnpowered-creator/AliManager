@@ -25,10 +25,10 @@ const TaskCard = ({
     const [isHovered, setIsHovered] = useState(false);
     const cardRef = useRef(null);
 
-    // Alternating horizontal offset: even indices go left (-10px), odd go right (+10px)
-    const xStackOffset = index === 0 ? 0 : (index % 2 === 0 ? -10 : 10);
-    const stackOffset = index * -15; // Stack UP (negative margin)
-    const rowHeight = 134;
+    // Alternating horizontal offset: even indices go left (-3px), odd go right (+3px)
+    const xStackOffset = index === 0 ? 0 : (index % 2 === 0 ? -3 : 3);
+    const stackOffset = index * -6; // Stack UP (negative margin)
+    const rowHeight = 160;
     const personnelColWidth = 200;
 
     // Calculate width based on duration
@@ -200,7 +200,7 @@ const TaskCard = ({
                 scale: 1,
                 x: left + (getColumnWidth(new Date(currentDate)) / 2) - (cardWidth / 2) + xStackOffset,
                 top: "50%",
-                y: "-50%",
+                y: -46, // Exact half of 92px height for crisp centering
                 marginTop: stackOffset,
                 width: cardWidth,
                 height: 92,

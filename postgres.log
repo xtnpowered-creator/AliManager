@@ -1,0 +1,39 @@
+2025-12-19 01:57:09.613 CST [21388] LOG:  starting PostgreSQL 16.11, compiled by Visual C++ build 1944, 64-bit
+2025-12-19 01:57:09.619 CST [21388] LOG:  listening on IPv6 address "::1", port 5433
+2025-12-19 01:57:09.619 CST [21388] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2025-12-19 01:57:09.740 CST [17144] LOG:  database system was shut down at 2025-12-19 01:56:57 CST
+2025-12-19 01:57:09.804 CST [21388] LOG:  database system is ready to accept connections
+2025-12-19 02:02:09.743 CST [21012] LOG:  checkpoint starting: time
+2025-12-19 02:02:13.887 CST [21012] LOG:  checkpoint complete: wrote 39 buffers (0.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=3.908 s, sync=0.146 s, total=4.146 s; sync files=11, longest=0.030 s, average=0.014 s; distance=205 kB, estimate=205 kB; lsn=0/15A0E10, redo lsn=0/15A0DD8
+2025-12-19 02:03:15.563 CST [4248] FATAL:  database "alimanager" does not exist
+2025-12-19 02:03:26.534 CST [13752] FATAL:  database "alimanager" does not exist
+2025-12-19 02:06:43.295 CST [19816] ERROR:  invalid input syntax for type uuid: "p0000000-0000-4000-a000-000000000001" at character 87
+2025-12-19 02:06:43.295 CST [19816] STATEMENT:  INSERT INTO projects (id, organization_id, title, description, status)
+	VALUES (
+	    'p0000000-0000-4000-a000-000000000001',
+	    '00000000-0000-0000-0000-111111111111',
+	    'Q4 Marketing Campaign',
+	    'Launch and promote the new office management suite.',
+	    'active'
+	) ON CONFLICT (id) DO NOTHING;
+2025-12-19 02:06:43.295 CST [19816] ERROR:  invalid input syntax for type uuid: "t0000000-0000-4000-a000-000000000001" at character 103
+2025-12-19 02:06:43.295 CST [19816] STATEMENT:  INSERT INTO tasks (id, title, project_id, organization_id, status, priority, due_date)
+	VALUES (
+	    't0000000-0000-4000-a000-000000000001',
+	    'Finalize Design Tokens',
+	    'p0000000-0000-4000-a000-000000000001',
+	    '00000000-0000-0000-0000-111111111111',
+	    'doing',
+	    'high',
+	    NOW() + INTERVAL '2 days'
+	) ON CONFLICT (id) DO NOTHING;
+2025-12-19 02:06:43.296 CST [19816] ERROR:  invalid input syntax for type uuid: "t0000000-0000-4000-a000-000000000001" at character 64
+2025-12-19 02:06:43.296 CST [19816] STATEMENT:  INSERT INTO task_assignments (task_id, user_id)
+	VALUES (
+	    't0000000-0000-4000-a000-000000000001',
+	    '00000000-0000-0000-0000-222222222222' -- Assigned to Alisara
+	) ON CONFLICT DO NOTHING;
+2025-12-19 02:07:09.892 CST [21012] LOG:  checkpoint starting: time
+2025-12-19 02:09:03.196 CST [21012] LOG:  checkpoint complete: wrote 1027 buffers (6.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=110.878 s, sync=2.329 s, total=113.305 s; sync files=331, longest=0.026 s, average=0.008 s; distance=4750 kB, estimate=4750 kB; lsn=0/1A44920, redo lsn=0/1A448B0
+2025-12-19 02:22:09.238 CST [21012] LOG:  checkpoint starting: time
+2025-12-19 02:22:11.045 CST [21012] LOG:  checkpoint complete: wrote 15 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.622 s, sync=0.080 s, total=1.808 s; sync files=4, longest=0.039 s, average=0.020 s; distance=38 kB, estimate=4279 kB; lsn=0/1A4E4C0, redo lsn=0/1A4E488

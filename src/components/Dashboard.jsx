@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight, Users, Activity, Zap, Clock, CheckCircle2 } from 'lucide-react';
-import { useCollection } from '../hooks/useCollection';
+import { useApiData } from '../hooks/useApiData';
 
 const Dashboard = () => {
-    const { data: tasks, loading: tasksLoading } = useCollection('tasks', 'dueDate');
-    const { data: projects, loading: projectsLoading } = useCollection('projects');
-    const { data: colleagues } = useCollection('colleagues');
+    const { data: tasks, loading: tasksLoading } = useApiData('/tasks');
+    const { data: projects, loading: projectsLoading } = useApiData('/projects');
+    const { data: colleagues } = useApiData('/colleagues');
 
     const stats = {
         totalTasks: tasks.length,

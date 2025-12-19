@@ -6,12 +6,13 @@ import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 // TO DO: Replace these values with your actual keys from the Firebase Console!
 // (Settings -> Project Settings -> General -> Your Apps)
 const prodConfig = {
-    apiKey: "REPLACE_WITH_YOUR_API_KEY",
+    apiKey: "AIzaSyCY6NpbaByRFjn_eBvMyfq-kaMWv0Z95XM",
     authDomain: "alimanager.firebaseapp.com",
     projectId: "alimanager",
-    storageBucket: "alimanager.appspot.com",
-    messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
-    appId: "REPLACE_WITH_YOUR_APP_ID"
+    storageBucket: "alimanager.firebasestorage.app",
+    messagingSenderId: "219329658388",
+    appId: "1:219329658388:web:cdebdbb7e75629f95d3101",
+    measurementId: "G-2E1505VX24"
 };
 
 // --- EMULATOR CONFIG ---
@@ -25,9 +26,11 @@ const emulatorConfig = {
 };
 
 // --- ENVIRONMENT DETECTION ---
-const isLocal = window.location.hostname === "localhost" ||
+const isLocal = typeof window !== 'undefined' && (
+    window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ||
-    window.location.hostname.startsWith("192.168.");
+    window.location.hostname.startsWith("192.168.")
+);
 
 const firebaseConfig = isLocal ? emulatorConfig : prodConfig;
 

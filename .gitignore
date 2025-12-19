@@ -4,8 +4,10 @@ node_modules
 /dist
 
 # local env files
+.env
 .env.local
 .env.*.local
+*.env
 
 # Log files
 npm-debug.log*
@@ -25,9 +27,18 @@ yarn-error.log*
 /.firebase/
 firebase-debug.log*
 firestore-debug.log*
+ui-debug.log*
 
 # Office Temp files
 ~$*
 
 # Vite
 .vite/
+
+# Backend / Database
+postgres_data/
+server/node_modules/
+coverage/
+
+# Misc
+cardcolors.xlsx

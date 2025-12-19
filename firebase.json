@@ -1,9 +1,14 @@
 {
+  "functions": {
+    "source": "server",
+    "runtime": "nodejs18"
+  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "alimanager",
     "public": "dist",
     "ignore": [
       "firebase.json",
@@ -12,12 +17,19 @@
     ],
     "rewrites": [
       {
+        "source": "/api/**",
+        "function": "api"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ]
   },
   "emulators": {
+    "functions": {
+      "port": 5001
+    },
     "auth": {
       "port": 9099
     },

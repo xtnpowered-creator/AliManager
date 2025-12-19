@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useCollection } from '../hooks/useCollection';
+import { useApiData } from '../hooks/useApiData';
 import { MoreHorizontal, Plus, Clock, Users } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
 
 const KanbanBoard = () => {
-    const { data: tasks, loading: tasksLoading } = useCollection('tasks');
-    const { data: colleagues } = useCollection('colleagues');
+    const { data: tasks, loading: tasksLoading } = useApiData('/tasks');
+    const { data: colleagues } = useApiData('/colleagues');
 
     const columns = [
         { id: 'todo', title: 'To Do', color: 'bg-slate-100 text-slate-600' },

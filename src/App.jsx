@@ -15,19 +15,17 @@ function App() {
     const [currentView, setCurrentView] = useState('dashboard');
 
     // Uncomment below to seed/update/cleanup database (run once, then comment out again)
-    // useEffect(() => {
-    //     if (import.meta.env.DEV) {
-    //         seedDatabase().then(() => {
-    //             // Update existing colleagues with new fields
-    //             updateColleagueDetails().then(() => {
-    //                 // Wait a bit for all operations to complete, then remove duplicates
-    //                 setTimeout(() => {
-    //                     removeDuplicateColleagues();
-    //                 }, 2000);
-    //             });
-    //         });
-    //     }
-    // }, []);
+    useEffect(() => {
+        seedDatabase().then(() => {
+            // Update existing colleagues with new fields
+            updateColleagueDetails().then(() => {
+                // Wait a bit for all operations to complete, then remove duplicates
+                setTimeout(() => {
+                    removeDuplicateColleagues();
+                }, 2000);
+            });
+        });
+    }, []);
 
     return (
         <Shell currentView={currentView} setView={setCurrentView}>

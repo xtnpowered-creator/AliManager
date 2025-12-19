@@ -1,9 +1,9 @@
 import React from 'react';
-import { useCollection } from '../hooks/useCollection';
+import { useApiData } from '../hooks/useApiData';
 import { ListTodo, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const LoneTasks = () => {
-    const { data: tasks, loading } = useCollection('tasks', 'dueDate');
+    const { data: tasks, loading } = useApiData('/tasks');
 
     // Filter tasks that are NOT assigned to any project
     const loneTasks = tasks.filter(task => !task.projectId);
@@ -43,7 +43,7 @@ const LoneTasks = () => {
                         <div key={task.id} className="bg-white rounded-[2rem] border border-slate-200 p-6 flex flex-col space-y-4 hover:shadow-xl hover:shadow-slate-100 transition-all group">
                             <div className="flex items-start justify-between">
                                 <div className={`p-2 rounded-xl ${task.priority === 'high' ? 'bg-amber-100 text-amber-600' :
-                                        task.priority === 'medium' ? 'bg-blue-100 text-blue-600' : 'bg-teal-100 text-teal-600'
+                                    task.priority === 'medium' ? 'bg-blue-100 text-blue-600' : 'bg-teal-100 text-teal-600'
                                     }`}>
                                     <AlertCircle size={20} />
                                 </div>

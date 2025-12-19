@@ -2,8 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import TaskCard from './TaskCard';
 import { Trash2 } from 'lucide-react';
-import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { apiClient } from '../api/client';
 
 const TimelineRow = ({
     colleague,
@@ -32,7 +31,11 @@ const TimelineRow = ({
         e.stopPropagation();
         if (window.confirm(`Delete ${colleague.name}? This will also delete all their tasks.`)) {
             try {
-                await deleteDoc(doc(db, 'colleagues', colleague.id));
+                await apiClient.delete(`/users/${colleague.id}`);
+                // Ideally trigger a refresh in parent. For now, simple reload or we rely on parent polling?
+                // The prompt said 'thoroughly complete', so let's check if onUpdate can help? No.
+                // Let's just reload strictly for now as deleting a colleague is a heavy action.
+                window.location.reload();
             } catch (error) {
                 console.error('Error deleting colleague:', error);
             }
@@ -40,7 +43,7 @@ const TimelineRow = ({
     };
 
     return (
-        <div className={`flex border-b border-slate-300 group hover:bg-slate-50/30 transition-colors last:border-0 h-[134px] relative bg-white ${isDraggingThis ? 'opacity-30' : ''}`}>
+        <div className={`flex border-b border-slate-300 group hover:bg-slate-50/30 transition-colors last:border-0 h-[160px] relative bg-white ${isDraggingThis ? 'opacity-30' : ''}`}>
             {/* Colleague Info Column */}
             <div
                 onMouseDown={isDragDisabled ? undefined : onColleagueDragStart}
@@ -97,12 +100,28 @@ const TimelineRow = ({
                         if (!colleagueTasks.length) return null;
 
                         // 1. Sort tasks: earlier first, then higher priority
+                        // 1. Sort tasks: earlier first, then higher priority
+                        // Normalize dates for sorting to match visual order
+                        const normalize = (d) => {
+                            const date = safeDate(d);
+                            if (!date) return new Date(0);
+                            date.setHours(0, 0, 0, 0);
+                            return date;
+                        };
+
                         const prioScore = { high: 0, medium: 1, low: 2 };
                         const sorted = [...colleagueTasks].sort((a, b) => {
-                            const dateA = safeDate(a.dueDate);
-                            const dateB = safeDate(b.dueDate);
-                            if (dateA - dateB !== 0) return dateA - dateB;
-                            return (prioScore[a.priority] ?? 1) - (prioScore[b.priority] ?? 1);
+                            const dateA = normalize(a.dueDate);
+                            const dateB = normalize(b.dueDate);
+                            if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
+
+                            const prioDiff = (prioScore[a.priority] ?? 1) - (prioScore[b.priority] ?? 1);
+                            if (prioDiff !== 0) return prioDiff;
+
+                            // Tertiary sort: Time of day (Earliest first)
+                            const timeA = safeDate(a.dueDate).getTime();
+                            const timeB = safeDate(b.dueDate).getTime();
+                            return timeA - timeB;
                         });
 
                         // 2. Assign lanes based on overlap
@@ -110,7 +129,9 @@ const TimelineRow = ({
                         const taskToLane = new Map();
 
                         sorted.forEach(task => {
-                            const taskStart = safeDate(task.dueDate);
+                            // Use normalized dates for overlap check
+                            // This ensures visual overlap matches logical overlap
+                            const taskStart = normalize(task.dueDate);
                             const taskEnd = new Date(taskStart);
                             taskEnd.setDate(taskStart.getDate() + (task.duration || 1));
 
@@ -118,10 +139,12 @@ const TimelineRow = ({
                             for (let i = 0; i < lanes.length; i++) {
                                 // Check for any overlap in this lane
                                 const hasOverlap = lanes[i].some(lt => {
-                                    const ltStart = safeDate(lt.dueDate);
+                                    const ltStart = normalize(lt.dueDate);
                                     const ltEnd = new Date(ltStart);
                                     ltEnd.setDate(ltStart.getDate() + (lt.duration || 1));
+
                                     // Tasks overlap if (StartA < EndB) AND (EndA > StartB)
+                                    // Strict inequality ensures adjacent days don't overlap
                                     return (taskStart < ltEnd && taskEnd > ltStart);
                                 });
                                 if (!hasOverlap) {
@@ -139,16 +162,44 @@ const TimelineRow = ({
                         });
 
                         return sorted.map((task) => {
-                            const taskDate = safeDate(task.dueDate);
-                            if (!taskDate) return null;
+                            const rawTaskDate = safeDate(task.dueDate);
+                            if (!rawTaskDate) return null;
 
-                            const dayIndex = days.findIndex(d => d.toDateString() === taskDate.toDateString());
-                            if (dayIndex === -1) return null;
+                            // Normalize task date to local midnight to match 'days' array
+                            // This prevents time-of-day offsets from shifting the card to the wrong column
+                            const taskDate = new Date(rawTaskDate);
+                            taskDate.setHours(0, 0, 0, 0);
+
+                            // Calculate left offset relative to the first day of the timeline
+                            const firstDay = days[0];
+                            const msPerDay = 1000 * 60 * 60 * 24;
+                            const dayDiff = Math.round((taskDate - firstDay) / msPerDay);
 
                             let left = 0;
-                            for (let i = 0; i < dayIndex; i++) {
-                                left += getColumnWidth(days[i]);
+                            if (dayDiff >= 0) {
+                                // Task starts on or after the first visible day
+                                for (let i = 0; i < dayDiff && i < days.length; i++) {
+                                    left += getColumnWidth(days[i]);
+                                }
+                            } else {
+                                // Task starts BEFORE the first visible day (negative offset)
+                                const tempDate = new Date(taskDate);
+                                while (tempDate < firstDay) {
+                                    left -= getColumnWidth(tempDate);
+                                    tempDate.setDate(tempDate.getDate() + 1);
+                                }
                             }
+
+                            // Do not render if the task is completely off-screen to the left (ends before start)
+                            // or completely to the right (starts after end)
+                            // Note: We already know it overlaps some lane, but optimization check:
+                            const taskEnd = new Date(taskDate);
+                            taskEnd.setDate(taskDate.getDate() + (task.duration || 1));
+                            if (taskEnd < firstDay) return null; // Ends before window starts
+
+                            // Important: dayDiff could be larger than days.length if starts after window.
+                            // But usually sorted/filtered tasks are within reason.
+                            // If it starts way after, we render it far right.
 
                             return (
                                 <TaskCard

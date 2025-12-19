@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useCollection } from '../hooks/useCollection';
+import { useApiData } from '../hooks/useApiData';
 import { FolderKanban, Plus, MoreHorizontal, Target, Calendar } from 'lucide-react';
 
 const ProjectList = () => {
-    const { data: projects, loading } = useCollection('projects');
-    const { data: tasks } = useCollection('tasks');
+    const { data: projects, loading } = useApiData('/projects');
+    const { data: tasks } = useApiData('/tasks');
 
     return (
         <div className="p-8 h-full flex flex-col space-y-6">

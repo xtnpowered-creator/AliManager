@@ -1,9 +1,8 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useCollection } from '../hooks/useCollection';
+import { useApiData } from '../hooks/useApiData';
+import { apiClient } from '../api/client';
 import { Clock, Calendar, GripVertical } from 'lucide-react';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { db } from '../firebase';
 import AssignmentConflictModal from './AssignmentConflictModal';
 import { addScrollTestData } from '../utils/addTestData';
 import TimelineRow from './TimelineRow';
@@ -13,7 +12,7 @@ import { getTaskCardColor } from '../utils/cardStyles';
 // Helper to safely parse any date-like input into a Date object
 const safeDate = (dateVal) => {
     if (!dateVal) return null;
-    // Handle Firestore Timestamp
+    // Handle Firestore Timestamp (legacy, harmless to keep for a bit)
     if (dateVal.seconds) return new Date(dateVal.seconds * 1000);
     // Handle ISO string or Date object
     const d = new Date(dateVal);
@@ -21,9 +20,9 @@ const safeDate = (dateVal) => {
 };
 
 const TimelineView = () => {
-    const { data: tasks } = useCollection('tasks', 'dueDate');
-    const { data: colleagues } = useCollection('colleagues');
-    const { data: projectsData } = useCollection('projects');
+    const { data: tasks, refetch: refetchTasks } = useApiData('/tasks');
+    const { data: colleagues } = useApiData('/colleagues');
+    const { data: projectsData } = useApiData('/projects');
 
     // Filter State
     const [filterText, setFilterText] = useState('');
@@ -217,17 +216,78 @@ const TimelineView = () => {
         return filteredTasks.filter(t => t.assignedTo?.includes(colleagueId));
     };
 
-    const handleToday = () => {
-        const todayIdx = days.findIndex(d => isToday(d));
-        if (todayIdx !== -1 && scrollContainerRef.current) {
-            // Calculate total width up to today
-            const widthBeforeToday = days.slice(0, todayIdx).reduce((acc, day) => acc + getColumnWidth(day), 0);
-            scrollContainerRef.current.scrollTo({ left: widthBeforeToday - 100, behavior: 'smooth' });
+    // Scroll Helper
+    const getOffsetForDate = (targetDate) => {
+        const targetTime = targetDate.getTime();
+        let offset = 0;
+        for (const day of days) {
+            if (day.getTime() === targetTime) break;
+            offset += getColumnWidth(day);
         }
+        return offset;
     };
 
-    useEffect(() => {
-        setTimeout(handleToday, 100);
+    const getDateAtOffset = (scrollLeft, viewportWidth) => {
+        // Anchor to the visual "start" of the content area (Sidebar is 200px + ~60px buffer)
+        const anchorOffset = scrollLeft + 260;
+        let currentOffset = 0;
+        for (const day of days) {
+            const width = getColumnWidth(day);
+            if (anchorOffset >= currentOffset && anchorOffset < currentOffset + width) {
+                return day;
+            }
+            currentOffset += width;
+        }
+        return days[Math.floor(days.length / 2)]; // Fallback
+    };
+
+    const scrollToDate = (date, smooth = true) => {
+        if (!scrollContainerRef.current) return;
+        const offset = getOffsetForDate(date);
+
+        // Align to left-center (Sidebar + buffer)
+        // We want the date to start at visual pixel 260
+        const targetScrollLeft = offset - 260;
+
+        scrollContainerRef.current.scrollTo({
+            left: targetScrollLeft,
+            behavior: smooth ? 'smooth' : 'auto'
+        });
+    };
+
+    const handleToday = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        scrollToDate(today, true);
+    };
+
+    // Keep track of the date we want to focus on after a scale change
+    const preserveDateRef = useRef(null);
+
+    const handleScaleChange = (newScale) => {
+        if (scrollContainerRef.current) {
+            // Capture current center date
+            const centerDate = getDateAtOffset(
+                scrollContainerRef.current.scrollLeft,
+                scrollContainerRef.current.clientWidth
+            );
+            preserveDateRef.current = centerDate;
+        }
+        setScale(newScale);
+    };
+
+    // Initial scroll and scale handling
+    React.useLayoutEffect(() => {
+        if (preserveDateRef.current) {
+            // Restore position to previous center date
+            scrollToDate(preserveDateRef.current, false);
+            preserveDateRef.current = null;
+        } else {
+            // Initial load - jump to today immediately
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            scrollToDate(today, false);
+        }
     }, [scale]);
 
     const handleMouseDown = (e) => {
@@ -328,7 +388,7 @@ const TimelineView = () => {
         const finalY = currentY || startY; // Use tracked Y or fallback to startY
         const totalDeltaY = (finalY - startY) + scrollDelta;
 
-        const rowHeight = 134;
+        const rowHeight = 160;
         const indexDelta = Math.round(totalDeltaY / rowHeight);
         const newIndex = Math.max(0, Math.min(visibleColleagues.length - 1, startIndex + indexDelta));
 
@@ -350,11 +410,12 @@ const TimelineView = () => {
 
     const handleUpdateTask = async (taskId, newDate, newColleagueId) => {
         try {
-            const taskRef = doc(db, 'tasks', taskId);
             const updates = {};
             if (newDate) updates.dueDate = newDate.toISOString();
             if (newColleagueId) updates.assignedTo = [newColleagueId]; // Default behavior (drag within same colleague or date change)
-            await updateDoc(taskRef, updates);
+
+            await apiClient.patch(`/tasks/${taskId}`, updates);
+            refetchTasks(); // Refresh data to reflect changes
         } catch (err) {
             console.error("Error updating task:", err);
         }
@@ -375,20 +436,29 @@ const TimelineView = () => {
 
         try {
             const { taskId, newColleagueId, newDate } = pendingReassignment;
-            const taskRef = doc(db, 'tasks', taskId);
             const updates = {};
 
             if (newDate) updates.dueDate = newDate.toISOString();
 
+            // We need to fetch the current task to know its current assignments for 'add' logic
+            // But since we are patching, we can just send the new array if we knew it.
+            // For now, let's simplify:
+            // 'reassign' -> replace array
+            // 'add' -> append to array (requires knowing current)
+
+            // To make 'add' work properly with a simple PATCH, we'd optimaly have an API endpoint for it
+            // or we grab the current task from our local state 'tasks'
+            const currentTask = tasks.find(t => t.id === taskId);
+            const currentAssignments = currentTask?.assignedTo || [];
+
             if (action === 'reassign') {
-                // Remove from old (implicit by setting new array), replace with new
                 updates.assignedTo = [newColleagueId];
             } else if (action === 'add') {
-                // Add new colleague to existing array
-                updates.assignedTo = arrayUnion(newColleagueId);
+                updates.assignedTo = [...new Set([...currentAssignments, newColleagueId])];
             }
 
-            await updateDoc(taskRef, updates);
+            await apiClient.patch(`/tasks/${taskId}`, updates);
+            refetchTasks();
         } catch (err) {
             console.error("Error handling assignment action:", err);
         } finally {
@@ -420,7 +490,7 @@ const TimelineView = () => {
                         ].map((s) => (
                             <button
                                 key={s.id}
-                                onClick={() => setScale(s.id)}
+                                onClick={() => handleScaleChange(s.id)}
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${scale === s.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
                             >
                                 {s.label}
@@ -544,7 +614,7 @@ const TimelineView = () => {
                         left: draggingColleague.x - draggingColleague.offsetX,
                         top: draggingColleague.y - draggingColleague.offsetY,
                         width: '200px',
-                        height: '134px',
+                        height: '160px',
                         pointerEvents: 'none',
                         zIndex: 10001,
                         opacity: 0.8

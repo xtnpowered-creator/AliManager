@@ -1,4 +1,4 @@
-import { db } from '../firebase';
+import { db } from '../firebase.js';
 import { collection, addDoc, getDocs, query, limit, writeBatch, doc } from 'firebase/firestore';
 
 const colleaguesData = [
@@ -117,10 +117,19 @@ export const seedDatabase = async () => {
             }
         ];
 
+        // Seed Tasks
+        const existingTasksSnapshot = await getDocs(collection(db, 'tasks'));
+        const existingTitles = new Set(existingTasksSnapshot.docs.map(d => d.data().title));
+
+        let tasksAdded = 0;
         for (const task of tasks) {
-            const ref = doc(collection(db, 'tasks'));
-            batch.set(ref, task);
+            if (!existingTitles.has(task.title)) {
+                const ref = doc(collection(db, 'tasks'));
+                batch.set(ref, task);
+                tasksAdded++;
+            }
         }
+        console.log(`Queued ${tasksAdded} new tasks for creation.`);
 
         await batch.commit();
         console.log("Database seeded successfully with colleagues!");
