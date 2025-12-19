@@ -19,10 +19,22 @@ const safeDate = (dateVal) => {
     return isNaN(d.getTime()) ? null : d;
 };
 
-const TimelineView = () => {
+const TimelineView = ({ highlightTaskId }) => {
     const { data: tasks, refetch: refetchTasks } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');
     const { data: projectsData } = useApiData('/projects');
+
+    // Deep Link Effect
+    useEffect(() => {
+        if (highlightTaskId && tasks.length > 0) {
+            const targetTask = tasks.find(t => t.id === highlightTaskId);
+            if (targetTask && targetTask.dueDate) {
+                console.log("Deep Link: Scrolling to Task Date", targetTask.dueDate);
+                const date = safeDate(targetTask.dueDate);
+                if (date) scrollToDate(date, true);
+            }
+        }
+    }, [highlightTaskId, tasks]);
 
     // Filter State
     const [filterText, setFilterText] = useState('');

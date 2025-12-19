@@ -14,6 +14,21 @@ import AdminDashboard from './components/AdminDashboard';
 
 function App() {
     const [currentView, setCurrentView] = useState('dashboard');
+    const [highlightTaskId, setHighlightTaskId] = useState(null);
+
+    // Deep Link Handling
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const taskId = params.get('taskId');
+        if (taskId) {
+            console.log("Deep Link Detected: Task ID", taskId);
+            setHighlightTaskId(taskId);
+            setCurrentView('timelines');
+
+            // Optional: Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
 
     // Uncomment below to seed/update/cleanup database (run once, then comment out again)
     useEffect(() => {
@@ -31,7 +46,7 @@ function App() {
     return (
         <Shell currentView={currentView} setView={setCurrentView}>
             {currentView === 'dashboard' && <Dashboard />}
-            {currentView === 'timelines' && <TimelineView />}
+            {currentView === 'timelines' && <TimelineView highlightTaskId={highlightTaskId} />}
             {currentView === 'kanban' && <KanbanBoard />}
             {currentView === 'gantt' && <GanttChart />}
             {currentView === 'projects' && <ProjectList />}

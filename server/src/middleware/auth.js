@@ -26,22 +26,45 @@ export const createAuthMiddleware = (pool) => {
 
             // 3. JIT Provisioning (Registration Pipeline)
             if (!dbUser) {
-                console.log(`[Auth] New User Detected: ${email}. Provisioning...`);
+                // CLAIMS LOGIC: Check if this email exists as a "Ghost" user (invited via Viral Loop)
+                const existingEmailRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
-                // Determine Role
-                const isGod = GOD_EMAILS.includes(email);
-                const role = isGod ? 'god' : 'user';
-                const orgId = DEFAULT_ORG_ID; // Auto-join "Mattamay" for now (or make a pending bucket later)
+                if (existingEmailRes.rows.length > 0) {
+                    // ACCOUNT CLAIM: Merge Firebase Identity into Ghost Record
+                    console.log(`[Auth] Account Claim Detected for ${email}. Merging Ghost Record...`);
+                    const ghostUser = existingEmailRes.rows[0];
 
-                const insertResult = await pool.query(
-                    `INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url)
-                     VALUES ($1, $2, $3, $4, $5, $6)
-                     RETURNING id, role, organization_id`,
-                    [uid, email, role, orgId, name || 'New User', picture || '']
-                );
+                    const updateRes = await pool.query(
+                        `UPDATE users 
+                         SET firebase_uid = $1, 
+                             avatar_url = COALESCE(NULLIF($2, ''), avatar_url),
+                             display_name = COALESCE(NULLIF($3, ''), display_name),
+                             status = 'active'
+                         WHERE id = $4
+                         RETURNING id, role, organization_id`,
+                        [uid, picture || '', name || ghostUser.display_name, ghostUser.id]
+                    );
 
-                dbUser = insertResult.rows[0];
-                console.log(`[Auth] Provisioned ${email} as ${role}`);
+                    dbUser = updateRes.rows[0];
+                } else {
+                    // NEW USER: Standard Provisioning
+                    console.log(`[Auth] New User Detected: ${email}. Provisioning...`);
+
+                    // Determine Role
+                    const isGod = GOD_EMAILS.includes(email);
+                    const role = isGod ? 'god' : 'user';
+                    const orgId = DEFAULT_ORG_ID; // Auto-join "Mattamay" for now
+
+                    const insertResult = await pool.query(
+                        `INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+                         RETURNING id, role, organization_id`,
+                        [uid, email, role, orgId, name || 'New User', picture || '']
+                    );
+
+                    dbUser = insertResult.rows[0];
+                    console.log(`[Auth] Provisioned ${email} as ${role}`);
+                }
             }
             // 3b. Self-Healing: Ensure God Emails always have God Role
             else if (GOD_EMAILS.includes(email) && dbUser.role !== 'god') {
