@@ -13,7 +13,7 @@ A professional, corporate-grade office management platform built with Vite, Reac
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
-- **Hosting/Backend**: Firebase (Planned)
+- **Backend/Database**: Firebase (Local Emulators)
 
 ## Getting Started
 
@@ -22,12 +22,18 @@ A professional, corporate-grade office management platform built with Vite, Reac
     npm install
     ```
 
-2.  **Start development server**:
+2.  **Start Firebase Emulators** (Required for Auth/Firestore):
+    ```bash
+    npm run emulators
+    ```
+    *Note: This is pre-configured to use the Java instance found on your D: drive.*
+
+3.  **Start development server**:
     ```bash
     npm run dev
     ```
 
-3.  **Build for production**:
+4.  **Build for production**:
     ```bash
     npm run build
     ```

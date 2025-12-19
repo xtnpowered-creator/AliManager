@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'AliManager',
         short_name: 'AliManager',
@@ -31,7 +31,7 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 5175,
+    port: 5180,
     strictPort: true
   }
 })

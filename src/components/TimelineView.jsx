@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { motion, Reorder, useDragControls } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCollection } from '../hooks/useCollection';
 import { Clock, Calendar, GripVertical } from 'lucide-react';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -8,6 +8,17 @@ import AssignmentConflictModal from './AssignmentConflictModal';
 import { addScrollTestData } from '../utils/addTestData';
 import TimelineRow from './TimelineRow';
 import TimelineFilters from './TimelineFilters';
+import { getTaskCardColor } from '../utils/cardStyles';
+
+// Helper to safely parse any date-like input into a Date object
+const safeDate = (dateVal) => {
+    if (!dateVal) return null;
+    // Handle Firestore Timestamp
+    if (dateVal.seconds) return new Date(dateVal.seconds * 1000);
+    // Handle ISO string or Date object
+    const d = new Date(dateVal);
+    return isNaN(d.getTime()) ? null : d;
+};
 
 const TimelineView = () => {
     const { data: tasks } = useCollection('tasks', 'dueDate');
@@ -48,6 +59,16 @@ const TimelineView = () => {
             }
         });
 
+        // Ensure Alisara Plyler is always at the top (unless manually reordered)
+        // Only enforce this if there's no saved order or if it's the first load
+        if (savedOrder.length === 0) {
+            const alisaraIndex = newOrder.findIndex(c => c.name === 'Alisara Plyler');
+            if (alisaraIndex > 0) {
+                const [alisara] = newOrder.splice(alisaraIndex, 1);
+                newOrder.unshift(alisara);
+            }
+        }
+
         setOrderedColleagues(newOrder);
     }, [colleagues]);
 
@@ -65,7 +86,13 @@ const TimelineView = () => {
     const [scrollLeftState, setScrollLeftState] = useState(0);
 
     const [scrollDirection, setScrollDirection] = useState(0);
+    const [verticalScrollDirection, setVerticalScrollDirection] = useState(0);
     const scrollInterval = useRef(null);
+    const verticalScrollInterval = useRef(null);
+    const [isDraggingColleague, setIsDraggingColleague] = useState(false);
+    const [draggingColleague, setDraggingColleague] = useState(null);
+    const dragColleagueDataRef = useRef(null);
+    const colleagueGhostRef = useRef(null);
 
     // Dragging task state - only for showing/hiding ghost, not position
     const [draggingTask, setDraggingTask] = useState(null);
@@ -87,6 +114,20 @@ const TimelineView = () => {
         return () => clearInterval(scrollInterval.current);
     }, [scrollDirection]);
 
+    // Vertical auto-scroll for colleague reordering
+    useEffect(() => {
+        if (verticalScrollDirection !== 0) {
+            verticalScrollInterval.current = setInterval(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTop += verticalScrollDirection * 20;
+                }
+            }, 16);
+        } else {
+            clearInterval(verticalScrollInterval.current);
+        }
+        return () => clearInterval(verticalScrollInterval.current);
+    }, [verticalScrollDirection]);
+
     const days = useMemo(() => {
         const result = [];
         const start = new Date();
@@ -101,8 +142,14 @@ const TimelineView = () => {
     }, []);
 
     const getColumnWidth = (date) => {
-        const baseWidth = scale === '1w' ? 240 : scale === '3w' ? 90 : 60;
-        return isWeekend(date) ? baseWidth * 0.7 : baseWidth;
+        const baseWidth = {
+            '1w': 233, // 233 * 7 = 1631
+            '3w': 77,  // 77 * 21 = 1617
+            '5w': 46   // 46 * 35 = 1610
+        }[scale] || 77;
+
+        // Weekend columns are 50% of weekday width
+        return isWeekend(date) ? baseWidth * 0.5 : baseWidth;
     };
 
     const isWeekend = (date) => [0, 6].includes(date.getDay());
@@ -166,10 +213,8 @@ const TimelineView = () => {
 
     const isFiltering = !!filterText;
 
-    const getTasksForDay = (colleagueId, date) => {
-        const dateStr = date.toISOString().split('T')[0];
-        // Use filteredTasks here to hide irrelevant tasks
-        return filteredTasks.filter(t => t.assignedTo?.includes(colleagueId) && t.dueDate.split('T')[0] === dateStr);
+    const getTasksForColleague = (colleagueId) => {
+        return filteredTasks.filter(t => t.assignedTo?.includes(colleagueId));
     };
 
     const handleToday = () => {
@@ -203,6 +248,104 @@ const TimelineView = () => {
     const handleMouseUp = () => {
         setIsDraggingTimeline(false);
         scrollContainerRef.current?.classList.remove('cursor-grabbing');
+    };
+
+    // Custom colleague drag handlers
+    const handleColleagueDragStart = (colleague, colleagueIndex, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        dragColleagueDataRef.current = {
+            colleagueId: colleague.id,
+            startIndex: colleagueIndex,
+            startY: e.clientY,
+            startScrollTop: scrollContainerRef.current.scrollTop,
+            offsetX,
+            offsetY
+        };
+
+        setDraggingColleague({
+            colleague,
+            x: e.clientX,
+            y: e.clientY,
+            offsetX,
+            offsetY
+        });
+        setIsDraggingColleague(true);
+
+        document.addEventListener('mousemove', handleColleagueGlobalMouseMove);
+        document.addEventListener('mouseup', handleColleagueGlobalMouseUp);
+    };
+
+    const handleColleagueGlobalMouseMove = (e) => {
+        if (!dragColleagueDataRef.current) return;
+
+        const { offsetX, offsetY } = dragColleagueDataRef.current;
+
+        // Track current position in ref for accurate drop calculation
+        dragColleagueDataRef.current.currentY = e.clientY;
+
+        // Update ghost ref position immediately for smooth dragging
+        if (colleagueGhostRef.current) {
+            colleagueGhostRef.current.style.left = `${e.clientX - offsetX}px`;
+            colleagueGhostRef.current.style.top = `${e.clientY - offsetY}px`;
+        }
+
+        // Update state for reordering calculation
+        setDraggingColleague(prev => ({
+            ...prev,
+            x: e.clientX,
+            y: e.clientY
+        }));
+
+        // Auto-scroll logic
+        const rect = scrollContainerRef.current?.getBoundingClientRect();
+        if (rect) {
+            const edgeThreshold = 100;
+            const distanceFromTop = e.clientY - rect.top;
+            const distanceFromBottom = rect.bottom - e.clientY;
+
+            if (distanceFromTop < edgeThreshold && distanceFromTop > 0) {
+                setVerticalScrollDirection(-1);
+            } else if (distanceFromBottom < edgeThreshold && distanceFromBottom > 0) {
+                setVerticalScrollDirection(1);
+            } else {
+                setVerticalScrollDirection(0);
+            }
+        }
+    };
+
+    const handleColleagueGlobalMouseUp = () => {
+        if (!dragColleagueDataRef.current) return;
+
+        const { startIndex, startY, startScrollTop, currentY } = dragColleagueDataRef.current;
+        const currentScrollTop = scrollContainerRef.current.scrollTop;
+        const scrollDelta = currentScrollTop - startScrollTop;
+        const finalY = currentY || startY; // Use tracked Y or fallback to startY
+        const totalDeltaY = (finalY - startY) + scrollDelta;
+
+        const rowHeight = 134;
+        const indexDelta = Math.round(totalDeltaY / rowHeight);
+        const newIndex = Math.max(0, Math.min(visibleColleagues.length - 1, startIndex + indexDelta));
+
+        if (newIndex !== startIndex) {
+            const newOrder = [...visibleColleagues];
+            const [movedColleague] = newOrder.splice(startIndex, 1);
+            newOrder.splice(newIndex, 0, movedColleague);
+            handleReorder(newOrder);
+        }
+
+        document.removeEventListener('mousemove', handleColleagueGlobalMouseMove);
+        document.removeEventListener('mouseup', handleColleagueGlobalMouseUp);
+
+        dragColleagueDataRef.current = null;
+        setDraggingColleague(null);
+        setIsDraggingColleague(false);
+        setVerticalScrollDirection(0);
     };
 
     const handleUpdateTask = async (taskId, newDate, newColleagueId) => {
@@ -301,19 +444,22 @@ const TimelineView = () => {
                     onMouseLeave={handleMouseUp}
                     className="flex-1 overflow-auto invisible-scrollbar relative cursor-grab active:cursor-grabbing"
                 >
-                    <div className="flex sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 min-w-max">
-                        <div className="sticky left-0 z-40 w-56 p-6 bg-slate-50/95 border-r border-slate-200 font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] flex items-center shrink-0">
-                            Personnel
+                    <div className="flex sticky top-0 z-[10000] bg-white/80 backdrop-blur-md border-b border-slate-200 min-w-max">
+                        <div className="sticky left-0 z-[9999] p-6 bg-slate-50/95 border-r border-slate-300 font-black text-slate-400 text-[10px] uppercase tracking-[0.2em] flex items-center shrink-0" style={{ width: '200px' }}>
+                            Colleagues
                         </div>
                         <div className="flex">
                             {days.map((day, i) => (
                                 <div
                                     key={i}
                                     style={{ width: getColumnWidth(day), minWidth: getColumnWidth(day) }}
-                                    className={`flex flex-col items-center justify-center py-4 border-r border-slate-200 last:border-0 relative shrink-0 ${isToday(day) ? 'bg-teal-100/70' : isWeekend(day) ? 'bg-slate-200/70' : ''}`}
+                                    className={`flex flex-col items-center justify-center py-4 border-r border-slate-300 last:border-0 relative shrink-0 ${isToday(day) ? 'bg-teal-100/70' : isWeekend(day) ? 'bg-slate-200/70' : ''}`}
                                 >
-                                    {day.getDate() === 1 && i > 0 && (
-                                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.3)] z-50" />
+                                    {day.getDate() === 1 && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-teal-500 z-50 pointer-events-none" />
+                                    )}
+                                    {day.getDay() === 1 && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-slate-400/60 z-40 pointer-events-none" />
                                     )}
                                     <p className={`text-[9px] font-black uppercase tracking-tight leading-none ${isToday(day) ? 'text-teal-700' : 'text-slate-500'}`}>
                                         {day.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -331,20 +477,22 @@ const TimelineView = () => {
                         </div>
                     </div>
 
-                    <Reorder.Group axis="y" values={visibleColleagues} onReorder={handleReorder} className="flex flex-col min-w-max">
+                    <div className="flex flex-col min-w-max">
                         {visibleColleagues.map((colleague, cIdx) => (
-                            <TimelineRowWrapper
+                            <TimelineRow
                                 key={colleague.id}
                                 colleague={colleague}
-                                cIdx={cIdx}
+                                colleagueIndex={cIdx}
                                 isDragDisabled={isFiltering}
+                                onColleagueDragStart={(e) => handleColleagueDragStart(colleague, cIdx, e)}
+                                isDraggingThis={draggingColleague?.colleague.id === colleague.id}
                                 // Pass other props
-                                colleagues={colleagues}
+                                colleagues={visibleColleagues}
                                 days={days}
                                 getColumnWidth={getColumnWidth}
                                 isToday={isToday}
                                 isWeekend={isWeekend}
-                                getTasksForDay={getTasksForDay}
+                                getTasksForColleague={getTasksForColleague}
                                 onUpdate={handleUpdateTask}
                                 setScrollDirection={setScrollDirection}
                                 scrollContainerRef={scrollContainerRef}
@@ -352,9 +500,11 @@ const TimelineView = () => {
                                 setDraggingTask={setDraggingTask}
                                 ghostRef={ghostRef}
                                 onReassign={handleReassignRequest}
+                                safeDate={safeDate}
+                                scale={scale}
                             />
                         ))}
-                    </Reorder.Group>
+                    </div>
                 </div>
             </div>
 
@@ -364,24 +514,62 @@ const TimelineView = () => {
                     ref={ghostRef}
                     style={{
                         position: 'fixed',
-                        left: draggingTask.x - (draggingTask.offsetX || 0),
+                        left: Math.max(200, draggingTask.x - (draggingTask.offsetX || 0)),
                         top: draggingTask.y - (draggingTask.offsetY || 0),
                         transform: 'none',
                         pointerEvents: 'none',
-                        zIndex: 10000,
-                        scale: 1.1,
+                        zIndex: 5000,
+                        width: draggingTask.width || 160,
+                        height: 97,
                         willChange: 'transform'
                     }}
-                    className={`p-3 rounded-xl border-[2.5px] border-slate-900 shadow-[8px_8px_0_0_rgba(0,0,0,1)] w-[160px] ${draggingTask.task.priority === 'high' ? 'bg-amber-100' :
-                        draggingTask.task.priority === 'medium' ? 'bg-blue-100' : 'bg-teal-100'
-                        }`}
+                    className={`p-3 rounded-xl border border-slate-900 ${getTaskCardColor(draggingTask.task)}`}
                 >
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 min-h-[72px]">
                         <div className="flex items-center gap-1.5 font-black text-[8px] uppercase tracking-[0.1em]">
                             <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
                             {draggingTask.task.priority || 'Task'}
                         </div>
                         <h4 className="font-black text-slate-900 text-[10px] leading-tight uppercase tracking-tight line-clamp-2">{draggingTask.task.title}</h4>
+                    </div>
+                </div>
+            )}
+
+            {/* Floating dragged colleague */}
+            {draggingColleague && (
+                <div
+                    ref={colleagueGhostRef}
+                    style={{
+                        position: 'fixed',
+                        left: draggingColleague.x - draggingColleague.offsetX,
+                        top: draggingColleague.y - draggingColleague.offsetY,
+                        width: '200px',
+                        height: '134px',
+                        pointerEvents: 'none',
+                        zIndex: 10001,
+                        opacity: 0.8
+                    }}
+                    className="bg-white border-2 border-teal-500 shadow-2xl"
+                >
+                    <div className="w-full p-4 bg-slate-50 border-r border-slate-300 flex items-center gap-3 h-full">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-sm font-black text-white uppercase shadow-lg shrink-0">
+                            {draggingColleague.colleague.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex flex-col gap-0 mb-1">
+                                <p className="font-bold text-slate-900 text-[11px] truncate uppercase tracking-tight leading-tight">
+                                    {draggingColleague.colleague.name.split(' ')[0]}
+                                </p>
+                                <p className="font-bold text-slate-900 text-[11px] truncate uppercase tracking-tight leading-tight">
+                                    {draggingColleague.colleague.name.split(' ').slice(1).join(' ')}
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-0">
+                                {draggingColleague.colleague.company && <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider truncate leading-tight">{draggingColleague.colleague.company}</p>}
+                                {draggingColleague.colleague.department && <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider truncate leading-tight">{draggingColleague.colleague.department}</p>}
+                                {draggingColleague.colleague.role && <p className="text-[8px] font-bold text-teal-600 uppercase tracking-wider truncate leading-tight">{draggingColleague.colleague.role}</p>}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -399,12 +587,3 @@ const TimelineView = () => {
 
 
 export default TimelineView;
-
-const TimelineRowWrapper = ({ colleague, cIdx, ...props }) => {
-    const controls = useDragControls();
-    return (
-        <Reorder.Item value={colleague} dragListener={false} dragControls={controls}>
-            <TimelineRow colleague={colleague} colleagueIndex={cIdx} dragControls={controls} {...props} />
-        </Reorder.Item>
-    );
-};

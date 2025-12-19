@@ -1,6 +1,9 @@
-import React, { memo } from 'react';
+import React from 'react';
+import { motion } from 'framer-motion';
 import TaskCard from './TaskCard';
-import { GripVertical } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const TimelineRow = ({
     colleague,
@@ -10,7 +13,7 @@ const TimelineRow = ({
     getColumnWidth,
     isToday,
     isWeekend,
-    getTasksForDay,
+    getTasksForColleague,
     onUpdate,
     setScrollDirection,
     scrollContainerRef,
@@ -18,41 +21,142 @@ const TimelineRow = ({
     setDraggingTask,
     ghostRef,
     onReassign,
-    dragControls,
-    isDragDisabled
+    isDragDisabled,
+    safeDate,
+    scale,
+    onColleagueDragStart,
+    isDraggingThis
 }) => {
-    // Add drag handle trigger
-    const handleDragStart = (e) => {
-        if (!isDragDisabled) dragControls?.start(e);
+
+    const handleDeleteColleague = async (e) => {
+        e.stopPropagation();
+        if (window.confirm(`Delete ${colleague.name}? This will also delete all their tasks.`)) {
+            try {
+                await deleteDoc(doc(db, 'colleagues', colleague.id));
+            } catch (error) {
+                console.error('Error deleting colleague:', error);
+            }
+        }
     };
 
     return (
-        <div className="flex border-b border-slate-200 group hover:bg-slate-50/30 transition-colors last:border-0 h-48 relative bg-white">
-            <div className="sticky left-0 z-20 w-56 p-6 bg-white border-r border-slate-200 flex items-center gap-3 shrink-0 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.1)]">
-                <div
-                    onPointerDown={handleDragStart}
-                    className={`p-1 -ml-2 transition-colors ${isDragDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-600'}`}
+        <div className={`flex border-b border-slate-300 group hover:bg-slate-50/30 transition-colors last:border-0 h-[134px] relative bg-white ${isDraggingThis ? 'opacity-30' : ''}`}>
+            {/* Colleague Info Column */}
+            <div
+                onMouseDown={isDragDisabled ? undefined : onColleagueDragStart}
+                className={`sticky left-0 z-[9999] w-50 p-4 bg-white border-r border-slate-300 flex items-center gap-3 shrink-0 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.1)] ${isDragDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                style={{ width: '200px' }}
+            >
+                {/* Temporary delete button */}
+                <button
+                    onClick={handleDeleteColleague}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                    title="Delete colleague"
                 >
-                    <GripVertical size={16} />
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-sm font-black text-white uppercase shadow-lg shadow-slate-200">{colleague.avatar}</div>
-                <div className="overflow-hidden">
-                    <p className="font-bold text-slate-900 text-sm truncate uppercase tracking-tight">{colleague.name}</p>
-                    <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest truncate">{colleague.role}</p>
+                    <Trash2 size={12} />
+                </button>
+
+                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-sm font-black text-white uppercase shadow-lg shadow-slate-200 shrink-0">{colleague.avatar}</div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex flex-col gap-0 mb-1">
+                        <p className="font-bold text-slate-900 text-[11px] truncate uppercase tracking-tight leading-tight">{colleague.name.split(' ')[0]}</p>
+                        <p className="font-bold text-slate-900 text-[11px] truncate uppercase tracking-tight leading-tight">{colleague.name.split(' ').slice(1).join(' ')}</p>
+                    </div>
+                    <div className="flex flex-col gap-0">
+                        {colleague.company && <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider truncate leading-tight">{colleague.company}</p>}
+                        {colleague.department && <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider truncate leading-tight">{colleague.department}</p>}
+                        {colleague.role && <p className="text-[8px] font-bold text-teal-600 uppercase tracking-wider truncate leading-tight">{colleague.role}</p>}
+                    </div>
                 </div>
             </div>
+
+            {/* Timeline Grid & Tasks */}
             <div className="flex relative shrink-0">
+                {/* Horizontal Baseline */}
                 <div className="absolute top-1/2 left-0 w-full h-[4px] bg-slate-400/50 -translate-y-1/2 z-0" />
+
+                {/* Day Columns */}
                 {days.map((day, dIdx) => (
-                    <div key={dIdx} style={{ minWidth: getColumnWidth(day) }} className={`h-full border-r border-slate-200/50 flex items-center justify-center relative last:border-0 ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}>
+                    <div key={dIdx} style={{ minWidth: getColumnWidth(day) }} className={`h-full border-r border-slate-300/70 flex items-center justify-center relative last:border-0 ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}>
+                        {/* Month boundary */}
+                        {day.getDate() === 1 && dIdx > 0 && (
+                            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-teal-500/30 z-10 pointer-events-none" />
+                        )}
+                        {/* Week boundary (Pale line between Sun/Mon) */}
+                        {day.getDay() === 1 && (
+                            <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-slate-400/50 z-10 pointer-events-none" />
+                        )}
                         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[4px] h-8 z-0 rounded-full ${isToday(day) ? 'bg-teal-600/70' : 'bg-slate-400/70'}`} />
-                        <div className="w-full h-full relative flex items-center justify-center pointer-events-none">
-                            {getTasksForDay(colleague.id, day).map((task, tIdx) => (
+                    </div>
+                ))}
+
+                {/* Task Layer - Absolute positioning over the row */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ clipPath: 'inset(0 0 0 0)' }}>
+                    {(() => {
+                        const colleagueTasks = getTasksForColleague(colleague.id);
+                        if (!colleagueTasks.length) return null;
+
+                        // 1. Sort tasks: earlier first, then higher priority
+                        const prioScore = { high: 0, medium: 1, low: 2 };
+                        const sorted = [...colleagueTasks].sort((a, b) => {
+                            const dateA = safeDate(a.dueDate);
+                            const dateB = safeDate(b.dueDate);
+                            if (dateA - dateB !== 0) return dateA - dateB;
+                            return (prioScore[a.priority] ?? 1) - (prioScore[b.priority] ?? 1);
+                        });
+
+                        // 2. Assign lanes based on overlap
+                        const lanes = []; // Each element is an array of tasks in that lane
+                        const taskToLane = new Map();
+
+                        sorted.forEach(task => {
+                            const taskStart = safeDate(task.dueDate);
+                            const taskEnd = new Date(taskStart);
+                            taskEnd.setDate(taskStart.getDate() + (task.duration || 1));
+
+                            let assignedLane = -1;
+                            for (let i = 0; i < lanes.length; i++) {
+                                // Check for any overlap in this lane
+                                const hasOverlap = lanes[i].some(lt => {
+                                    const ltStart = safeDate(lt.dueDate);
+                                    const ltEnd = new Date(ltStart);
+                                    ltEnd.setDate(ltStart.getDate() + (lt.duration || 1));
+                                    // Tasks overlap if (StartA < EndB) AND (EndA > StartB)
+                                    return (taskStart < ltEnd && taskEnd > ltStart);
+                                });
+                                if (!hasOverlap) {
+                                    assignedLane = i;
+                                    lanes[i].push(task);
+                                    break;
+                                }
+                            }
+
+                            if (assignedLane === -1) {
+                                assignedLane = lanes.length;
+                                lanes.push([task]);
+                            }
+                            taskToLane.set(task.id, assignedLane);
+                        });
+
+                        return sorted.map((task) => {
+                            const taskDate = safeDate(task.dueDate);
+                            if (!taskDate) return null;
+
+                            const dayIndex = days.findIndex(d => d.toDateString() === taskDate.toDateString());
+                            if (dayIndex === -1) return null;
+
+                            let left = 0;
+                            for (let i = 0; i < dayIndex; i++) {
+                                left += getColumnWidth(days[i]);
+                            }
+
+                            return (
                                 <TaskCard
                                     key={task.id}
                                     task={task}
-                                    index={tIdx}
-                                    currentDate={day}
+                                    index={taskToLane.get(task.id)} // This is now the lane index
+                                    left={left}
+                                    currentDate={taskDate}
                                     currentColleagueId={colleague.id}
                                     colleagues={colleagues}
                                     colleagueIndex={colleagueIndex}
@@ -64,14 +168,16 @@ const TimelineRow = ({
                                     setDraggingTask={setDraggingTask}
                                     ghostRef={ghostRef}
                                     onReassign={onReassign}
+                                    days={days}
                                 />
-                            ))}
-                        </div>
-                    </div>
-                ))}
+                            );
+                        });
+                    })()}
+                </div>
             </div>
         </div>
     );
 };
 
-export default memo(TimelineRow);
+export default TimelineRow;
+

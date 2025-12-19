@@ -1,15 +1,52 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, GripVertical } from 'lucide-react';
+import { Package, GripVertical } from 'lucide-react';
+import { getTaskCardColor } from '../utils/cardStyles';
 
-const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, colleagueIndex, getColumnWidth, onUpdate, setScrollDirection, scrollContainerRef, draggingTask, setDraggingTask, ghostRef, onReassign }) => {
+const TaskCard = ({
+    task,
+    index,
+    left,
+    currentDate,
+    currentColleagueId,
+    colleagues,
+    colleagueIndex,
+    getColumnWidth,
+    onUpdate,
+    setScrollDirection,
+    scrollContainerRef,
+    draggingTask,
+    setDraggingTask,
+    ghostRef,
+    onReassign,
+    days,
+    scale
+}) => {
     const [isHovered, setIsHovered] = useState(false);
     const cardRef = useRef(null);
 
-    const xOffset = index * 12;
-    const yOffset = index * -12;
-    const rowHeight = 192;
-    const personnelColWidth = 224;
+    // Alternating horizontal offset: even indices go left (-10px), odd go right (+10px)
+    const xStackOffset = index === 0 ? 0 : (index % 2 === 0 ? -10 : 10);
+    const stackOffset = index * -15; // Stack UP (negative margin)
+    const rowHeight = 134;
+    const personnelColWidth = 200;
+
+    // Calculate width based on duration
+    const duration = task.duration || 1;
+    let cardWidth = 0;
+    const startDate = new Date(currentDate);
+
+    for (let i = 0; i < duration; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        cardWidth += getColumnWidth(d);
+    }
+    cardWidth -= 12; // Gap between tasks to prevent touching across days
+    cardWidth = cardWidth * 0.95; // Constrain to 95% to prevent overlap with stacked cards
+
+    // Calculate hover width (what it would be on the 1 WEEK scale)
+    // 1W column width is 233px. Gap is 12px.
+    const hoverWidth = scale === '1w' ? cardWidth : (duration * 233) - 12;
 
     // Use ref to store drag data so event handlers can access current values
     const dragDataRef = useRef(null);
@@ -27,6 +64,7 @@ const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, co
             startX: e.clientX,
             startY: e.clientY,
             startScrollLeft: scrollContainerRef.current.scrollLeft,
+            startScrollTop: scrollContainerRef.current.scrollTop,
             startDate: currentDate,
             startColleagueId: currentColleagueId,
             startColleagueIndex: colleagueIndex,
@@ -42,7 +80,8 @@ const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, co
             startColleagueId: currentColleagueId,
             startColleagueIndex: colleagueIndex,
             offsetX,
-            offsetY
+            offsetY,
+            width: cardWidth
         });
 
         document.addEventListener('mousemove', handleGlobalMouseMove);
@@ -84,13 +123,15 @@ const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, co
             return;
         }
 
-        const { taskId, startX, startY, startScrollLeft, startDate, startColleagueId, startColleagueIndex } = dragDataRef.current;
-        // Calculate movement
+        const { taskId, startX, startY, startScrollLeft, startScrollTop, startDate, startColleagueId, startColleagueIndex } = dragDataRef.current;
+
         const totalScrollDelta = scrollContainerRef.current.scrollLeft - startScrollLeft;
+        const totalVerticalScrollDelta = scrollContainerRef.current.scrollTop - startScrollTop;
         const pointerDeltaX = e.clientX - startX;
         const pointerDeltaY = e.clientY - startY;
 
         const totalGridDeltaX = pointerDeltaX + totalScrollDelta;
+        const totalVerticalDelta = pointerDeltaY + totalVerticalScrollDelta;
 
         // NEW: Calculate dayDelta based on variable widths
         let dayDelta = 0;
@@ -119,7 +160,8 @@ const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, co
         const newDate = new Date(startDate);
         newDate.setDate(newDate.getDate() + dayDelta);
 
-        const colleagueDelta = Math.round(pointerDeltaY / rowHeight);
+        // Only consider colleague change if vertical movement exceeds 40% of row height
+        const colleagueDelta = Math.abs(totalVerticalDelta) > (rowHeight * 0.4) ? Math.round(totalVerticalDelta / rowHeight) : 0;
         let newColleagueId = startColleagueId;
         const newIdx = startColleagueIndex + colleagueDelta;
         if (newIdx >= 0 && newIdx < colleagues.length) {
@@ -145,6 +187,7 @@ const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, co
     // Hide if this is the dragged task
     const isDragged = draggingTask?.task.id === task.id;
 
+
     return (
         <motion.div
             ref={cardRef}
@@ -155,33 +198,36 @@ const TaskCard = ({ task, index, currentDate, currentColleagueId, colleagues, co
             animate={{
                 opacity: isDragged ? 0 : 1,
                 scale: 1,
-                x: xOffset,
-                y: yOffset,
-                width: getColumnWidth(currentDate) - 4, // Leave a tiny gap
-                zIndex: isHovered ? 1000 : 10 + index
+                x: left + (getColumnWidth(new Date(currentDate)) / 2) - (cardWidth / 2) + xStackOffset,
+                top: "50%",
+                y: "-50%",
+                marginTop: stackOffset,
+                width: cardWidth,
+                height: 92,
+                zIndex: isHovered ? 3000 : 100 - index, // Lane 0 is on TOP (highest z-index)
+                originX: 0
             }}
-            whileHover={{
-                scale: 1.25,
-                transition: { duration: 0.2 }
+            whileHover={isDragged ? {} : {
+                width: hoverWidth,
+                zIndex: 3000,
+                transition: { duration: 0.15, ease: "easeOut", type: "tween" }
             }}
-            className={`absolute pointer-events-auto task-card cursor-grab p-3 rounded-xl border-[2.5px] border-slate-900 shadow-[6px_6px_0_0_rgba(0,0,0,1)] ${task.priority === 'high' ? 'bg-amber-100' :
-                task.priority === 'medium' ? 'bg-blue-100' : 'bg-teal-100'
-                } group transition-all`}
+            transition={{ width: { type: 'tween', duration: 0.15 }, default: { type: 'spring', stiffness: 300, damping: 30 } }}
+            className={`absolute pointer-events-auto task-card cursor-grab p-2.5 rounded-2xl border border-slate-900 ${getTaskCardColor(task)} group`}
         >
-            <div className="flex flex-col gap-2 relative">
+            <div className="flex flex-col gap-1 relative overflow-hidden min-h-[72px]">
                 <div className="absolute -left-1.5 -top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GripVertical size={12} className="text-slate-400" />
+                    <GripVertical size={10} className="text-slate-400" />
                 </div>
-                <div className="flex items-center gap-1.5 font-black text-[8px] uppercase tracking-[0.1em]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                    {task.priority || 'Task'}
-                </div>
-                <h4 className="font-black text-slate-900 text-[10px] leading-tight uppercase tracking-tight line-clamp-2">{task.title}</h4>
-                <div className="flex items-center justify-between mt-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-1">
-                        <Clock size={10} className="text-slate-900" />
-                        <span className="text-[8px] font-black text-slate-900 uppercase">Deliverable</span>
-                    </div>
+
+                {/* Title - Wrapped */}
+                <h4 className="font-black text-slate-900 text-[11px] leading-[1.2] uppercase tracking-tight line-clamp-4 break-words">
+                    {task.title}
+                </h4>
+
+                {/* Deliverable Icon */}
+                <div className="mt-auto pt-1.5 border-t border-slate-900/10 flex items-center justify-center">
+                    <Package size={12} className="text-slate-900/50" strokeWidth={2.5} />
                 </div>
             </div>
         </motion.div>

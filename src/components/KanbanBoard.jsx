@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useCollection } from '../hooks/useCollection';
 import { MoreHorizontal, Plus, Clock, Users } from 'lucide-react';
+import { getTaskCardColor } from '../utils/cardStyles';
 
 const KanbanBoard = () => {
     const { data: tasks, loading: tasksLoading } = useCollection('tasks');
@@ -35,7 +36,7 @@ const KanbanBoard = () => {
 
             <div className="flex-1 flex gap-6 overflow-x-auto pb-4 invisible-scrollbar">
                 {columns.map(column => (
-                    <div key={column.id} className="min-w-[350px] flex-1 flex flex-col bg-slate-50/50 rounded-3xl border border-slate-200/50 p-4">
+                    <div key={column.id} className="min-w-[350px] flex-1 flex flex-col bg-slate-50/50 rounded-3xl border border-slate-300/70 p-4">
                         <div className="flex items-center justify-between mb-6 px-2">
                             <div className="flex items-center gap-3">
                                 <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs">{column.title}</h3>
@@ -59,7 +60,7 @@ const KanbanBoard = () => {
                                 ))
                             )}
 
-                            <button className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs font-bold hover:border-slate-300 hover:text-slate-500 transition-all flex items-center justify-center gap-2">
+                            <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 text-xs font-bold hover:border-slate-400 hover:text-slate-500 transition-all flex items-center justify-center gap-2">
                                 <Plus size={14} />
                                 Add Task
                             </button>
@@ -71,24 +72,36 @@ const KanbanBoard = () => {
     );
 };
 
+const getTypeLabel = (t) => {
+    if (t.type === 'project') return 'PROJ';
+    if (t.projectId) return 'PTASK';
+    return 'LTASK';
+};
+
+const getPriorityLabel = (p) => {
+    if (!p) return 'TASK';
+    const lowerP = p.toLowerCase();
+    if (lowerP === 'high') return 'HIGH';
+    if (lowerP === 'medium') return 'MED';
+    if (lowerP === 'low') return 'LOW';
+    return p.toUpperCase();
+};
+
 const KanbanCard = ({ task, colleagues }) => (
     <motion.div
         layout
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -2, shadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
-        className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing group"
+        className={`${getTaskCardColor(task)} p-5 rounded-2xl border border-slate-300 shadow-sm cursor-grab active:cursor-grabbing group`}
     >
-        <div className="flex justify-between items-start mb-3">
-            <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${task.priority === 'high' ? 'bg-amber-100 text-amber-700' :
-                    task.priority === 'medium' ? 'bg-blue-100 text-blue-700' :
-                        'bg-slate-100 text-slate-600'
-                }`}>
-                {task.priority} Priority
+        <div className="flex flex-col gap-0.5 mb-3 text-left">
+            <span className="text-[7.5px] font-black text-slate-900/40 uppercase tracking-widest leading-none">
+                {getTypeLabel(task)}
             </span>
-            <button className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-700 transition-all">
-                <MoreHorizontal size={14} />
-            </button>
+            <span className="text-[8px] font-black uppercase tracking-wider leading-none text-slate-900">
+                {getPriorityLabel(task.priority)}
+            </span>
         </div>
 
         <h4 className="font-bold text-slate-800 text-sm mb-4 leading-tight">{task.title}</h4>

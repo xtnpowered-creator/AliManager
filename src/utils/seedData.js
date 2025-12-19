@@ -2,10 +2,34 @@ import { db } from '../firebase';
 import { collection, addDoc, getDocs, query, limit, writeBatch, doc } from 'firebase/firestore';
 
 const colleaguesData = [
-    { name: 'Alisara', role: 'Project Manager', avatar: 'AL' },
-    { name: 'John Doe', role: 'Developer', avatar: 'JD' },
-    { name: 'Jane Smith', role: 'Designer', avatar: 'JS' },
-    { name: 'Sam Wilson', role: 'Marketing', avatar: 'SW' },
+    {
+        name: 'Alisara Plyler',
+        role: 'Purchasing Director',
+        company: 'Mattamay Homes',
+        department: 'Purchasing',
+        avatar: 'AP'
+    },
+    {
+        name: 'John Doe',
+        role: 'Senior Developer',
+        company: 'Mattamay Homes',
+        department: 'Engineering',
+        avatar: 'JD'
+    },
+    {
+        name: 'Jane Smith',
+        role: 'Lead Designer',
+        company: 'Mattamay Homes',
+        department: 'Design',
+        avatar: 'JS'
+    },
+    {
+        name: 'Sam Wilson',
+        role: 'Marketing Director',
+        company: 'Mattamay Homes',
+        department: 'Marketing',
+        avatar: 'SW'
+    },
 ];
 
 const projectsData = [
@@ -16,21 +40,29 @@ const projectsData = [
 
 export const seedDatabase = async () => {
     try {
-        const colleaguesSnapshot = await getDocs(query(collection(db, 'colleagues'), limit(1)));
-        if (!colleaguesSnapshot.empty) {
-            console.log("Database already seeded with colleagues.");
-            return;
-        }
+        console.log("Checking database...");
 
-        console.log("Seeding database with colleagues...");
+        // Seed Colleagues - check by name to prevent duplicates
+        const colleaguesSnapshot = await getDocs(collection(db, 'colleagues'));
+        const existingNames = new Set(colleaguesSnapshot.docs.map(doc => doc.data().name));
+
         const batch = writeBatch(db);
-
-        // Seed Colleagues
         const colleagueRefs = [];
+
         for (const colleague of colleaguesData) {
-            const ref = doc(collection(db, 'colleagues'));
-            batch.set(ref, colleague);
-            colleagueRefs.push({ id: ref.id, ...colleague });
+            if (!existingNames.has(colleague.name)) {
+                console.log(`Adding colleague: ${colleague.name}`);
+                const ref = doc(collection(db, 'colleagues'));
+                batch.set(ref, colleague);
+                colleagueRefs.push({ id: ref.id, ...colleague });
+            } else {
+                console.log(`Colleague ${colleague.name} already exists, skipping`);
+                // Find existing colleague for task assignment
+                const existing = colleaguesSnapshot.docs.find(d => d.data().name === colleague.name);
+                if (existing) {
+                    colleagueRefs.push({ id: existing.id, ...existing.data() });
+                }
+            }
         }
 
         // Seed Projects
