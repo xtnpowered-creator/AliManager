@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "ali-manager-local"
-  }
+    "default": "alimanager",
+    "production": "alimanager"
+  },
+  "targets": {},
+  "etags": {}
 }
