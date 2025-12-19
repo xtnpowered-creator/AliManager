@@ -1,6 +1,14 @@
-import { LayoutDashboard, Calendar, Columns, BarChart3, Users, Settings, FolderKanban, ListTodo } from 'lucide-react';
+import { LayoutDashboard, Calendar, Columns, BarChart3, Users, Settings, FolderKanban, ListTodo, ShieldAlert } from 'lucide-react';
+import { useApiData } from '../hooks/useApiData';
+import { useAuth } from '../context/AuthContext';
 
 const Navigation = ({ currentView, setView }) => {
+    const { data: colleagues } = useApiData('/colleagues'); // Cached or fetched
+    const { user } = useAuth();
+
+    const dbUser = colleagues.find(c => c.id === user?.uid);
+    const isAdmin = dbUser?.role === 'god' || dbUser?.role === 'admin';
+
     const menuItems = [
         {
             group: 'Main Views', items: [
@@ -17,10 +25,9 @@ const Navigation = ({ currentView, setView }) => {
                 { id: 'team', icon: <Users size={20} />, label: 'Directory' },
             ]
         },
-
-
         {
             group: 'System', items: [
+                ...(isAdmin ? [{ id: 'admin', icon: <ShieldAlert size={20} />, label: 'Admin Dash' }] : []),
                 { id: 'settings', icon: <Settings size={20} />, label: 'Settings' },
             ]
         }

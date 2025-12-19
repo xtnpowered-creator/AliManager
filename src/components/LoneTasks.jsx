@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApiData } from '../hooks/useApiData';
 import { ListTodo, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import NewTaskModal from './NewTaskModal';
 
 const LoneTasks = () => {
-    const { data: tasks, loading } = useApiData('/tasks');
+    const { data: tasks, loading, refetch } = useApiData('/tasks');
+    const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
     // Filter tasks that are NOT assigned to any project
     const loneTasks = tasks.filter(task => !task.projectId);
@@ -23,7 +25,10 @@ const LoneTasks = () => {
                     <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Lone Tasks</h2>
                     <p className="text-slate-500 mt-1 text-lg">Single event tasks not tied to any project.</p>
                 </div>
-                <button className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2">
+                <button
+                    onClick={() => setShowNewTaskModal(true)}
+                    className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
+                >
                     <ListTodo size={18} />
                     + New Task
                 </button>
@@ -81,6 +86,12 @@ const LoneTasks = () => {
                     ))}
                 </div>
             )}
+
+            <NewTaskModal
+                isOpen={showNewTaskModal}
+                onClose={() => setShowNewTaskModal(false)}
+                onSuccess={refetch}
+            />
         </div>
     );
 };

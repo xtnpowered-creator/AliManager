@@ -6,6 +6,7 @@ export const useApiData = (endpoint, dependencies = []) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [refreshIndex, setRefreshIndex] = useState(0);
     const { user } = useAuth(); // Wait for user to be logged in before fetching
 
     useEffect(() => {
@@ -26,7 +27,9 @@ export const useApiData = (endpoint, dependencies = []) => {
         };
 
         fetchData();
-    }, [endpoint, user, ...dependencies]);
+    }, [endpoint, user, refreshIndex, ...dependencies]);
 
-    return { data, loading, error, refetch: () => setData([]) }; // Simple refetch stub
+    const refetch = () => setRefreshIndex(prev => prev + 1);
+
+    return { data, loading, error, refetch };
 };

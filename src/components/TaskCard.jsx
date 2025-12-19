@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Package, GripVertical } from 'lucide-react';
+import { Package, GripVertical, Share2, UserPlus } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
+import InviteModal from './InviteModal';
 
 const TaskCard = ({
     task,
@@ -23,6 +24,7 @@ const TaskCard = ({
     scale
 }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const cardRef = useRef(null);
 
     // Alternating horizontal offset: even indices go left (-3px), odd go right (+3px)
@@ -48,10 +50,17 @@ const TaskCard = ({
     // 1W column width is 233px. Gap is 12px.
     const hoverWidth = scale === '1w' ? cardWidth : (duration * 233) - 12;
 
+    // Access Source Check
+    const isSharedWithMe = task.access_source && !['owner', 'member', 'god'].includes(task.access_source);
+    const isOwner = ['owner', 'member', 'god'].includes(task.access_source || 'owner'); // Default to owner if missing for legacy
+
     // Use ref to store drag data so event handlers can access current values
     const dragDataRef = useRef(null);
 
     const handleMouseDown = (e) => {
+        // Prevent drag if clicking buttons
+        if (e.target.closest('button')) return;
+
         e.stopPropagation();
 
         // Calculate offset from top-left of card
@@ -187,50 +196,84 @@ const TaskCard = ({
     // Hide if this is the dragged task
     const isDragged = draggingTask?.task.id === task.id;
 
-
     return (
-        <motion.div
-            ref={cardRef}
-            onMouseDown={handleMouseDown}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-                opacity: isDragged ? 0 : 1,
-                scale: 1,
-                x: left + (getColumnWidth(new Date(currentDate)) / 2) - (cardWidth / 2) + xStackOffset,
-                top: "50%",
-                y: -46, // Exact half of 92px height for crisp centering
-                marginTop: stackOffset,
-                width: cardWidth,
-                height: 92,
-                zIndex: isHovered ? 3000 : 100 - index, // Lane 0 is on TOP (highest z-index)
-                originX: 0
-            }}
-            whileHover={isDragged ? {} : {
-                width: hoverWidth,
-                zIndex: 3000,
-                transition: { duration: 0.15, ease: "easeOut", type: "tween" }
-            }}
-            transition={{ width: { type: 'tween', duration: 0.15 }, default: { type: 'spring', stiffness: 300, damping: 30 } }}
-            className={`absolute pointer-events-auto task-card cursor-grab p-2.5 rounded-2xl border border-slate-900 ${getTaskCardColor(task)} group`}
-        >
-            <div className="flex flex-col gap-1 relative overflow-hidden min-h-[72px]">
-                <div className="absolute -left-1.5 -top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GripVertical size={10} className="text-slate-400" />
-                </div>
+        <>
+            <motion.div
+                ref={cardRef}
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                    opacity: isDragged ? 0 : 1,
+                    scale: 1,
+                    x: left + (getColumnWidth(new Date(currentDate)) / 2) - (cardWidth / 2) + xStackOffset,
+                    top: "50%",
+                    y: -46, // Exact half of 92px height for crisp centering
+                    marginTop: stackOffset,
+                    width: cardWidth,
+                    height: 92,
+                    zIndex: isHovered ? 3000 : 100 - index, // Lane 0 is on TOP (highest z-index)
+                    originX: 0
+                }}
+                whileHover={isDragged ? {} : {
+                    width: hoverWidth,
+                    zIndex: 3000,
+                    transition: { duration: 0.15, ease: "easeOut", type: "tween" }
+                }}
+                transition={{ width: { type: 'tween', duration: 0.15 }, default: { type: 'spring', stiffness: 300, damping: 30 } }}
+                className={`absolute pointer-events-auto task-card cursor-grab p-2.5 rounded-2xl border border-slate-900 ${getTaskCardColor(task)} group`}
+            >
+                <div className="flex flex-col gap-1 relative overflow-hidden min-h-[72px]">
+                    <div className="absolute -left-1.5 -top-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <GripVertical size={10} className="text-slate-400" />
+                    </div>
 
-                {/* Title - Wrapped */}
-                <h4 className="font-black text-slate-900 text-[11px] leading-[1.2] uppercase tracking-tight line-clamp-4 break-words">
-                    {task.title}
-                </h4>
+                    {/* Invite Button - Top Right (Visible on Hover if Owner) */}
+                    {isOwner && (
+                        <button
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => setShowInviteModal(true)}
+                            className="absolute -right-1 -top-1 p-1 bg-white/50 rounded-lg hover:bg-white text-teal-700 opacity-0 group-hover:opacity-100 transition-all z-10"
+                            title="Invite Collaborator"
+                        >
+                            <UserPlus size={12} />
+                        </button>
+                    )}
 
-                {/* Deliverable Icon */}
-                <div className="mt-auto pt-1.5 border-t border-slate-900/10 flex items-center justify-center">
-                    <Package size={12} className="text-slate-900/50" strokeWidth={2.5} />
+                    {/* Shared Indicator (If shared with me) */}
+                    {isSharedWithMe && (
+                        <div className="absolute -right-1 -top-1 p-1 bg-amber-100 rounded-lg text-amber-600 z-10">
+                            <Share2 size={12} />
+                        </div>
+                    )}
+
+
+                    {/* Title - Wrapped */}
+                    <h4 className="font-black text-slate-900 text-[11px] leading-[1.2] uppercase tracking-tight line-clamp-4 break-words">
+                        {task.title}
+                    </h4>
+
+                    {/* Deliverable Icon + Shared Status */}
+                    <div className="mt-auto pt-1.5 border-t border-slate-900/10 flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                            {/* Show small shared icon here too if it's the owner's view but shared with others? 
+                                Not yet implemented in backend response (we don't know if owner shared it). 
+                                Just keeping standard icon. */}
+                        </div>
+                        <Package size={12} className="text-slate-900/50 mx-auto" strokeWidth={2.5} />
+                    </div>
                 </div>
-            </div>
-        </motion.div>
+            </motion.div>
+
+            {/* Render Modal outside of motion div to avoid transform issues */}
+            <InviteModal
+                isOpen={showInviteModal}
+                onClose={() => setShowInviteModal(false)}
+                taskId={task.id}
+                taskTitle={task.title}
+            />
+        </>
     );
 };
 

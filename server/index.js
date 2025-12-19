@@ -39,6 +39,7 @@ app.use((req, res, next) => {
 import { createAuthMiddleware } from './src/middleware/auth.js';
 import { createProjectsRouter } from './src/routes/projects.js';
 import { createTasksRouter } from './src/routes/tasks.js';
+import { createRequestsRouter } from './src/routes/requests.js';
 import { createUsersRouter } from './src/routes/users.js';
 
 // Mount Protected Routes
@@ -46,6 +47,8 @@ const authMiddleware = createAuthMiddleware(pool);
 app.use('/projects', authMiddleware, createProjectsRouter(pool));
 app.use('/tasks', authMiddleware, createTasksRouter(pool));
 app.use('/users', authMiddleware, createUsersRouter(pool));
+app.use('/requests', authMiddleware, createRequestsRouter(pool));
+
 // Legacy/Alias for consistency with frontend 'colleagues'
 app.use('/colleagues', authMiddleware, createUsersRouter(pool));
 

@@ -10,6 +10,7 @@ import Directory from './components/Directory';
 import { seedDatabase } from './utils/seedData';
 import { updateColleagueDetails } from './utils/updateColleagues';
 import { removeDuplicateColleagues } from './utils/removeDuplicateColleagues';
+import AdminDashboard from './components/AdminDashboard';
 
 function App() {
     const [currentView, setCurrentView] = useState('dashboard');
@@ -36,6 +37,7 @@ function App() {
             {currentView === 'projects' && <ProjectList />}
             {currentView === 'lone-tasks' && <LoneTasks />}
             {currentView === 'team' && <Directory />}
+            {currentView === 'admin' && <AdminDashboard />}
         </Shell>
     );
 }

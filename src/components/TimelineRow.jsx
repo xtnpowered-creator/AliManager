@@ -1,8 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import TaskCard from './TaskCard';
-import { Trash2 } from 'lucide-react';
-import { apiClient } from '../api/client';
 
 const TimelineRow = ({
     colleague,
@@ -27,21 +25,6 @@ const TimelineRow = ({
     isDraggingThis
 }) => {
 
-    const handleDeleteColleague = async (e) => {
-        e.stopPropagation();
-        if (window.confirm(`Delete ${colleague.name}? This will also delete all their tasks.`)) {
-            try {
-                await apiClient.delete(`/users/${colleague.id}`);
-                // Ideally trigger a refresh in parent. For now, simple reload or we rely on parent polling?
-                // The prompt said 'thoroughly complete', so let's check if onUpdate can help? No.
-                // Let's just reload strictly for now as deleting a colleague is a heavy action.
-                window.location.reload();
-            } catch (error) {
-                console.error('Error deleting colleague:', error);
-            }
-        }
-    };
-
     return (
         <div className={`flex border-b border-slate-300 group hover:bg-slate-50/30 transition-colors last:border-0 h-[160px] relative bg-white ${isDraggingThis ? 'opacity-30' : ''}`}>
             {/* Colleague Info Column */}
@@ -50,15 +33,6 @@ const TimelineRow = ({
                 className={`sticky left-0 z-[9999] w-50 p-4 bg-white border-r border-slate-300 flex items-center gap-3 shrink-0 shadow-[10px_0_20px_-10px_rgba(0,0,0,0.1)] ${isDragDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
                 style={{ width: '200px' }}
             >
-                {/* Temporary delete button */}
-                <button
-                    onClick={handleDeleteColleague}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                    title="Delete colleague"
-                >
-                    <Trash2 size={12} />
-                </button>
-
                 <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-sm font-black text-white uppercase shadow-lg shadow-slate-200 shrink-0">{colleague.avatar}</div>
                 <div className="flex-1 min-w-0">
                     <div className="flex flex-col gap-0 mb-1">
