@@ -7,32 +7,38 @@ const RescheduleModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, curren
     const [date, setDate] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const taskIds = Array.isArray(taskId) ? taskId : [taskId].filter(Boolean);
+    const isBulk = taskIds.length > 1;
+
     useEffect(() => {
-        if (isOpen && currentDate) {
+        if (isOpen && currentDate && !isBulk) {
             setDate(new Date(currentDate).toISOString().split('T')[0]);
+        } else if (isOpen) {
+            setDate('');
         }
-    }, [isOpen, currentDate]);
+    }, [isOpen, currentDate, isBulk]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!date) return;
+        if (!date || taskIds.length === 0) return;
 
         // Fix: Construct date in LOCAL time to avoid timezone shift on roundtrip
-        // new Date("2025-12-24") creates UTC midnight -> 12/23 18:00 CST -> Displays as 23rd
-        // new Date(2025, 11, 24) creates Local midnight -> 12/24 00:00 CST -> Displays as 24th
         const [y, m, d] = date.split('-').map(Number);
         const localDate = new Date(y, m - 1, d);
 
         setLoading(true);
         try {
-            await apiClient.patch(`/tasks/${taskId}`, {
-                dueDate: localDate.toISOString()
-            });
+            const promises = taskIds.map(id =>
+                apiClient.patch(`/tasks/${id}`, {
+                    dueDate: localDate.toISOString()
+                })
+            );
+            await Promise.all(promises);
             onSuccess?.();
             onClose();
         } catch (err) {
             console.error(err);
-            alert("Failed to reschedule task");
+            alert("Failed to reschedule task(s)");
         } finally {
             setLoading(false);
         }
@@ -55,9 +61,9 @@ const RescheduleModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, curren
                     <div className="p-8">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-3 bg-teal-100 text-teal-700 rounded-2xl"><Calendar size={24} /></div>
-                            <h3 className="text-2xl font-bold text-slate-900">Change Date</h3>
+                            <h3 className="text-2xl font-bold text-slate-900">{isBulk ? `Reschedule ${taskIds.length} Tasks` : 'Change Date'}</h3>
                         </div>
-                        <p className="text-slate-500 font-medium mb-6 line-clamp-1">{taskTitle}</p>
+                        <p className="text-slate-500 font-medium mb-6 line-clamp-1">{isBulk ? `${taskIds.length} items will be moved` : taskTitle}</p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>

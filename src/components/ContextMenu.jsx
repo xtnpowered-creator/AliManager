@@ -63,17 +63,19 @@ const ContextMenu = ({ x, y, items, onClose }) => {
                         >
                             <button
                                 onClick={() => {
-                                    if (!hasSubmenu) {
+                                    if (!hasSubmenu && !item.disabled) {
                                         item.onClick();
                                         onClose();
                                     }
                                 }}
-                                className={`w-full text-left px-4 py-1 text-sm font-medium flex items-center justify-between gap-2 hover:bg-slate-50 transition-colors
-                                    ${item.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700'}`}
+                                disabled={item.disabled}
+                                className={`w-full text-left px-4 py-1 text-sm font-medium flex items-center justify-between gap-2 transition-colors
+                                    ${item.disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-50 cursor-pointer'}
+                                    ${item.danger && !item.disabled ? 'text-red-600 hover:bg-red-50' : 'text-slate-700'}`}
                             >
-                                <span className="flex items-center gap-2">
+                                <span className={`flex items-center gap-2 ${item.disabled ? 'grayscale' : ''}`}>
                                     {item.icon && (
-                                        typeof item.icon === 'function' ? <item.icon /> : <item.icon size={14} strokeWidth={2.5} className={item.danger ? 'text-red-500' : 'text-slate-400'} />
+                                        typeof item.icon === 'function' ? <item.icon /> : <item.icon size={14} strokeWidth={2.5} className={(item.danger && !item.disabled) ? 'text-red-500' : 'text-slate-400'} />
                                     )}
                                     {item.label}
                                 </span>

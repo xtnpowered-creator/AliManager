@@ -19,7 +19,8 @@ const TaskCard = ({
     scale, // '1w', '3w', etc
     stackIndex, // DEPRECATED: Removed in favor of hoverOffset
     hoverOffset = 0, // Precise pixel offset for hover alignment
-    isExpanded = false // New Prop: Persistently Expanded State
+    isExpanded = false, // New Prop: Persistently Expanded State
+    isSelected = false // NEW: Selected state for bulk actions
 }) => {
     const { user } = useAuth();
     const [isHovered, setIsHovered] = useState(false);
@@ -134,7 +135,7 @@ const TaskCard = ({
                 }}
                 onClick={(e) => {
                     e.stopPropagation(); // STOP Day Expansion!
-                    if (onTaskClick) onTaskClick(task); // Triggers Expand/Collapse
+                    if (onTaskClick) onTaskClick(task, e); // Triggers Expand/Collapse or Multi-Select
                 }}
                 onDoubleClick={(e) => {
                     e.stopPropagation();
@@ -194,7 +195,8 @@ const TaskCard = ({
                     borderRadius: 11.5,
                     transition: { duration: 0.15, ease: "easeOut", type: "tween" }
                 }}
-                className={`${isStatic ? 'relative' : 'absolute'} pointer-events-auto task-card cursor-pointer p-0 group overflow-hidden ${containerClass} ${variant === 'CAPSULE' ? CARD_VARIANTS.TIMELINE_CAPSULE.interactive : CARD_VARIANTS.MICRO.interactive} ${getTaskCardColor(task)} ${isStatic ? 'ring-2 ring-slate-900' : ''}`}
+                className={`${isStatic ? 'relative' : 'absolute'} pointer-events-auto task-card cursor-pointer p-0 group overflow-hidden ${containerClass} ${variant === 'CAPSULE' ? CARD_VARIANTS.TIMELINE_CAPSULE.interactive : CARD_VARIANTS.MICRO.interactive} ${getTaskCardColor(task)} ${(isStatic || isSelected) ? 'ring-2 ring-slate-900' : ''}`}
+                data-task-id={task.id}
             >
                 {/* Condition: Render Icons ONLY if NOT showing details (Collapsed) */}
                 {(variant === 'CAPSULE' || variant === 'BUBBLE') && !showDetails ? (
@@ -239,4 +241,4 @@ const TaskCard = ({
     );
 };
 
-export default TaskCard;
+export default React.memo(TaskCard);

@@ -13,6 +13,9 @@ const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentA
     const [isAddingUser, setIsAddingUser] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const taskIds = Array.isArray(taskId) ? taskId : [taskId].filter(Boolean);
+    const isBulk = taskIds.length > 1;
+
     // Initial State
     useEffect(() => {
         if (isOpen) {
@@ -56,24 +59,21 @@ const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentA
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!selectedAssignee) return;
+        if (!selectedAssignee || taskIds.length === 0) return;
 
         setLoading(true);
         try {
-            // PATCH the task with new assignee
-            // Assuming API supports array or single ID. Dashboard often uses array. 
-            // Checking setup_steps.sql/schema might clarify but safe to send array if NewTaskModal does.
-            // Actually NewTaskModal sends `assignedTo: [id]`.
-            // Wait, existing Update task logic usually PATCHes `{ assigned_to: [id] }` or defined endpoint.
-            // Let's use the standard update endpoint.
-            await apiClient.patch(`/tasks/${taskId}`, {
-                assignedTo: [selectedAssignee]
-            });
+            const promises = taskIds.map(id =>
+                apiClient.patch(`/tasks/${id}`, {
+                    assignedTo: [selectedAssignee]
+                })
+            );
+            await Promise.all(promises);
             onSuccess?.();
             onClose();
         } catch (err) {
             console.error(err);
-            alert("Failed to reassign task");
+            alert("Failed to reassign task(s)");
         } finally {
             setLoading(false);
         }
@@ -98,22 +98,30 @@ const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentA
                     <div className="p-8">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-3 bg-teal-100 text-teal-700 rounded-2xl"><User size={24} /></div>
-                            <h3 className="text-2xl font-bold text-slate-900">Reassign Task</h3>
+                            <h3 className="text-2xl font-bold text-slate-900">{isBulk ? `Reassign ${taskIds.length} Tasks` : 'Reassign Task'}</h3>
                         </div>
-                        <p className="text-slate-500 font-medium mb-6 line-clamp-1">{taskTitle}</p>
+                        <p className="text-slate-500 font-medium mb-6 line-clamp-1">{isBulk ? `${taskIds.length} items will be moved` : taskTitle}</p>
 
-                        <div className="flex items-center gap-4 mb-6 text-sm">
-                            <div className="flex items-center gap-2 text-slate-400">
-                                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
-                                    {currentAssignee?.avatar || '?'}
+                        {!isBulk ? (
+                            <div className="flex items-center gap-4 mb-6 text-sm">
+                                <div className="flex items-center gap-2 text-slate-400">
+                                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
+                                        {currentAssignee?.avatar || '?'}
+                                    </div>
+                                    <span className="font-bold strike-through decoration-2 decoration-slate-300 line-through decoration-slate-400/50">{currentAssignee?.name || 'Unassigned'}</span>
                                 </div>
-                                <span className="font-bold strike-through decoration-2 decoration-slate-300 line-through decoration-slate-400/50">{currentAssignee?.name || 'Unassigned'}</span>
+                                <ArrowRight size={16} className="text-slate-300" />
+                                <div className="font-bold text-teal-600">
+                                    {selectedAssignee ? (colleagues.find(c => c.id === selectedAssignee)?.name) : 'Select New Owner'}
+                                </div>
                             </div>
-                            <ArrowRight size={16} className="text-slate-300" />
-                            <div className="font-bold text-teal-600">
-                                {selectedAssignee ? (colleagues.find(c => c.id === selectedAssignee)?.name) : 'Select New Owner'}
+                        ) : (
+                            <div className="flex items-center gap-4 mb-6 text-sm">
+                                <div className="font-bold text-teal-600">
+                                    Set to: {selectedAssignee ? (colleagues.find(c => c.id === selectedAssignee)?.name) : 'Select New Owner'}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Assignee Search */}

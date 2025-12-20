@@ -20,7 +20,8 @@ const TimelineRow = ({
     safeDate,
     expandedDay,
     onExpandDay,
-    expandedTaskId // New Prop
+    expandedTaskId, // New Prop
+    selectedTaskIds = new Set() // NEW: Selection state for bulk actions
 }) => {
     // Row Container
     return (
@@ -177,6 +178,7 @@ const TimelineRow = ({
                                                         onTaskDoubleClick={onTaskDoubleClick}
                                                         onContextMenu={onTaskContextMenu}
                                                         isExpanded={expandedTaskId === task.id}
+                                                        isSelected={selectedTaskIds.has(task.id)}
                                                     />
                                                 </div>
                                             ))}
@@ -260,6 +262,7 @@ const TimelineRow = ({
                                                                             onTaskDoubleClick={onTaskDoubleClick}
                                                                             onContextMenu={onTaskContextMenu}
                                                                             isExpanded={isExpanded}
+                                                                            isSelected={selectedTaskIds.has(task.id)}
                                                                         />
                                                                     </div>
                                                                 );
@@ -294,6 +297,7 @@ const TimelineRow = ({
                                                         onTaskDoubleClick={onTaskDoubleClick}
                                                         onContextMenu={onTaskContextMenu}
                                                         isExpanded={isExpanded}
+                                                        isSelected={selectedTaskIds.has(task.id)}
                                                     />
                                                 </div>
                                             );
@@ -312,4 +316,4 @@ const TimelineRow = ({
     );
 };
 
-export default TimelineRow;
+export default React.memo(TimelineRow);

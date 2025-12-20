@@ -8,15 +8,21 @@ const InviteModal = ({ isOpen, onClose, taskId, taskTitle }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    const taskIds = Array.isArray(taskId) ? taskId : [taskId].filter(Boolean);
+    const isBulk = taskIds.length > 1;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!email) return;
+        if (!email || taskIds.length === 0) return;
 
         setLoading(true);
         setError(null);
         try {
-            await apiClient.post(`/tasks/${taskId}/invite`, { email });
-            alert(`Invitation sent to ${email}`);
+            const promises = taskIds.map(id =>
+                apiClient.post(`/tasks/${id}/invite`, { email })
+            );
+            await Promise.all(promises);
+            alert(`Invitation sent to ${email}${isBulk ? ` for ${taskIds.length} tasks` : ''}`);
             onClose();
             setEmail('');
         } catch (err) {
@@ -52,10 +58,10 @@ const InviteModal = ({ isOpen, onClose, taskId, taskTitle }) => {
                         </div>
 
                         <h3 className="text-2xl font-bold text-center text-slate-900 mb-2">
-                            Invite Collaborator
+                            {isBulk ? `Invite Collaborator to ${taskIds.length} Tasks` : 'Invite Collaborator'}
                         </h3>
                         <p className="text-slate-500 text-center mb-8">
-                            Share <strong>{taskTitle}</strong> with an external partner. They will only see this task.
+                            Share <strong>{isBulk ? `${taskIds.length} selected tasks` : taskTitle}</strong> with an external partner. They will only see these tasks.
                         </p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
