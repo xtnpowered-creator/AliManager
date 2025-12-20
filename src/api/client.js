@@ -11,7 +11,7 @@ import { auth } from '../firebase';
 // const BASE_URL = import.meta.env.VITE_API_URL || '/api'; 
 // Better approach: Point to local function emulator for Dev
 const BASE_URL = import.meta.env.DEV
-    ? 'http://127.0.0.1:5001/ali-manager-local/us-central1/api'
+    ? 'http://127.0.0.1:5001/api'
     : '/api';
 
 export const apiClient = {

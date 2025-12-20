@@ -4,13 +4,14 @@ import { X, CheckSquare, Calendar, User, Plus } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useApiData } from '../hooks/useApiData';
 
-const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee }) => {
+const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee, initialData }) => {
     const { data: colleagues, refetch: refetchColleagues } = useApiData('/colleagues');
 
     const [title, setTitle] = useState('');
-    const [dueDate, setDueDate] = useState(initialDate ? new Date(initialDate).toISOString().split('T')[0] : '');
+    const [dueDate, setDueDate] = useState('');
+    const [priority, setPriority] = useState('whenever');
     const [assigneeSearch, setAssigneeSearch] = useState('');
-    const [selectedAssignee, setSelectedAssignee] = useState(initialAssignee || null);
+    const [selectedAssignee, setSelectedAssignee] = useState(null);
 
     // Smart Assignee Logic
     const [showAddPrompt, setShowAddPrompt] = useState(false);
@@ -19,9 +20,16 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        // Handle discrete props (Legacy/LoneTasks)
         if (initialDate) setDueDate(new Date(initialDate).toISOString().split('T')[0]);
         if (initialAssignee) setSelectedAssignee(initialAssignee);
-    }, [initialDate, initialAssignee, isOpen]);
+
+        // Handle object prop (Timeline Context Menu)
+        if (initialData) {
+            if (initialData.dueDate) setDueDate(new Date(initialData.dueDate).toISOString().split('T')[0]);
+            if (initialData.assigneeId) setSelectedAssignee(initialData.assigneeId);
+        }
+    }, [initialDate, initialAssignee, initialData, isOpen]);
 
     // Filter colleagues
     const filteredColleagues = colleagues.filter(c =>
@@ -68,6 +76,7 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
             await apiClient.post('/tasks', {
                 title,
                 dueDate: new Date(dueDate).toISOString(),
+                priority,
                 assignedTo: selectedAssignee ? [selectedAssignee] : []
             });
             onSuccess?.();
@@ -193,20 +202,35 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
                                         </div>
                                     )}
                                 </div>
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
-                            >
-                                {loading ? 'Creating...' : 'Create Task'}
-                            </button>
+                                {/* Priority */}
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Priority</label>
+                                    <select
+                                        value={priority}
+                                        onChange={e => setPriority(e.target.value)}
+                                        className="w-full bg-slate-50 rounded-xl p-3 text-sm font-bold text-slate-700 border-none focus:ring-2 focus:ring-teal-500/50 appearance-none cursor-pointer"
+                                    >
+                                        <option value="asap">A.S.A.P.</option>
+                                        <option value="sooner">Sooner is better</option>
+                                        <option value="whenever">Whenever</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-6 pt-6">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+                                >
+                                    {loading ? 'Creating...' : 'Create Task'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </motion.div>
-            </div>
-        </AnimatePresence>
+            </div >
+        </AnimatePresence >
     );
 };
 

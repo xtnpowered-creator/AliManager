@@ -43,3 +43,534 @@
 2025-12-19 04:17:19.122 CST [21012] LOG:  checkpoint complete: wrote 81 buffers (0.5%); 0 WAL file(s) added, 0 removed, 0 recycled; write=8.686 s, sync=0.857 s, total=9.640 s; sync files=51, longest=0.065 s, average=0.017 s; distance=316 kB, estimate=3514 kB; lsn=0/1ACB568, redo lsn=0/1ACB530
 2025-12-19 04:32:09.140 CST [21012] LOG:  checkpoint starting: time
 2025-12-19 04:32:12.717 CST [21012] LOG:  checkpoint complete: wrote 28 buffers (0.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.912 s, sync=0.565 s, total=3.577 s; sync files=23, longest=0.047 s, average=0.025 s; distance=91 kB, estimate=3172 kB; lsn=0/1AE24B8, redo lsn=0/1AE2480
+2025-12-19 05:42:09.824 CST [21012] LOG:  checkpoint starting: time
+2025-12-19 05:42:13.183 CST [21012] LOG:  checkpoint complete: wrote 26 buffers (0.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.699 s, sync=0.561 s, total=3.359 s; sync files=26, longest=0.034 s, average=0.022 s; distance=8 kB, estimate=2855 kB; lsn=0/1AE46C8, redo lsn=0/1AE4658
+2025-12-19 05:47:09.186 CST [21012] LOG:  checkpoint starting: time
+2025-12-19 05:47:10.491 CST [21012] LOG:  checkpoint complete: wrote 10 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.972 s, sync=0.219 s, total=1.305 s; sync files=9, longest=0.062 s, average=0.025 s; distance=2 kB, estimate=2570 kB; lsn=0/1AE5170, redo lsn=0/1AE5138
+2025-12-19 06:03:06.015 CST [21388] LOG:  server process (PID 2632) was terminated by exception 0xC000013A
+2025-12-19 06:03:06.015 CST [21388] DETAIL:  Failed process was running: select c.oid,pg_catalog.pg_total_relation_size(c.oid) as total_rel_size,pg_catalog.pg_relation_size(c.oid) as rel_size
+	FROM pg_class c
+	WHERE c.relnamespace=$1
+2025-12-19 06:03:06.015 CST [21388] HINT:  See C include file "ntstatus.h" for a description of the hexadecimal value.
+2025-12-19 06:03:06.015 CST [21388] LOG:  terminating any other active server processes
+2025-12-19 06:03:06.048 CST [21388] LOG:  all server processes terminated; reinitializing
+2025-12-19 06:03:06.098 CST [20940] LOG:  database system was interrupted; last known up at 2025-12-19 05:47:10 CST
+2025-12-19 06:03:06.421 CST [20940] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-12-19 06:03:06.498 CST [20940] LOG:  redo starts at 0/1AE5138
+2025-12-19 06:03:06.499 CST [20940] LOG:  invalid record length at 0/1AE5220: expected at least 24, got 0
+2025-12-19 06:03:06.499 CST [20940] LOG:  redo done at 0/1AE51E8 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.01 s
+2025-12-19 06:03:06.540 CST [6980] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-12-19 06:03:06.668 CST [6980] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.005 s, sync=0.031 s, total=0.163 s; sync files=2, longest=0.020 s, average=0.016 s; distance=0 kB, estimate=0 kB; lsn=0/1AE5220, redo lsn=0/1AE5220
+2025-12-19 06:03:06.726 CST [21388] LOG:  database system is ready to accept connections
+2025-12-19 06:03:08.168 CST [21388] LOG:  background worker "logical replication launcher" (PID 7968) was terminated by exception 0xC000013A
+2025-12-19 06:03:08.168 CST [21388] HINT:  See C include file "ntstatus.h" for a description of the hexadecimal value.
+2025-12-19 06:03:08.168 CST [21388] LOG:  terminating any other active server processes
+2025-12-19 06:03:08.187 CST [21388] LOG:  all server processes terminated; reinitializing
+2025-12-19 06:03:08.308 CST [13260] LOG:  database system was interrupted; last known up at 2025-12-19 06:03:06 CST
+2025-12-19 06:03:08.741 CST [13260] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-12-19 06:03:08.773 CST [13260] LOG:  invalid record length at 0/1AE5298: expected at least 24, got 0
+2025-12-19 06:03:08.773 CST [13260] LOG:  redo is not required
+2025-12-19 06:03:08.814 CST [19224] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-12-19 06:03:08.943 CST [19224] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.004 s, sync=0.029 s, total=0.166 s; sync files=2, longest=0.018 s, average=0.015 s; distance=0 kB, estimate=0 kB; lsn=0/1AE5298, redo lsn=0/1AE5298
+2025-12-19 06:03:09.013 CST [21388] LOG:  database system is ready to accept connections
+2025-12-19 06:03:10.021 CST [21388] LOG:  background worker "logical replication launcher" (PID 20908) was terminated by exception 0xC000013A
+2025-12-19 06:03:10.021 CST [21388] HINT:  See C include file "ntstatus.h" for a description of the hexadecimal value.
+2025-12-19 06:03:10.021 CST [21388] LOG:  terminating any other active server processes
+2025-12-19 06:03:10.036 CST [21388] LOG:  all server processes terminated; reinitializing
+2025-12-19 06:03:10.078 CST [18648] LOG:  database system was interrupted; last known up at 2025-12-19 06:03:08 CST
+2025-12-19 06:03:10.398 CST [18648] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-12-19 06:03:10.432 CST [18648] LOG:  invalid record length at 0/1AE5310: expected at least 24, got 0
+2025-12-19 06:03:10.432 CST [18648] LOG:  redo is not required
+2025-12-19 06:03:10.472 CST [20772] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-12-19 06:03:10.597 CST [20772] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.004 s, sync=0.032 s, total=0.161 s; sync files=2, longest=0.021 s, average=0.016 s; distance=0 kB, estimate=0 kB; lsn=0/1AE5310, redo lsn=0/1AE5310
+2025-12-19 06:03:10.644 CST [21388] LOG:  database system is ready to accept connections
+2025-12-19 06:10:17.758 CST [18560] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:17.758 CST [18560] DETAIL:  Failing row contains (f9cd25bc-f9f5-44fb-83b2-77f1cc24a49c, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:17.726538-06, active).
+2025-12-19 06:10:17.758 CST [18560] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:17.758 CST [4236] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:17.758 CST [4236] DETAIL:  Failing row contains (b797e1cc-f728-4b1e-91aa-945bf4f8f809, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:17.72535-06, active).
+2025-12-19 06:10:17.758 CST [4236] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:17.758 CST [1356] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:17.758 CST [1356] DETAIL:  Failing row contains (020ebcc0-80d1-4613-9880-3518c964ff75, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:17.725802-06, active).
+2025-12-19 06:10:17.758 CST [1356] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:17.901 CST [19924] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:17.901 CST [19924] DETAIL:  Failing row contains (8dbcba79-4d67-4506-a1a7-00445cfbea62, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:17.862126-06, active).
+2025-12-19 06:10:17.901 CST [19924] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:17.921 CST [20108] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:17.921 CST [20108] DETAIL:  Failing row contains (0e2f52ec-ba21-49e3-bd81-2055096eafbd, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:17.905805-06, active).
+2025-12-19 06:10:17.921 CST [20108] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:17.958 CST [20732] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:17.958 CST [20732] DETAIL:  Failing row contains (60ff74a7-4a73-42c2-baa4-844dd9b40eb7, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:17.947786-06, active).
+2025-12-19 06:10:17.958 CST [20732] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:18.056 CST [11556] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:18.056 CST [11556] DETAIL:  Failing row contains (53ce5a8e-64ca-4a87-a334-b3d3fb907f5c, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:18.046809-06, active).
+2025-12-19 06:10:18.056 CST [11556] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:18.109 CST [12980] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:18.109 CST [12980] DETAIL:  Failing row contains (4b395755-b033-411d-ae15-ba9eadc0abdb, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:18.10275-06, active).
+2025-12-19 06:10:18.109 CST [12980] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:19.345 CST [13376] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:19.345 CST [13376] DETAIL:  Failing row contains (616a2072-427d-489c-acb4-9495a8d29f9a, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:19.337258-06, active).
+2025-12-19 06:10:19.345 CST [13376] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:19.345 CST [8496] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:19.345 CST [8496] DETAIL:  Failing row contains (a75d0a5f-e63f-4886-a166-c6c8cdf887af, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:19.338634-06, active).
+2025-12-19 06:10:19.345 CST [8496] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:19.357 CST [19976] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:19.357 CST [19976] DETAIL:  Failing row contains (71199dd1-a1bb-4f9e-9c47-cdc7f0e061d8, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:19.344208-06, active).
+2025-12-19 06:10:19.357 CST [19976] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:19.438 CST [10756] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:19.438 CST [10756] DETAIL:  Failing row contains (cea29ee4-c2d0-4d66-a715-a8eab3a0a50e, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:19.428667-06, active).
+2025-12-19 06:10:19.438 CST [10756] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:19.443 CST [15640] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:19.443 CST [15640] DETAIL:  Failing row contains (1a2e1736-195d-4637-af61-cea0103e2131, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:19.432534-06, active).
+2025-12-19 06:10:19.443 CST [15640] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:10:19.468 CST [17152] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:10:19.468 CST [17152] DETAIL:  Failing row contains (3ccf039a-2453-409c-9713-be844eb082b6, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:10:19.459256-06, active).
+2025-12-19 06:10:19.468 CST [17152] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:16.895 CST [3676] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:16.895 CST [3676] DETAIL:  Failing row contains (a300f494-4bb3-41f3-855b-3b7438dd979c, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:16.886592-06, active).
+2025-12-19 06:12:16.895 CST [3676] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:16.895 CST [21192] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:16.895 CST [21192] DETAIL:  Failing row contains (f4bf1e39-b314-4773-91d6-1960ddb530d7, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:16.885811-06, active).
+2025-12-19 06:12:16.895 CST [21192] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:16.896 CST [14320] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:16.896 CST [14320] DETAIL:  Failing row contains (eafb29f9-e2d2-4652-978c-74257074b998, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:16.889296-06, active).
+2025-12-19 06:12:16.896 CST [14320] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:17.014 CST [7128] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:17.014 CST [7128] DETAIL:  Failing row contains (338308ee-2252-4957-b8ad-5f9f518bdc37, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:17.006532-06, active).
+2025-12-19 06:12:17.014 CST [7128] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:17.015 CST [14936] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:17.015 CST [14936] DETAIL:  Failing row contains (bd4e199e-9101-4889-9896-d8c7b6fb2b84, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:17.00619-06, active).
+2025-12-19 06:12:17.015 CST [14936] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:17.015 CST [18204] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:17.015 CST [18204] DETAIL:  Failing row contains (c58d6958-7887-4948-8ac5-15d8c9225bdb, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:17.00586-06, active).
+2025-12-19 06:12:17.015 CST [18204] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:17.080 CST [9444] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:17.080 CST [9444] DETAIL:  Failing row contains (e3457ef7-a07c-4ef2-9456-71a906f7c254, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:17.073544-06, active).
+2025-12-19 06:12:17.080 CST [9444] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:17.252 CST [19832] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:17.252 CST [19832] DETAIL:  Failing row contains (03ff2677-00a7-4e67-a059-71546dad48ae, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:17.242258-06, active).
+2025-12-19 06:12:17.252 CST [19832] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:19.580 CST [20720] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:19.580 CST [20720] DETAIL:  Failing row contains (fa6ec158-0364-436c-be01-c8192c9e954a, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:19.567194-06, active).
+2025-12-19 06:12:19.580 CST [20720] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:19.589 CST [5540] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:19.589 CST [5540] DETAIL:  Failing row contains (290ef833-0c48-43d5-a904-618d8993de35, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:19.567737-06, active).
+2025-12-19 06:12:19.589 CST [5540] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:19.602 CST [19968] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:19.602 CST [19968] DETAIL:  Failing row contains (dc150af5-6025-41a7-b167-9c49b33b0240, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:19.584688-06, active).
+2025-12-19 06:12:19.602 CST [19968] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:19.712 CST [6732] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:19.712 CST [6732] DETAIL:  Failing row contains (510bc2d8-6680-4acd-9bae-4d47a5d462f6, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:19.702829-06, active).
+2025-12-19 06:12:19.712 CST [6732] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:19.714 CST [20688] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:19.714 CST [20688] DETAIL:  Failing row contains (232691a9-484e-4767-aad2-2523207fee91, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:19.700196-06, active).
+2025-12-19 06:12:19.714 CST [20688] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:12:19.724 CST [10552] ERROR:  null value in column "email" of relation "users" violates not-null constraint
+2025-12-19 06:12:19.724 CST [10552] DETAIL:  Failing row contains (3860ed0d-b215-4d90-b7c4-6aefbb321fb4, z81VrTa7SqvH1TVQ74ePO6qjC0K5, null, user, 00000000-0000-0000-0000-111111111111, null, New User, , 2025-12-19 06:12:19.707042-06, active).
+2025-12-19 06:12:19.724 CST [10552] STATEMENT:  INSERT INTO users (firebase_uid, email, role, organization_id, display_name, avatar_url, status)
+	                         VALUES ($1, $2, $3, $4, $5, $6, 'active')
+	                         RETURNING id, role, organization_id
+2025-12-19 06:14:50.644 CST [4236] ERROR:  UNION types user_role and text cannot be matched at character 1113
+2025-12-19 06:14:50.644 CST [4236] STATEMENT:  
+	                    WITH org_members AS (
+	                        -- Use Memberships OR Legacy Org ID
+	                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+	                        FROM users u
+	                        LEFT JOIN memberships m ON m.user_id = u.id
+	                        WHERE m.organization_id = $1 OR u.organization_id = $1
+	                    ),
+	                    org_guests AS (
+	                        -- External users collaborating on this Org's tasks
+	                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+	                        FROM users u
+	                        JOIN task_collaborators tc ON tc.user_id = u.id
+	                        JOIN tasks t ON t.id = tc.task_id
+	                        WHERE t.organization_id = $1
+	                        AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+	                    )
+	                    SELECT * FROM org_members
+	                    UNION ALL
+	                    SELECT * FROM org_guests
+	                    ORDER BY display_name ASC
+	                
+2025-12-19 06:14:50.667 CST [15012] ERROR:  UNION types user_role and text cannot be matched at character 1113
+2025-12-19 06:14:50.667 CST [15012] STATEMENT:  
+	                    WITH org_members AS (
+	                        -- Use Memberships OR Legacy Org ID
+	                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+	                        FROM users u
+	                        LEFT JOIN memberships m ON m.user_id = u.id
+	                        WHERE m.organization_id = $1 OR u.organization_id = $1
+	                    ),
+	                    org_guests AS (
+	                        -- External users collaborating on this Org's tasks
+	                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+	                        FROM users u
+	                        JOIN task_collaborators tc ON tc.user_id = u.id
+	                        JOIN tasks t ON t.id = tc.task_id
+	                        WHERE t.organization_id = $1
+	                        AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+	                    )
+	                    SELECT * FROM org_members
+	                    UNION ALL
+	                    SELECT * FROM org_guests
+	                    ORDER BY display_name ASC
+	                
+2025-12-19 06:14:50.686 CST [16792] ERROR:  UNION types user_role and text cannot be matched at character 1113
+2025-12-19 06:14:50.686 CST [16792] STATEMENT:  
+	                    WITH org_members AS (
+	                        -- Use Memberships OR Legacy Org ID
+	                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+	                        FROM users u
+	                        LEFT JOIN memberships m ON m.user_id = u.id
+	                        WHERE m.organization_id = $1 OR u.organization_id = $1
+	                    ),
+	                    org_guests AS (
+	                        -- External users collaborating on this Org's tasks
+	                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+	                        FROM users u
+	                        JOIN task_collaborators tc ON tc.user_id = u.id
+	                        JOIN tasks t ON t.id = tc.task_id
+	                        WHERE t.organization_id = $1
+	                        AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+	                    )
+	                    SELECT * FROM org_members
+	                    UNION ALL
+	                    SELECT * FROM org_guests
+	                    ORDER BY display_name ASC
+	                
+2025-12-19 06:14:50.860 CST [12844] ERROR:  UNION types user_role and text cannot be matched at character 1113
+2025-12-19 06:14:50.860 CST [12844] STATEMENT:  
+	                    WITH org_members AS (
+	                        -- Use Memberships OR Legacy Org ID
+	                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+	                        FROM users u
+	                        LEFT JOIN memberships m ON m.user_id = u.id
+	                        WHERE m.organization_id = $1 OR u.organization_id = $1
+	                    ),
+	                    org_guests AS (
+	                        -- External users collaborating on this Org's tasks
+	                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+	                        FROM users u
+	                        JOIN task_collaborators tc ON tc.user_id = u.id
+	                        JOIN tasks t ON t.id = tc.task_id
+	                        WHERE t.organization_id = $1
+	                        AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+	                    )
+	                    SELECT * FROM org_members
+	                    UNION ALL
+	                    SELECT * FROM org_guests
+	                    ORDER BY display_name ASC
+	                
+2025-12-19 06:14:52.309 CST [18504] ERROR:  UNION types user_role and text cannot be matched at character 1113
+2025-12-19 06:14:52.309 CST [18504] STATEMENT:  
+	                    WITH org_members AS (
+	                        -- Use Memberships OR Legacy Org ID
+	                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+	                        FROM users u
+	                        LEFT JOIN memberships m ON m.user_id = u.id
+	                        WHERE m.organization_id = $1 OR u.organization_id = $1
+	                    ),
+	                    org_guests AS (
+	                        -- External users collaborating on this Org's tasks
+	                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+	                        FROM users u
+	                        JOIN task_collaborators tc ON tc.user_id = u.id
+	                        JOIN tasks t ON t.id = tc.task_id
+	                        WHERE t.organization_id = $1
+	                        AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+	                    )
+	                    SELECT * FROM org_members
+	                    UNION ALL
+	                    SELECT * FROM org_guests
+	                    ORDER BY display_name ASC
+	                
+2025-12-19 06:14:52.369 CST [19872] ERROR:  UNION types user_role and text cannot be matched at character 1113
+2025-12-19 06:14:52.369 CST [19872] STATEMENT:  
+	                    WITH org_members AS (
+	                        -- Use Memberships OR Legacy Org ID
+	                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+	                        FROM users u
+	                        LEFT JOIN memberships m ON m.user_id = u.id
+	                        WHERE m.organization_id = $1 OR u.organization_id = $1
+	                    ),
+	                    org_guests AS (
+	                        -- External users collaborating on this Org's tasks
+	                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+	                        FROM users u
+	                        JOIN task_collaborators tc ON tc.user_id = u.id
+	                        JOIN tasks t ON t.id = tc.task_id
+	                        WHERE t.organization_id = $1
+	                        AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+	                    )
+	                    SELECT * FROM org_members
+	                    UNION ALL
+	                    SELECT * FROM org_guests
+	                    ORDER BY display_name ASC
+	                
+2025-12-19 06:18:10.616 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 06:18:12.538 CST [20772] LOG:  checkpoint complete: wrote 15 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.509 s, sync=0.328 s, total=1.923 s; sync files=14, longest=0.037 s, average=0.024 s; distance=3 kB, estimate=3 kB; lsn=0/1AE5FF8, redo lsn=0/1AE5FC0
+2025-12-19 06:33:10.561 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 06:33:11.013 CST [20772] LOG:  checkpoint complete: wrote 4 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.322 s, sync=0.047 s, total=0.453 s; sync files=4, longest=0.026 s, average=0.012 s; distance=1 kB, estimate=3 kB; lsn=0/1AE65F8, redo lsn=0/1AE65C0
+2025-12-19 14:58:10.763 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 14:58:13.078 CST [20772] LOG:  checkpoint complete: wrote 20 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.052 s, sync=0.183 s, total=2.317 s; sync files=20, longest=0.025 s, average=0.010 s; distance=31 kB, estimate=31 kB; lsn=0/1AEE598, redo lsn=0/1AEE560
+2025-12-19 18:03:10.344 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 18:03:11.264 CST [20772] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.649 s, sync=0.160 s, total=0.921 s; sync files=7, longest=0.034 s, average=0.023 s; distance=9 kB, estimate=29 kB; lsn=0/1AF0A90, redo lsn=0/1AF0A58
+2025-12-19 19:08:10.367 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 19:08:12.055 CST [20772] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.412 s, sync=0.197 s, total=1.690 s; sync files=13, longest=0.038 s, average=0.016 s; distance=37 kB, estimate=37 kB; lsn=0/1AF9FE8, redo lsn=0/1AF9FB0
+2025-12-19 19:13:10.067 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 19:13:10.763 CST [20772] LOG:  checkpoint complete: wrote 6 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.534 s, sync=0.094 s, total=0.697 s; sync files=4, longest=0.043 s, average=0.024 s; distance=9 kB, estimate=34 kB; lsn=0/1AFC5E8, redo lsn=0/1AFC5B0
+2025-12-19 19:23:10.777 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 19:23:11.888 CST [20772] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.876 s, sync=0.158 s, total=1.111 s; sync files=9, longest=0.040 s, average=0.018 s; distance=9 kB, estimate=32 kB; lsn=0/1AFEBE8, redo lsn=0/1AFEBB0
+2025-12-19 19:27:10.342 CST [15944] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:27:10.342 CST [15944] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:27:10.357 CST [5320] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:27:10.357 CST [5320] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:27:29.890 CST [13704] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:27:29.890 CST [13704] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:27:29.901 CST [1868] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:27:29.901 CST [1868] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:28:10.896 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 19:28:12.372 CST [20772] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.184 s, sync=0.224 s, total=1.478 s; sync files=12, longest=0.037 s, average=0.019 s; distance=7 kB, estimate=29 kB; lsn=0/1B007E8, redo lsn=0/1B007B0
+2025-12-19 19:32:00.379 CST [4340] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:32:00.379 CST [4340] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:32:00.495 CST [10096] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:32:00.495 CST [10096] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:33:10.374 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 19:33:11.887 CST [20772] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.179 s, sync=0.263 s, total=1.514 s; sync files=10, longest=0.071 s, average=0.027 s; distance=36 kB, estimate=36 kB; lsn=0/1B099B0, redo lsn=0/1B09978
+2025-12-19 19:37:21.731 CST [7968] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:37:21.731 CST [7968] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:37:21.839 CST [10508] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:37:21.839 CST [10508] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:37:22.945 CST [3640] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:37:22.945 CST [3640] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:37:23.057 CST [17004] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:37:23.057 CST [17004] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 19:38:10.888 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 19:38:11.898 CST [20772] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.765 s, sync=0.160 s, total=1.010 s; sync files=8, longest=0.027 s, average=0.020 s; distance=7 kB, estimate=33 kB; lsn=0/1B0B758, redo lsn=0/1B0B720
+2025-12-19 19:39:45.158 CST [21024] ERROR:  bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-12-19 19:39:45.158 CST [21024] STATEMENT:  SELECT * FROM (
+	                    SELECT t.*, 'god' as access_source 
+	                    FROM tasks t
+	                    WHERE 1=1
+	                ) AS united_tasks WHERE 1=1 ORDER BY due_date ASC
+2025-12-19 20:23:10.990 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 20:23:12.503 CST [20772] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.193 s, sync=0.256 s, total=1.513 s; sync files=12, longest=0.048 s, average=0.022 s; distance=13 kB, estimate=31 kB; lsn=0/1B0EE00, redo lsn=0/1B0EDC8
+2025-12-19 21:08:10.572 CST [20772] LOG:  checkpoint starting: time
+2025-12-19 21:08:11.193 CST [20772] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.435 s, sync=0.115 s, total=0.622 s; sync files=5, longest=0.030 s, average=0.023 s; distance=26 kB, estimate=31 kB; lsn=0/1B15938, redo lsn=0/1B15900
+2025-12-19 21:19:46.229 CST [21388] LOG:  received fast shutdown request
+2025-12-19 21:19:46.295 CST [21388] LOG:  aborting any active transactions
+2025-12-19 21:19:46.309 CST [9232] ERROR:  canceling statement due to user request
+2025-12-19 21:19:46.332 CST [21388] LOG:  background worker "logical replication launcher" (PID 9232) exited with exit code 1
+2025-12-19 21:19:46.336 CST [20772] LOG:  shutting down
+2025-12-19 21:19:46.365 CST [20772] LOG:  checkpoint starting: shutdown immediate
+2025-12-19 21:19:46.440 CST [20772] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.104 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=27 kB; lsn=0/1B159E8, redo lsn=0/1B159E8
+2025-12-19 21:19:46.473 CST [21388] LOG:  database system is shut down
+2025-12-19 21:33:14.758 CST [21388] LOG:  starting PostgreSQL 16.11, compiled by Visual C++ build 1944, 64-bit
+2025-12-19 21:33:14.763 CST [21388] LOG:  listening on IPv6 address "::1", port 5433
+2025-12-19 21:33:14.763 CST [21388] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2025-12-19 21:33:14.878 CST [16664] LOG:  database system was shut down at 2025-12-19 21:19:46 CST
+2025-12-19 21:33:14.966 CST [21388] LOG:  database system is ready to accept connections
+2025-12-19 21:38:14.879 CST [18764] LOG:  checkpoint starting: time
+2025-12-19 21:38:14.975 CST [18764] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.004 s, sync=0.024 s, total=0.098 s; sync files=2, longest=0.013 s, average=0.012 s; distance=0 kB, estimate=0 kB; lsn=0/1B15AD0, redo lsn=0/1B15A98
+2025-12-19 21:43:14.989 CST [18764] LOG:  checkpoint starting: time
+2025-12-19 21:43:15.201 CST [18764] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.104 s, sync=0.033 s, total=0.212 s; sync files=2, longest=0.021 s, average=0.017 s; distance=3 kB, estimate=3 kB; lsn=0/1B169B0, redo lsn=0/1B16978
+2025-12-19 23:48:14.440 CST [18764] LOG:  checkpoint starting: time
+2025-12-19 23:48:15.322 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.659 s, sync=0.162 s, total=0.884 s; sync files=7, longest=0.029 s, average=0.024 s; distance=12 kB, estimate=12 kB; lsn=0/1B19CB0, redo lsn=0/1B19C78
+2025-12-19 23:53:14.328 CST [18764] LOG:  checkpoint starting: time
+2025-12-19 23:53:15.189 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.644 s, sync=0.155 s, total=0.861 s; sync files=7, longest=0.029 s, average=0.023 s; distance=14 kB, estimate=14 kB; lsn=0/1B1D4D0, redo lsn=0/1B1D498
+2025-12-20 01:18:14.337 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 01:18:19.104 CST [18764] LOG:  checkpoint complete: wrote 41 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.326 s, sync=0.380 s, total=4.768 s; sync files=37, longest=0.026 s, average=0.011 s; distance=194 kB, estimate=194 kB; lsn=0/1B4DDF0, redo lsn=0/1B4DDB8
+2025-12-20 01:23:14.121 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 01:23:14.467 CST [18764] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.229 s, sync=0.051 s, total=0.347 s; sync files=2, longest=0.033 s, average=0.026 s; distance=7 kB, estimate=175 kB; lsn=0/1B4FC88, redo lsn=0/1B4FC50
+2025-12-20 01:53:14.513 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 01:53:15.108 CST [18764] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.427 s, sync=0.104 s, total=0.596 s; sync files=5, longest=0.025 s, average=0.021 s; distance=22 kB, estimate=160 kB; lsn=0/1B555C0, redo lsn=0/1B55588
+2025-12-20 02:08:14.137 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:08:14.491 CST [18764] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.229 s, sync=0.062 s, total=0.355 s; sync files=3, longest=0.026 s, average=0.021 s; distance=4 kB, estimate=144 kB; lsn=0/1B56760, redo lsn=0/1B56728
+2025-12-20 02:18:14.515 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:18:15.883 CST [18764] LOG:  checkpoint complete: wrote 11 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.084 s, sync=0.205 s, total=1.369 s; sync files=11, longest=0.029 s, average=0.019 s; distance=17 kB, estimate=131 kB; lsn=0/1B5ACE0, redo lsn=0/1B5ACA8
+2025-12-20 02:23:14.892 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:23:15.791 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.657 s, sync=0.157 s, total=0.900 s; sync files=7, longest=0.031 s, average=0.023 s; distance=8 kB, estimate=119 kB; lsn=0/1B5D000, redo lsn=0/1B5CFC8
+2025-12-20 02:28:14.796 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:28:15.666 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.653 s, sync=0.161 s, total=0.870 s; sync files=7, longest=0.043 s, average=0.023 s; distance=9 kB, estimate=108 kB; lsn=0/1B5F558, redo lsn=0/1B5F520
+2025-12-20 02:33:14.666 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:33:15.607 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.653 s, sync=0.211 s, total=0.942 s; sync files=7, longest=0.060 s, average=0.031 s; distance=9 kB, estimate=98 kB; lsn=0/1B61B48, redo lsn=0/1B61B10
+2025-12-20 02:46:11.879 CST [4528] ERROR:  column "name" does not exist at character 55
+2025-12-20 02:46:11.879 CST [4528] STATEMENT:  SELECT id FROM users WHERE email ILIKE '%alisara%' OR name ILIKE '%alisara%' LIMIT 1
+2025-12-20 02:46:26.916 CST [4308] ERROR:  column "owner_id" of relation "tasks" does not exist at character 101
+2025-12-20 02:46:26.916 CST [4308] STATEMENT:  
+	                INSERT INTO tasks 
+	                (title, status, priority, due_date, project_id, owner_id)
+	                VALUES ($1, 'todo', NULL, $2, $3, $4)
+	            
+2025-12-20 02:46:43.718 CST [13852] ERROR:  null value in column "organization_id" of relation "tasks" violates not-null constraint
+2025-12-20 02:46:43.718 CST [13852] DETAIL:  Failing row contains (44715a3a-aa77-4fee-8b6e-f031d71db523, Test: Overdue (Red), a0000000-0000-4000-a000-000000000001, null, todo, null, 2025-12-17 02:46:43.694-06, null, {}, 2025-12-20 02:46:43.698047-06, 2025-12-20 02:46:43.698047-06, 00000000-0000-0000-0000-222222222222, null).
+2025-12-20 02:46:43.718 CST [13852] STATEMENT:  
+	                INSERT INTO tasks 
+	                (title, status, priority, due_date, project_id, created_by)
+	                VALUES ($1, 'todo', NULL, $2, $3, $4)
+	            
+2025-12-20 02:46:59.976 CST [19392] ERROR:  null value in column "organization_id" of relation "tasks" violates not-null constraint
+2025-12-20 02:46:59.976 CST [19392] DETAIL:  Failing row contains (8979cd1c-fe6a-433c-beff-501250fd4d92, Test: Overdue (Red), a0000000-0000-4000-a000-000000000001, null, todo, null, 2025-12-17 02:46:59.963-06, null, {}, 2025-12-20 02:46:59.966596-06, 2025-12-20 02:46:59.966596-06, 00000000-0000-0000-0000-222222222222, null).
+2025-12-20 02:46:59.976 CST [19392] STATEMENT:  
+	                INSERT INTO tasks 
+	                (title, status, priority, due_date, project_id, created_by)
+	                VALUES ($1, 'todo', NULL, $2, $3, $4)
+	            
+2025-12-20 02:48:14.620 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:48:16.399 CST [18764] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.401 s, sync=0.312 s, total=1.779 s; sync files=14, longest=0.036 s, average=0.023 s; distance=22 kB, estimate=91 kB; lsn=0/1B67378, redo lsn=0/1B67340
+2025-12-20 02:53:14.408 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:53:15.932 CST [18764] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.199 s, sync=0.256 s, total=1.524 s; sync files=11, longest=0.046 s, average=0.024 s; distance=24 kB, estimate=84 kB; lsn=0/1B6D4D8, redo lsn=0/1B6D4A0
+2025-12-20 02:58:14.945 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 02:58:15.832 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.654 s, sync=0.159 s, total=0.887 s; sync files=7, longest=0.033 s, average=0.023 s; distance=12 kB, estimate=77 kB; lsn=0/1B70808, redo lsn=0/1B707D0
+2025-12-20 03:03:14.836 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:03:16.290 CST [18764] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.191 s, sync=0.198 s, total=1.455 s; sync files=10, longest=0.047 s, average=0.020 s; distance=40 kB, estimate=73 kB; lsn=0/1B7A8D8, redo lsn=0/1B7A8A0
+2025-12-20 03:08:14.293 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:08:15.148 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.647 s, sync=0.159 s, total=0.856 s; sync files=7, longest=0.032 s, average=0.023 s; distance=14 kB, estimate=67 kB; lsn=0/1B7E220, redo lsn=0/1B7E1E8
+2025-12-20 03:13:14.154 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:13:15.023 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.657 s, sync=0.157 s, total=0.869 s; sync files=7, longest=0.031 s, average=0.023 s; distance=15 kB, estimate=62 kB; lsn=0/1B81E98, redo lsn=0/1B81E60
+2025-12-20 03:18:14.025 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:18:14.914 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.646 s, sync=0.176 s, total=0.890 s; sync files=7, longest=0.033 s, average=0.026 s; distance=15 kB, estimate=57 kB; lsn=0/1B85D68, redo lsn=0/1B85D30
+2025-12-20 03:23:14.922 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:23:15.784 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.651 s, sync=0.122 s, total=0.862 s; sync files=7, longest=0.036 s, average=0.018 s; distance=18 kB, estimate=53 kB; lsn=0/1B8A720, redo lsn=0/1B8A6E8
+2025-12-20 03:28:14.792 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:28:15.731 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.753 s, sync=0.119 s, total=0.939 s; sync files=7, longest=0.034 s, average=0.017 s; distance=18 kB, estimate=50 kB; lsn=0/1B8F120, redo lsn=0/1B8F0E8
+2025-12-20 03:31:49.004 CST [13720] ERROR:  null value in column "organization_id" of relation "tasks" violates not-null constraint
+2025-12-20 03:31:49.004 CST [13720] DETAIL:  Failing row contains (4a5d1842-badd-425e-ad60-c692a1a95e66, Patch Test Task, null, null, todo, medium, null, null, {}, 2025-12-20 03:31:48.997077-06, 2025-12-20 03:31:48.997077-06, 00000000-0000-0000-0000-222222222222, null).
+2025-12-20 03:31:49.004 CST [13720] STATEMENT:  INSERT INTO tasks (title, status, created_by) VALUES ($1, $2, $3) RETURNING *
+2025-12-20 03:33:14.738 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 03:33:15.881 CST [18764] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.904 s, sync=0.159 s, total=1.143 s; sync files=9, longest=0.032 s, average=0.018 s; distance=17 kB, estimate=46 kB; lsn=0/1B93610, redo lsn=0/1B935D8
+2025-12-20 09:08:15.353 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 09:08:17.201 CST [18764] LOG:  checkpoint complete: wrote 15 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.513 s, sync=0.284 s, total=1.849 s; sync files=14, longest=0.035 s, average=0.021 s; distance=9 kB, estimate=43 kB; lsn=0/1B95B08, redo lsn=0/1B95AD0
+2025-12-20 09:11:36.764 CST [5268] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-20 09:13:15.216 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 09:13:16.085 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.646 s, sync=0.159 s, total=0.869 s; sync files=7, longest=0.033 s, average=0.023 s; distance=13 kB, estimate=40 kB; lsn=0/1B99178, redo lsn=0/1B99140
+2025-12-20 09:18:15.095 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 09:18:16.618 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.309 s, sync=0.146 s, total=1.524 s; sync files=10, longest=0.036 s, average=0.015 s; distance=35 kB, estimate=39 kB; lsn=0/1BA2030, redo lsn=0/1BA1FE0
+2025-12-20 09:38:15.643 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 09:38:16.634 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.767 s, sync=0.155 s, total=0.991 s; sync files=8, longest=0.028 s, average=0.020 s; distance=7 kB, estimate=36 kB; lsn=0/1BA3D10, redo lsn=0/1BA3CD8
+2025-12-20 10:13:15.663 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 10:13:16.516 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.645 s, sync=0.144 s, total=0.853 s; sync files=7, longest=0.034 s, average=0.021 s; distance=7 kB, estimate=33 kB; lsn=0/1BA5C48, redo lsn=0/1BA5C10
+2025-12-20 10:34:28.552 CST [22516] ERROR:  relation "colleagues" does not exist at character 15
+2025-12-20 10:34:28.552 CST [22516] STATEMENT:  SELECT * FROM colleagues WHERE LOWER(name) LIKE '%alisara%' LIMIT 1
+2025-12-20 10:34:56.086 CST [16388] ERROR:  column "assigned_to" of relation "tasks" does not exist at character 121
+2025-12-20 10:34:56.086 CST [16388] STATEMENT:  
+	                INSERT INTO tasks (
+	                    id, title, description, status, priority, 
+	                    assigned_to, access_source, 
+	                    created_at, updated_at, completed_at, due_date
+	                ) VALUES (
+	                    $1, $2, $3, 'done', '4', 
+	                    $4, 'member',
+	                    NOW(), NOW(), NOW(), NOW()
+	                )
+	            
+2025-12-20 10:35:22.362 CST [5320] ERROR:  column "access_source" of relation "tasks" does not exist at character 121
+2025-12-20 10:35:22.362 CST [5320] STATEMENT:  
+	                INSERT INTO tasks (
+	                    id, title, description, status, priority, 
+	                    access_source, 
+	                    created_at, updated_at, completed_at, due_date
+	                ) VALUES (
+	                    $1, $2, $3, 'done', '4', 
+	                    'member',
+	                    NOW(), NOW(), NOW(), NOW()
+	                )
+	            
+2025-12-20 10:38:15.559 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 10:38:17.232 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.302 s, sync=0.295 s, total=1.674 s; sync files=13, longest=0.027 s, average=0.023 s; distance=22 kB, estimate=32 kB; lsn=0/1BAB820, redo lsn=0/1BAB7E8

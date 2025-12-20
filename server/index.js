@@ -7,8 +7,17 @@ import admin from 'firebase-admin';
 
 // Initialize Firebase Admin (for Auth checks later)
 // Try/Catch to avoid double init in some HMR scenarios
+// Set Emulator Host for Token Verification if running locally
+if (process.env.NODE_ENV !== 'production') {
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+}
+
 if (!admin.apps.length) {
-    admin.initializeApp();
+    const projectId = process.env.NODE_ENV === 'production'
+        ? 'alimanager'
+        : 'ali-manager-local';
+
+    admin.initializeApp({ projectId });
 }
 
 dotenv.config();
@@ -41,6 +50,8 @@ import { createProjectsRouter } from './src/routes/projects.js';
 import { createTasksRouter } from './src/routes/tasks.js';
 import { createRequestsRouter } from './src/routes/requests.js';
 import { createUsersRouter } from './src/routes/users.js';
+import { createStepsRouter } from './src/routes/steps.js';
+import { createDelegationsRouter } from './src/routes/delegations.js';
 
 // Mount Protected Routes
 const authMiddleware = createAuthMiddleware(pool);
@@ -48,6 +59,8 @@ app.use('/projects', authMiddleware, createProjectsRouter(pool));
 app.use('/tasks', authMiddleware, createTasksRouter(pool));
 app.use('/users', authMiddleware, createUsersRouter(pool));
 app.use('/requests', authMiddleware, createRequestsRouter(pool));
+app.use('/steps', authMiddleware, createStepsRouter(pool));
+app.use('/delegations', authMiddleware, createDelegationsRouter(pool));
 
 // Legacy/Alias for consistency with frontend 'colleagues'
 app.use('/colleagues', authMiddleware, createUsersRouter(pool));
@@ -73,3 +86,17 @@ export const api = onRequest(app);
 
 // Export for local dev server
 export { app, pool };
+
+// --- SELF-START LOGIC (Fix for npm run dev) ---
+import { pathToFileURL } from 'url';
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+    console.log('[Index] Auto-starting local server on 5001...');
+    const devServer = express();
+    devServer.use(cors({ origin: true }));
+    devServer.use('/api', app); // Match client expectations
+    devServer.listen(5001, () => {
+        console.log('[Index] Server running on http://localhost:5001/api');
+    });
+}
+// ----------------------------------------------
+// restart 5

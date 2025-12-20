@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight, Users, Activity, Zap, Clock, CheckCircle2 } from 'lucide-react';
 import { useApiData } from '../hooks/useApiData';
+import Card from './common/Card';
 
 const Dashboard = () => {
     const { data: tasks, loading: tasksLoading } = useApiData('/tasks');
@@ -41,7 +42,7 @@ const Dashboard = () => {
             </div>
 
             {/* Timeline Summary */}
-            <section className="bg-slate-900 rounded-3xl p-8 text-white overflow-hidden relative">
+            <section className="bg-slate-900 rounded-2xl p-8 text-white overflow-hidden relative">
                 <div className="relative z-10">
                     <div className="flex items-center justify-between mb-8">
                         <div>
@@ -87,7 +88,7 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Task List Section */}
-                <section className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                <Card variant="MACRO" className="lg:col-span-2 p-8">
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="font-bold text-xl text-slate-800">Upcoming Deliverables</h3>
                         <div className="text-sm font-semibold text-teal-600 cursor-pointer hover:underline">View Calendar</div>
@@ -132,10 +133,10 @@ const Dashboard = () => {
                             ))
                         )}
                     </div>
-                </section>
+                </Card>
 
                 {/* Project Feed */}
-                <section className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                <Card variant="MACRO" className="p-8">
                     <h3 className="font-bold text-xl text-slate-800 mb-6">Active Projects</h3>
                     <div className="space-y-6">
                         {projectsLoading ? (
@@ -159,17 +160,14 @@ const Dashboard = () => {
                     <button className="w-full mt-8 py-3 bg-slate-50 text-slate-500 text-sm font-bold rounded-2xl hover:bg-slate-100 transition-colors uppercase tracking-widest">
                         Manage All Projects
                     </button>
-                </section>
+                </Card>
             </div>
         </div>
     );
 };
 
 const KPICard = ({ title, value, change, trend, icon }) => (
-    <motion.div
-        whileHover={{ y: -4 }}
-        className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all"
-    >
+    <Card variant="MACRO" className="p-6" onClick={() => { }}>
         <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-slate-50 text-slate-600 rounded-2xl">
                 {icon}
@@ -183,7 +181,7 @@ const KPICard = ({ title, value, change, trend, icon }) => (
             <h4 className="text-sm font-medium text-slate-400 leading-none">{title}</h4>
             <p className="text-2xl font-bold text-slate-900 tracking-tight">{value}</p>
         </div>
-    </motion.div>
+    </Card>
 );
 
 export default Dashboard;

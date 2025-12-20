@@ -1,13 +1,44 @@
+import React, { useEffect } from 'react';
 import { Search, Bell, Menu } from 'lucide-react';
 import Navigation from './Navigation';
 import Logo from './Logo';
+import { useAuth } from '../context/AuthContext';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const Shell = ({ children, currentView, setView }) => {
+    const { user } = useAuth();
+
+    // Custom Login Helper (Restored)
+    useEffect(() => {
+        window.loginGod = async () => {
+            console.log("Global Login Triggered");
+            try {
+                await signInWithEmailAndPassword(auth, 'xtnpowered@gmail.com', 'password123');
+                alert("LOGIN SUCCESS!");
+            } catch (e) {
+                console.warn("Login failed, creating...", e);
+                try {
+                    await createUserWithEmailAndPassword(auth, 'xtnpowered@gmail.com', 'password123');
+                    alert("CREATED & LOGGED IN!");
+                } catch (createErr) {
+                    alert("ERROR: " + createErr.message);
+                }
+            }
+        };
+    }, []);
+
+    const getInitials = (name) => {
+        if (!name) return '??';
+        return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    };
+
     return (
         <div className="h-screen w-screen overflow-hidden flex flex-col bg-slate-50 text-slate-900 selection:bg-teal-100 selection:text-teal-900">
-            <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center sticky top-0 z-10 p-0">
+            {/* FIXED LOGIN BUTTON REMOVED (Use window.loginGod() in console if needed) */}
+            <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center sticky top-0 z-[100] p-0 shadow-sm">
                 {/* Fixed Logo/Brand area matching sidebar width */}
-                <div className="w-72 border-r border-slate-200 h-full flex items-center px-8 shrink-0">
+                <div className="w-72 border-r border-slate-200 h-full flex items-center px-8 shrink-0 bg-white/95 backdrop-blur z-[101]">
                     <div className="flex items-center gap-3">
                         <Logo className="w-12 h-12" />
                         <h1 className="text-3xl font-bold tracking-tight">
@@ -35,11 +66,13 @@ const Shell = ({ children, currentView, setView }) => {
                         <div className="h-4 w-[1px] bg-slate-200 mx-2"></div>
                         <div className="flex items-center gap-3 pl-2">
                             <div className="text-right hidden sm:block">
-                                <p className="text-sm font-bold text-slate-900">Alisara Plyler</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-teal-600 leading-none">Admin</p>
+                                <p className="text-sm font-bold text-slate-900">{user?.displayName || user?.email || 'Guest'}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-teal-600 leading-none">
+                                    {user?.role === 'god' ? 'System God' : (user?.role || 'Member')}
+                                </p>
                             </div>
                             <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-slate-200 transition-transform active:scale-95 cursor-pointer">
-                                AP
+                                {getInitials(user?.displayName || user?.email)}
                             </div>
                             <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
                                 <Menu size={24} />
@@ -50,8 +83,10 @@ const Shell = ({ children, currentView, setView }) => {
             </header>
 
             <div className="flex flex-1 overflow-hidden">
-                <Navigation currentView={currentView} setView={setView} />
-                <main className="flex-1 bg-[#f8fafc]/50 overflow-hidden relative">
+                <div className="relative z-[90] h-full shadow-[1px_0_20px_0_rgba(0,0,0,0.05)]">
+                    <Navigation currentView={currentView} setView={setView} />
+                </div>
+                <main className="flex-1 bg-[#f8fafc]/50 overflow-hidden relative z-0">
                     {['timelines', 'kanban', 'gantt'].includes(currentView) ? children : (
                         <div className="h-full overflow-y-auto custom-scrollbar">
                             {children}

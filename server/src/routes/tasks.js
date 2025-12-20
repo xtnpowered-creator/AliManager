@@ -13,6 +13,8 @@ export const createTasksRouter = (pool) => {
             let queryText;
             let params = [userId]; // $1 is userId
 
+            console.log(`[GET /tasks] Fetching for ${role} (User: ${userId})`);
+
             if (role === 'god') {
                 // GOD MODE: See all tasks
                 queryText = `
@@ -25,8 +27,11 @@ export const createTasksRouter = (pool) => {
                 queryText = `
                     WITH user_orgs AS (
                         SELECT organization_id FROM memberships WHERE user_id = $1
+                        UNION
+                        SELECT organization_id FROM users WHERE id = $1
                     )
-                    SELECT t.*, 'member' as access_source 
+                    SELECT t.*, 
+                        CASE WHEN t.created_by = $1 THEN 'owner' ELSE 'member' END as access_source
                     FROM tasks t
                     WHERE t.organization_id IN (SELECT organization_id FROM user_orgs)
                     
@@ -47,10 +52,8 @@ export const createTasksRouter = (pool) => {
             }
 
             // Apply Filters (Post-Union Wrapper or Append)
-            // Since UNION makes WHERE clauses tricky, we wrap it.
-            // But for simplicity/perf, let's wrap the whole thing if filters exist.
-
-            let finalQuery = `SELECT * FROM (${queryText}) AS united_tasks WHERE 1=1`;
+            // We calculate is_owner here to ensure it's accurate regardless of how the task was found (member/assignee/god)
+            let finalQuery = `SELECT *, (created_by = $1) as is_owner FROM (${queryText}) AS united_tasks WHERE 1=1`;
             let paramIdx = params.length + 1;
 
             if (projectId) {
@@ -64,18 +67,41 @@ export const createTasksRouter = (pool) => {
                 paramIdx++;
             }
 
-            finalQuery += ' ORDER BY due_date ASC';
+            finalQuery += ` ORDER BY due_date ASC, 
+                CASE priority 
+                    WHEN 'asap' THEN 1 
+                    WHEN 'high' THEN 1 -- legacy support
+                    WHEN 'sooner' THEN 2 
+                    WHEN 'medium' THEN 2 
+                    WHEN 'whenever' THEN 3 
+                    WHEN 'low' THEN 3 
+                    ELSE 4 
+                END ASC`;
 
             const result = await pool.query(finalQuery, params);
+            console.log(`[GET /tasks] Query Result: ${result.rows.length} tasks found.`);
 
-            // Enrichment: Fetch Assignments
-            const tasks = result.rows;
-            if (tasks.length > 0) {
-                const taskIds = tasks.map(t => t.id);
-                // Safe way to pass array for ANY($N)
-                // Note: node-postgres handles arrays automatically if passed correctly.
+            // Enrich and Map to CamelCase
+            const mappedTasks = result.rows.map(t => ({
+                id: t.id,
+                title: t.title,
+                projectId: t.project_id,
+                organizationId: t.organization_id,
+                status: t.status,
+                priority: t.priority,
+                dueDate: t.due_date, // Map snake to camel
+                dueDate: t.due_date, // Map snake to camel
+                createdAt: t.created_at, // Mapping for P1 sorting
+                completedAt: t.completed_at, // History logic
+                description: t.description,
+                accessSource: t.access_source,
+                isOwner: t.is_owner, // Explicit ownership flag
+                assignedTo: [] // Will be populated below
+            }));
 
-                // Fetch assignments
+            if (mappedTasks.length > 0) {
+                const taskIds = mappedTasks.map(t => t.id);
+
                 const assignmentsRes = await pool.query(
                     'SELECT task_id, user_id FROM task_assignments WHERE task_id = ANY($1)',
                     [taskIds]
@@ -87,12 +113,12 @@ export const createTasksRouter = (pool) => {
                     assignmentsMap[r.task_id].push(r.user_id);
                 });
 
-                tasks.forEach(t => {
+                mappedTasks.forEach(t => {
                     t.assignedTo = assignmentsMap[t.id] || [];
                 });
             }
 
-            res.json(tasks);
+            res.json(mappedTasks);
         } catch (error) {
             console.error('GET /tasks Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -113,7 +139,7 @@ export const createTasksRouter = (pool) => {
                 const insertRes = await client.query(
                     `INSERT INTO tasks (title, project_id, organization_id, status, priority, due_date, created_by)
                      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-                    [title, projectId || null, organization_id, status || 'todo', priority || 'medium', dueDate, req.dbUser.id]
+                    [title, projectId || null, organization_id, status || 'todo', priority || 'whenever', dueDate, req.dbUser.id]
                 );
                 const newTask = insertRes.rows[0];
 
@@ -147,32 +173,89 @@ export const createTasksRouter = (pool) => {
         const updates = req.body;
         const allowedUpdates = ['title', 'status', 'priority', 'dueDate', 'description'];
 
+        const client = await pool.connect();
         try {
-            // Construct dynamic update query
+            await client.query('BEGIN');
+
+            // 1. Update Tasks Table Fields
             const setClauses = [];
             const params = [];
             let idx = 1;
 
             Object.keys(updates).forEach(key => {
                 if (allowedUpdates.includes(key)) {
-                    // Convert camelCase to snake_case for DB
                     const dbKey = key === 'dueDate' ? 'due_date' : key;
                     setClauses.push(`${dbKey} = $${idx}`);
                     params.push(updates[key]);
                     idx++;
+
+                    // Special Handling for Status Change -> Completed At
+                    if (key === 'status') {
+                        if (updates.status === 'done') {
+                            setClauses.push(`completed_at = NOW()`);
+                        } else {
+                            // If moving OUT of done, clear it
+                            setClauses.push(`completed_at = NULL`);
+                        }
+                    }
                 }
             });
 
-            if (setClauses.length === 0) return res.json({ message: 'No updates provided' });
+            let updatedTask;
+            if (setClauses.length > 0) {
+                params.push(id);
+                const queryText = `UPDATE tasks SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`;
+                const result = await client.query(queryText, params);
+                updatedTask = result.rows[0];
+            } else {
+                // If no task fields updated, fetch current state
+                const res = await client.query('SELECT * FROM tasks WHERE id = $1', [id]);
+                updatedTask = res.rows[0];
+            }
 
-            params.push(id);
-            const queryText = `UPDATE tasks SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`;
+            // 2. Update Assignments if provided
+            if (updates.assignedTo !== undefined) {
+                // Remove existing assignments
+                await client.query('DELETE FROM task_assignments WHERE task_id = $1', [id]);
 
-            const result = await pool.query(queryText, params);
-            res.json(result.rows[0]);
+                // Insert new assignments
+                if (Array.isArray(updates.assignedTo) && updates.assignedTo.length > 0) {
+                    const values = updates.assignedTo.map(uid => `('${id}', '${uid}')`).join(',');
+                    await client.query(`INSERT INTO task_assignments (task_id, user_id) VALUES ${values}`);
+                }
+            }
+
+            await client.query('COMMIT');
+
+            // 3. Return enriched task
+            // Fetch fresh assignments to be sure
+            const assignRes = await client.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
+            const finalAssignments = assignRes.rows.map(r => r.user_id);
+
+            // Map DB snake_case to camelCase
+            const finalTask = {
+                id: updatedTask.id,
+                title: updatedTask.title,
+                projectId: updatedTask.project_id,
+                organizationId: updatedTask.organization_id,
+                status: updatedTask.status,
+                priority: updatedTask.priority,
+                priority: updatedTask.priority,
+                dueDate: updatedTask.due_date,
+                completedAt: updatedTask.completed_at,
+                createdAt: updatedTask.created_at,
+                description: updatedTask.description,
+                accessSource: updatedTask.access_source, // Might be missing if not re-fetched with logic, but ok for now
+                assignedTo: finalAssignments
+            };
+
+            res.json(finalTask);
         } catch (error) {
+            await client.query('ROLLBACK');
             console.error('PATCH /tasks/:id Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
+        } finally {
+            client.release();
         }
     });
 

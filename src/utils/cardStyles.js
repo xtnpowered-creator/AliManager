@@ -39,19 +39,26 @@ export const getTaskCardColor = (task) => {
     const timeDiff = dueDate - today;
     const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-    // Priority helpers
-    const isHigh = task.priority === 'high' || daysLeft < 7;
-    const isMed = task.priority === 'medium' || (daysLeft >= 7 && daysLeft < 14);
-
+    // Priority helpers (Date Logic Only - Explicit Priority does NOT affect color)
     const isStrong = type === 'PROJ';
 
-    if (isHigh) {
-        return isStrong ? 'bg-orange-600' : 'bg-orange-300';
-    }
-    if (isMed) {
-        return isStrong ? 'bg-amber-400' : 'bg-amber-200';
+    // New Splits: 3, 6, 9 days (High -> Med -> Low)
+
+    // < 3 Days: High Urgency (Orange)
+    if (daysLeft < 3) {
+        return isStrong ? 'bg-orange-700' : 'bg-orange-400';
     }
 
-    // Low priority (> 2 weeks)
+    // 3 - 6 Days: Medium Urgency (Amber)
+    if (daysLeft < 6) {
+        return isStrong ? 'bg-amber-600' : 'bg-amber-400';
+    }
+
+    // 6 - 9 Days: Approaching (Yellow)
+    if (daysLeft < 9) {
+        return isStrong ? 'bg-yellow-400' : 'bg-yellow-200';
+    }
+
+    // > 9 Days: Safe (Green)
     return isStrong ? 'bg-emerald-500' : 'bg-emerald-200';
 };

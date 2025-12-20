@@ -7,14 +7,33 @@ import GanttChart from './components/GanttChart';
 import ProjectList from './components/ProjectList';
 import LoneTasks from './components/LoneTasks';
 import Directory from './components/Directory';
+import AdminDashboard from './components/AdminDashboard';
+import TaskDetailView from './components/TaskDetailView';
 import { seedDatabase } from './utils/seedData';
 import { updateColleagueDetails } from './utils/updateColleagues';
 import { removeDuplicateColleagues } from './utils/removeDuplicateColleagues';
-import AdminDashboard from './components/AdminDashboard';
 
 function App() {
-    const [currentView, setCurrentView] = useState('dashboard');
-    const [highlightTaskId, setHighlightTaskId] = useState(null);
+    // Navigation Stack: [{ id: 'dashboard', params: {} }]
+    const [viewStack, setViewStack] = useState([{ id: 'dashboard', params: {} }]);
+
+    const activeView = viewStack[viewStack.length - 1];
+
+    // Navigation Helpers
+    const pushView = (id, params = {}) => {
+        console.log(`Pushing View: ${id}`, params);
+        setViewStack(prev => [...prev, { id, params }]);
+    };
+
+    const popView = () => {
+        console.log("Popping View");
+        setViewStack(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
+    };
+
+    const resetView = (id, params = {}) => {
+        console.log(`Resetting View Root: ${id}`);
+        setViewStack([{ id, params }]);
+    };
 
     // Deep Link Handling
     useEffect(() => {
@@ -22,44 +41,53 @@ function App() {
         const taskId = params.get('taskId');
         if (taskId) {
             console.log("Deep Link Detected: Task ID", taskId);
-            setHighlightTaskId(taskId);
-            setCurrentView('timelines');
+            // Deep link logic: Reset to Timelines, then PUSH Task Detail? 
+            // Or just reset directly to Task Detail?
+            // Let's reset to Task Detail so back button goes nowhere? 
+            // Better: Reset to Timelines, then Push Task Detail so user has context.
+            setViewStack([
+                { id: 'timelines', params: { highlightTaskId: taskId } },
+                { id: 'task-detail', params: { taskId } }
+            ]);
 
-            // Optional: Clean URL
+            // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }, []);
 
-    // Uncomment below to seed/update/cleanup database (run once, then comment out again)
+    // Database Maintenance (keep commented out unless needed)
+    /*
     useEffect(() => {
         seedDatabase().then(() => {
-            // Update existing colleagues with new fields
             updateColleagueDetails().then(() => {
-                // Wait a bit for all operations to complete, then remove duplicates
                 setTimeout(() => {
                     removeDuplicateColleagues();
                 }, 2000);
             });
         });
     }, []);
+    */
 
     return (
-        <Shell currentView={currentView} setView={setCurrentView}>
-            {currentView === 'dashboard' && <Dashboard />}
-            {currentView === 'timelines' && <TimelineView highlightTaskId={highlightTaskId} />}
-            {currentView === 'kanban' && <KanbanBoard />}
-            {currentView === 'gantt' && <GanttChart />}
-            {currentView === 'projects' && <ProjectList />}
-            {currentView === 'lone-tasks' && <LoneTasks />}
-            {currentView === 'team' && <Directory />}
-            {currentView === 'admin' && <AdminDashboard />}
+        <Shell currentView={activeView.id} setView={resetView}>
+            {activeView.id === 'dashboard' && <Dashboard />}
+            {activeView.id === 'timelines' && <TimelineView highlightTaskId={activeView.params?.highlightTaskId} pushView={pushView} />}
+            {activeView.id === 'kanban' && <KanbanBoard />}
+            {activeView.id === 'gantt' && <GanttChart />}
+            {activeView.id === 'projects' && <ProjectList />}
+            {activeView.id === 'lone-tasks' && <LoneTasks pushView={pushView} />}
+            {activeView.id === 'team' && <Directory />}
+            {activeView.id === 'admin' && <AdminDashboard />}
+
+            {/* New Stacked Views */}
+            {activeView.id === 'task-detail' && (
+                <TaskDetailView
+                    taskId={activeView.params?.taskId}
+                    onBack={popView}
+                />
+            )}
         </Shell>
     );
 }
 
-
-
 export default App;
-
-
-

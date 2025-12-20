@@ -7,6 +7,7 @@ export const createProjectsRouter = (pool) => {
     router.get('/', async (req, res) => {
         try {
             const { role, organization_id } = req.dbUser;
+            console.log(`[GET /projects] Request from ${req.dbUser.email} (Role: ${role}, Org: ${organization_id})`);
 
             let queryText = 'SELECT * FROM projects';
             let params = [];
@@ -22,6 +23,7 @@ export const createProjectsRouter = (pool) => {
             queryText += ' ORDER BY created_at DESC';
 
             const result = await pool.query(queryText, params);
+            console.log(`[GET /projects] Found ${result.rows.length} projects.`);
             res.json(result.rows);
         } catch (error) {
             console.error('GET /projects Error:', error);

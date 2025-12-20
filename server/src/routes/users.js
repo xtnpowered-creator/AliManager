@@ -3,6 +3,39 @@ import express from 'express';
 export const createUsersRouter = (pool) => {
     const router = express.Router();
 
+    // GET /api/users/me (Current User Profile)
+    router.get('/me', async (req, res) => {
+        try {
+            const { id } = req.dbUser;
+            const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            const u = result.rows[0];
+            const profile = {
+                id: u.id,
+                name: u.display_name,
+                email: u.email,
+                role: req.dbUser.role || u.role, // Use Middleware role (handles delegation)
+                isDelegated: req.dbUser.is_delegated || false,
+                delegationExpiresAt: req.dbUser.delegation_expires_at || null,
+                avatar: u.avatar_url || (u.display_name || u.email).charAt(0).toUpperCase(),
+                company: u.company_label || '',
+                department: u.department || '',
+                position: u.position || '',
+                status: u.status,
+                organizationId: u.organization_id
+            };
+
+            res.json(profile);
+        } catch (error) {
+            console.error('GET /users/me Error:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+
     // GET /api/users (The Directory)
     router.get('/', async (req, res) => {
         try {
@@ -13,7 +46,7 @@ export const createUsersRouter = (pool) => {
 
             if (role === 'god') {
                 queryText = `
-                    SELECT id, display_name as name, role, email, avatar_url as avatar, company_label as company 
+                    SELECT id, display_name, role, email, avatar_url, company_label, department, position 
                     FROM users 
                     ORDER BY display_name ASC
                 `;
@@ -23,14 +56,14 @@ export const createUsersRouter = (pool) => {
                 queryText = `
                     WITH org_members AS (
                         -- Use Memberships OR Legacy Org ID
-                        SELECT u.id, u.display_name, u.role, u.email, u.avatar_url, u.company_label, 'member' as source
+                        SELECT u.id, u.display_name, u.role::text, u.email, u.avatar_url, u.company_label, u.department, u.position, 'member' as source
                         FROM users u
                         LEFT JOIN memberships m ON m.user_id = u.id
                         WHERE m.organization_id = $1 OR u.organization_id = $1
                     ),
                     org_guests AS (
                         -- External users collaborating on this Org's tasks
-                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, 'guest' as source
+                        SELECT u.id, u.display_name, 'guest' as role, u.email, u.avatar_url, u.company_label, u.department, u.position, 'guest' as source
                         FROM users u
                         JOIN task_collaborators tc ON tc.user_id = u.id
                         JOIN tasks t ON t.id = tc.task_id
@@ -48,13 +81,19 @@ export const createUsersRouter = (pool) => {
             const result = await pool.query(queryText, params);
 
             // Map result to frontend expected format if needed (it matches already)
+            // Map result to frontend expected format if needed (it matches already)
+            if (result.rows.length > 0) {
+                console.log('[API DEBUG] Row 0:', JSON.stringify(result.rows[0]));
+            }
             const colleagues = result.rows.map(row => ({
                 id: row.id,
                 name: row.display_name || row.email.split('@')[0],
                 role: row.role, // 'admin', 'user', 'guest', 'god'
                 email: row.email,
                 avatar: row.avatar_url || '👤',
-                company: row.company_label || (row.role === 'guest' ? 'External Partner' : 'Company')
+                company: row.company_label,
+                department: row.department,
+                position: row.position
             }));
 
             res.json(colleagues);

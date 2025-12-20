@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useApiData } from '../hooks/useApiData';
 import { FolderKanban, Plus, MoreHorizontal, Target, Calendar } from 'lucide-react';
 
+import Card from './common/Card';
+
 const ProjectList = () => {
     const { data: projects, loading } = useApiData('/projects');
     const { data: tasks } = useApiData('/tasks');
@@ -22,7 +24,7 @@ const ProjectList = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    [1, 2, 3].map(i => <div key={i} className="h-64 bg-white rounded-3xl animate-pulse"></div>)
+                    [1, 2, 3].map(i => <div key={i} className="h-64 bg-white rounded-2xl animate-pulse"></div>)
                 ) : (
                     projects.map(project => {
                         const projectTasks = tasks.filter(t => t.projectId === project.id);
@@ -30,10 +32,11 @@ const ProjectList = () => {
                         const progress = projectTasks.length > 0 ? (completed / projectTasks.length) * 100 : 0;
 
                         return (
-                            <motion.div
+                            <Card
                                 key={project.id}
-                                whileHover={{ y: -4 }}
-                                className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all group"
+                                variant="MACRO"
+                                className="p-8 group"
+                                onClick={() => { }} // Make interactive
                             >
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="p-3 bg-teal-50 text-teal-600 rounded-2xl group-hover:bg-teal-500 group-hover:text-white transition-colors">
@@ -71,7 +74,7 @@ const ProjectList = () => {
                                         <span className="text-[10px] font-bold uppercase">{project.status}</span>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </Card>
                         );
                     })
                 )}

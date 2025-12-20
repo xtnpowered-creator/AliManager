@@ -55,9 +55,94 @@ VALUES (
     NOW() + INTERVAL '2 days'
 ) ON CONFLICT (id) DO NOTHING;
 
--- 6. Assignment
-INSERT INTO task_assignments (task_id, user_id)
+-- 6b. Additional Users
+INSERT INTO users (id, firebase_uid, email, role, organization_id, display_name, company_label, avatar_url)
+VALUES 
+(
+    '00000000-0000-0000-0000-444444444444',
+    'uid-bob',
+    'bob@example.com',
+    'user',
+    '00000000-0000-0000-0000-111111111111',
+    'Bob Builder',
+    'Construct Co',
+    '👷'
+),
+(
+    '00000000-0000-0000-0000-555555555555',
+    'uid-alice',
+    'alice@example.com',
+    'user',
+    '00000000-0000-0000-0000-111111111111',
+    'Alice Architect',
+    'Design Studio',
+    '👩‍🎨'
+) ON CONFLICT (email) DO NOTHING;
+
+-- 6c. Project: Kitchen Reno
+INSERT INTO projects (id, organization_id, title, description, start_date, end_date)
 VALUES (
-    'b0000000-0000-4000-a000-000000000001',
-    '00000000-0000-0000-0000-222222222222' -- Assigned to Alisara
-) ON CONFLICT DO NOTHING;
+    'a0000000-0000-4000-a000-000000000002',
+    '00000000-0000-0000-0000-111111111111',
+    'Kitchen Renovation',
+    'Full remodel of the main kitchen area.',
+    NOW(),
+    NOW() + INTERVAL '30 days'
+) ON CONFLICT (id) DO NOTHING;
+
+-- 6d. Dense Task List
+INSERT INTO tasks (id, title, project_id, organization_id, status, priority, due_date, description)
+VALUES 
+-- Past Task
+(
+    'b0000000-0000-4000-a000-000000000002',
+    'Demolition',
+    'a0000000-0000-4000-a000-000000000002',
+    '00000000-0000-0000-0000-111111111111',
+    'done',
+    'high',
+    NOW() - INTERVAL '2 days',
+    'tear down existing cabinets'
+),
+-- Today Task
+(
+    'b0000000-0000-4000-a000-000000000003',
+    'Plumbing Rough-in',
+    'a0000000-0000-4000-a000-000000000002',
+    '00000000-0000-0000-0000-111111111111',
+    'doing',
+    'high',
+    NOW(),
+    'Install new drain pipes'
+),
+-- Tomorrow Task
+(
+    'b0000000-0000-4000-a000-000000000004',
+    'Electrical Wiring',
+    'a0000000-0000-4000-a000-000000000002',
+    '00000000-0000-0000-0000-111111111111',
+    'todo',
+    'medium',
+    NOW() + INTERVAL '1 day',
+    'Run new outlets for island'
+),
+-- Lone Task
+(
+    'b0000000-0000-4000-a000-000000000005',
+    'Call Inspector City Hall',
+    NULL, -- Lone Task
+    '00000000-0000-0000-0000-111111111111',
+    'todo',
+    'high',
+    NOW() + INTERVAL '3 days',
+    'Schedule permit validation'
+) ON CONFLICT (id) DO NOTHING;
+
+-- 6e. Assignments
+INSERT INTO task_assignments (task_id, user_id)
+VALUES 
+('b0000000-0000-4000-a000-000000000002', '00000000-0000-0000-0000-444444444444'), -- Bob did Demo
+('b0000000-0000-4000-a000-000000000003', '00000000-0000-0000-0000-444444444444'), -- Bob doing Plumbing
+('b0000000-0000-4000-a000-000000000004', '00000000-0000-0000-0000-555555555555'), -- Alice Electrical
+('b0000000-0000-4000-a000-000000000005', '00000000-0000-0000-0000-222222222222')  -- Ali calls City
+ON CONFLICT DO NOTHING;

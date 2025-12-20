@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useApiData } from '../hooks/useApiData';
 import { ListTodo, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import NewTaskModal from './NewTaskModal';
+import Card from './common/Card';
 
-const LoneTasks = () => {
+const LoneTasks = ({ pushView }) => {
     const { data: tasks, loading, refetch } = useApiData('/tasks');
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
@@ -35,17 +36,22 @@ const LoneTasks = () => {
             </header>
 
             {loneTasks.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 p-12 text-center">
+                <Card variant="GHOST">
                     <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6 text-slate-300">
                         <ListTodo size={40} />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">No Lone Tasks</h3>
                     <p className="text-slate-500 mt-2 max-w-sm">Every single event task is either completed or attached to a project.</p>
-                </div>
+                </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {loneTasks.map((task) => (
-                        <div key={task.id} className="bg-white rounded-[2rem] border border-slate-200 p-6 flex flex-col space-y-4 hover:shadow-xl hover:shadow-slate-100 transition-all group">
+                        <Card
+                            key={task.id}
+                            variant="MACRO"
+                            onClick={() => pushView && pushView('task-detail', { taskId: task.id })}
+                            className="p-6 group cursor-pointer"
+                        >
                             <div className="flex items-start justify-between">
                                 <div className={`p-2 rounded-xl ${task.priority === 'high' ? 'bg-amber-100 text-amber-600' :
                                     task.priority === 'medium' ? 'bg-blue-100 text-blue-600' : 'bg-teal-100 text-teal-600'
@@ -82,7 +88,7 @@ const LoneTasks = () => {
                                     ))}
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     ))}
                 </div>
             )}
