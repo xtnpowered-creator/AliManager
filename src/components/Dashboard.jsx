@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight, Users, Activity, Zap, Clock, CheckCircle2 } from 'lucide-react';
 import { useApiData } from '../hooks/useApiData';
 import Card from './common/Card';
+import NewTaskModal from './NewTaskModal';
 
 const Dashboard = () => {
-    const { data: tasks, loading: tasksLoading } = useApiData('/tasks');
+    const { data: tasks, loading: tasksLoading, refetch: refetchTasks } = useApiData('/tasks');
     const { data: projects, loading: projectsLoading } = useApiData('/projects');
     const { data: colleagues } = useApiData('/colleagues');
+
+    const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
     const stats = {
         totalTasks: tasks.length,
@@ -27,11 +30,21 @@ const Dashboard = () => {
                     <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                         Generate Report
                     </button>
-                    <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                    <button
+                        onClick={() => setShowNewTaskModal(true)}
+                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+                    >
                         + New Task
                     </button>
                 </div>
             </header>
+
+            {/* Modal */}
+            <NewTaskModal
+                isOpen={showNewTaskModal}
+                onClose={() => setShowNewTaskModal(false)}
+                onSuccess={refetchTasks}
+            />
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -62,7 +75,10 @@ const Dashboard = () => {
                         {Array.from({ length: 7 }, (_, i) => {
                             const date = new Date();
                             date.setDate(date.getDate() + i);
-                            const dayTasks = tasks.filter(t => t.dueDate.split('T')[0] === date.toISOString().split('T')[0]);
+                            const dayTasks = tasks.filter(t => {
+                                if (!t.dueDate) return false;
+                                return t.dueDate.split('T')[0] === date.toISOString().split('T')[0];
+                            });
                             return (
                                 <div key={i} className="min-w-[140px] flex-1 bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-colors">
                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
@@ -108,7 +124,9 @@ const Dashboard = () => {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-slate-800">{task.title}</h4>
-                                            <p className="text-xs text-slate-400 mt-0.5">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
+                                            <p className="text-xs text-slate-400 mt-0.5">
+                                                {task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">

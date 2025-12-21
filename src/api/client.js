@@ -17,13 +17,15 @@ const BASE_URL = import.meta.env.DEV
 export const apiClient = {
     async request(endpoint, options = {}) {
         let token = null;
-        if (auth.currentUser) {
+        // In PROD: Get real token. In DEV: Skip to rely on x-god-mode-bypass header.
+        if (auth.currentUser && !import.meta.env.DEV) {
             token = await auth.currentUser.getIdToken();
         }
 
         const headers = {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...(import.meta.env.DEV ? { 'x-god-mode-bypass': 'true' } : {}),
             ...options.headers,
         };
 

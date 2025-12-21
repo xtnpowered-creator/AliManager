@@ -18,11 +18,13 @@ const TimelineRow = ({
     onTaskContextMenu,
     onGridContextMenu,
     safeDate,
-    expandedDay,
-    onExpandDay,
+
     expandedTaskId, // New Prop
     selectedTaskIds = new Set() // NEW: Selection state for bulk actions
 }) => {
+    // DEBUG: Check for re-renders
+    // console.log(`TimelineRow Render: ${colleague.name}`); 
+
     // Row Container
     return (
         <div className={`flex border-b border-slate-200 group hover:bg-slate-50/30 transition-colors last:border-0 h-[97px] relative bg-white`}>
@@ -155,37 +157,7 @@ const TimelineRow = ({
                             const doneTasks = dailyTasks.filter(t => t.status === 'done');
                             const activeTasks = dailyTasks.filter(t => t.status !== 'done');
 
-                            const isExpanded = expandedDay === key;
 
-                            // 1. Expanded Day Logic (Show ALL as Capsules)
-                            if (isExpanded) {
-                                return (
-                                    <div
-                                        key={dIdx}
-                                        style={{ minWidth: getColumnWidth(day) }}
-                                        className={`relative flex items-center justify-center h-full group/day pointer-events-auto`}
-                                        onClick={() => onExpandDay(null)}
-                                    >
-                                        <div className={`absolute z-[100] left-1/2 -translate-x-1/2 flex flex-nowrap justify-center gap-1 w-auto`}>
-                                            {dailyTasks.map((task) => (
-                                                <div key={task.id} className="focus:outline-none shrink-0" style={{ width: '160px' }}>
-                                                    <TaskCard
-                                                        task={task}
-                                                        variant={'CAPSULE'}
-                                                        isStatic={true}
-                                                        scale={scale}
-                                                        onTaskClick={onTaskClick}
-                                                        onTaskDoubleClick={onTaskDoubleClick}
-                                                        onContextMenu={onTaskContextMenu}
-                                                        isExpanded={expandedTaskId === task.id}
-                                                        isSelected={selectedTaskIds.has(task.id)}
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            }
 
                             // 2. Collapsed Day Logic (Bubbles + Capsules)
                             const colWidth = getColumnWidth(day);
@@ -203,7 +175,7 @@ const TimelineRow = ({
                                     key={dIdx}
                                     style={{ minWidth: colWidth }}
                                     className={`relative flex h-full group/day pointer-events-auto pl-1 pb-1 items-end`}
-                                    onClick={() => onExpandDay(key)}
+                                // onClick={() => onExpandDay(key)} // Removed to prevent accidental expansion during panning
                                 >
                                     {/* Done Task Bubbles (Smart Stacking) */}
                                     {doneTasks.length > 0 && (() => {

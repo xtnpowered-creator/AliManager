@@ -12,29 +12,43 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // For local development with emulators, we can auto-sign in anonymously or just monitor state
+        // FORCE GOD MODE (Frontend Bypass for Dev)
+        if (import.meta.env.DEV) {
+            const godUser = {
+                id: '9f449545-700a-4ce5-8dd5-4d221041e15e',
+                name: 'Christian Plyler',
+                displayName: 'Christian Plyler', // For Frontend
+                display_name: 'Christian Plyler', // For DB Compat
+                email: 'xtnpowered@gmail.com',
+                role: 'god',
+                organization_id: '00000000-0000-0000-0000-111111111111',
+                position: 'Owner', // Retrieved from DB
+                avatar_url: null,
+                isDelegated: false
+            };
+            // DEV MODE: Instant "God" Login
+            // The Backend accepts 'x-god-mode-bypass' header (see client.js)
+            console.log("DEV MODE: Forcing Frontend God User", godUser);
+            setUser(godUser);
+            setLoading(false);
+            return; // EXIT: Do not attach Firebase listener
+        }
+
+        // For Production: Standard Auth
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
-                    // Fetch full profile from backend to sync Role, Company, Position
                     const res = await apiClient.get('/users/me');
-                    // Merge Firebase properties with DB properties
-                    // res contains the profile object directly (id, name, ...), not res.data
                     setUser({ ...firebaseUser, ...res, displayName: res.name || firebaseUser.displayName });
                 } catch (err) {
                     console.error("AuthContext: Failed to sync user profile:", err);
-                    setUser(firebaseUser); // Fallback to basic auth
+                    setUser(firebaseUser);
                 }
             } else {
                 setUser(null);
             }
             setLoading(false);
         });
-
-        // Auto sign-in if no user (convenient for local testing)
-        if (!auth.currentUser && import.meta.env.DEV) {
-            signInAnonymously(auth).catch(err => console.error("Auth emulator error:", err));
-        }
 
         return unsubscribe;
     }, []);

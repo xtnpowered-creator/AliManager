@@ -15,7 +15,9 @@ export const useApiData = (endpoint, dependencies = []) => {
         const fetchData = async () => {
             setLoading(true);
             try {
+                console.log(`[API Request] fetching ${endpoint}...`);
                 const result = await apiClient.get(endpoint);
+                console.log(`[API Response] ${endpoint}:`, Array.isArray(result) ? `${result.length} items` : 'Object', result);
                 setData(result);
                 setError(null);
             } catch (err) {
@@ -31,5 +33,5 @@ export const useApiData = (endpoint, dependencies = []) => {
 
     const refetch = () => setRefreshIndex(prev => prev + 1);
 
-    return { data, loading, error, refetch };
+    return { data, loading, error, refetch, setData };
 };

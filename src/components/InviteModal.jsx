@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, UserPlus, Mail } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { useToast } from '../context/ToastContext';
 
 const InviteModal = ({ isOpen, onClose, taskId, taskTitle }) => {
+    const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -22,7 +24,7 @@ const InviteModal = ({ isOpen, onClose, taskId, taskTitle }) => {
                 apiClient.post(`/tasks/${id}/invite`, { email })
             );
             await Promise.all(promises);
-            alert(`Invitation sent to ${email}${isBulk ? ` for ${taskIds.length} tasks` : ''}`);
+            showToast(`Invitation sent to ${email}${isBulk ? ` for ${taskIds.length} tasks` : ''}`, 'success');
             onClose();
             setEmail('');
         } catch (err) {

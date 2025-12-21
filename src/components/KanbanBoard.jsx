@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApiData } from '../hooks/useApiData';
 import { MoreHorizontal, Plus, Clock, Users } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
+import NewTaskModal from './NewTaskModal';
 
 const KanbanBoard = () => {
-    const { data: tasks, loading: tasksLoading } = useApiData('/tasks');
+    const { data: tasks, loading: tasksLoading, refetch: refetchTasks } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');
+
+    const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
     const columns = [
         { id: 'todo', title: 'To Do', color: 'bg-slate-100 text-slate-600' },
@@ -27,12 +30,22 @@ const KanbanBoard = () => {
                     <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                         Filters
                     </button>
-                    <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2">
+                    <button
+                        onClick={() => setShowNewTaskModal(true)}
+                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
+                    >
                         <Plus size={18} />
                         New Task
                     </button>
                 </div>
             </header>
+
+            {/* Modal */}
+            <NewTaskModal
+                isOpen={showNewTaskModal}
+                onClose={() => setShowNewTaskModal(false)}
+                onSuccess={refetchTasks}
+            />
 
             <div className="flex-1 flex gap-6 overflow-x-auto pb-4 invisible-scrollbar">
                 {columns.map(column => (
@@ -60,7 +73,10 @@ const KanbanBoard = () => {
                                 ))
                             )}
 
-                            <button className="w-full py-3 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 text-xs font-bold hover:border-slate-400 hover:text-slate-500 transition-all flex items-center justify-center gap-2">
+                            <button
+                                onClick={() => setShowNewTaskModal(true)}
+                                className="w-full py-3 border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 text-xs font-bold hover:border-slate-400 hover:text-slate-500 transition-all flex items-center justify-center gap-2"
+                            >
                                 <Plus size={14} />
                                 Add Task
                             </button>
@@ -109,7 +125,9 @@ const KanbanCard = ({ task, colleagues }) => (
         <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-1.5 text-slate-400">
                 <Clock size={12} />
-                <span className="text-[10px] font-bold uppercase">{new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                <span className="text-[10px] font-bold uppercase">
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No Date'}
+                </span>
             </div>
 
             <div className="flex -space-x-2">

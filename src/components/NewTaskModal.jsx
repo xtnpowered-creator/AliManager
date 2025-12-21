@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckSquare, Calendar, User, Plus } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useApiData } from '../hooks/useApiData';
+import { useToast } from '../context/ToastContext';
 
 const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee, initialData }) => {
+    const { showToast } = useToast();
     const { data: colleagues, refetch: refetchColleagues } = useApiData('/colleagues');
 
     const [title, setTitle] = useState('');
@@ -20,13 +22,20 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        // Defensive Date Parsing Helper
+        const safeToDateString = (val) => {
+            if (!val) return '';
+            const d = new Date(val);
+            return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+        };
+
         // Handle discrete props (Legacy/LoneTasks)
-        if (initialDate) setDueDate(new Date(initialDate).toISOString().split('T')[0]);
+        if (initialDate) setDueDate(safeToDateString(initialDate));
         if (initialAssignee) setSelectedAssignee(initialAssignee);
 
         // Handle object prop (Timeline Context Menu)
         if (initialData) {
-            if (initialData.dueDate) setDueDate(new Date(initialData.dueDate).toISOString().split('T')[0]);
+            if (initialData.dueDate) setDueDate(safeToDateString(initialData.dueDate));
             if (initialData.assigneeId) setSelectedAssignee(initialData.assigneeId);
         }
     }, [initialDate, initialAssignee, initialData, isOpen]);
@@ -47,7 +56,7 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
 
     const handleCreateUser = async () => {
         if (!assigneeSearch.includes('@')) {
-            alert("Please enter an email address in the search field to create a new user (Format: Name or Email). Actually, let's just ask for email.");
+            showToast("Please enter an email address in the search field to create a new user (Format: Name or Email). Actually, let's just ask for email.", 'info');
             // For simplicity, let's assume the input is the name, and we prompt for email
             const email = prompt(`Enter email for ${assigneeSearch}:`);
             if (!email) return;
@@ -62,7 +71,7 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
                 setAssigneeSearch(res.data.display_name || assigneeSearch);
                 setShowAddPrompt(false);
             } catch (err) {
-                alert("Failed to create user: " + err.message);
+                showToast("Failed to create user: " + err.message, 'error');
             } finally {
                 setIsAddingUser(false);
             }
@@ -73,12 +82,22 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
         e.preventDefault();
         setLoading(true);
         try {
+            // Final validation before submitting
+            let finalDueDate = null;
+            if (dueDate) {
+                const d = new Date(dueDate);
+                if (!isNaN(d.getTime())) {
+                    finalDueDate = d.toISOString();
+                }
+            }
+
             await apiClient.post('/tasks', {
                 title,
-                dueDate: new Date(dueDate).toISOString(),
+                dueDate: finalDueDate,
                 priority,
                 assignedTo: selectedAssignee ? [selectedAssignee] : []
             });
+            showToast(`Created task: "${title}"`, 'success'); // Specific Confirmation
             onSuccess?.();
             onClose();
             // Reset
@@ -87,7 +106,7 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
             setSelectedAssignee(null);
         } catch (err) {
             console.error(err);
-            alert("Failed to create task");
+            showToast("Failed to create task", 'error');
         } finally {
             setLoading(false);
         }

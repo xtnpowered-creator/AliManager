@@ -62,9 +62,13 @@ const ContextMenu = ({ x, y, items, onClose }) => {
                             onMouseLeave={() => setActiveSubmenu(null)}
                         >
                             <button
-                                onClick={() => {
+                                onClick={async () => {
                                     if (!hasSubmenu && !item.disabled) {
-                                        item.onClick();
+                                        try {
+                                            await item.onClick();
+                                        } catch (e) {
+                                            console.error("Context menu action failed:", e);
+                                        }
                                         onClose();
                                     }
                                 }}

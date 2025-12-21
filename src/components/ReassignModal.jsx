@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Plus, ArrowRight } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useApiData } from '../hooks/useApiData';
+import { useToast } from '../context/ToastContext';
 
-const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentAssigneeId }) => {
+const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentAssigneeId, onConfirm }) => {
+    const { showToast } = useToast();
     const { data: colleagues, refetch: refetchColleagues } = useApiData('/colleagues');
 
     const [assigneeSearch, setAssigneeSearch] = useState('');
@@ -50,7 +52,7 @@ const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentA
                 setAssigneeSearch(res.data.display_name || assigneeSearch);
                 setShowAddPrompt(false);
             } catch (err) {
-                alert("Failed to create user: " + err.message);
+                showToast("Failed to create user: " + err.message, 'error');
             } finally {
                 setIsAddingUser(false);
             }
@@ -63,17 +65,24 @@ const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentA
 
         setLoading(true);
         try {
-            const promises = taskIds.map(id =>
-                apiClient.patch(`/tasks/${id}`, {
-                    assignedTo: [selectedAssignee]
-                })
-            );
-            await Promise.all(promises);
+            // Optimistic Handler
+            if (onConfirm) {
+                await onConfirm(new Set(taskIds), { assignedTo: [selectedAssignee] });
+            } else {
+                // Legacy Fallback
+                const promises = taskIds.map(id =>
+                    apiClient.patch(`/tasks/${id}`, {
+                        assignedTo: [selectedAssignee]
+                    })
+                );
+                await Promise.all(promises);
+            }
+
             onSuccess?.();
             onClose();
         } catch (err) {
             console.error(err);
-            alert("Failed to reassign task(s)");
+            showToast("Failed to reassign task(s)", 'error');
         } finally {
             setLoading(false);
         }

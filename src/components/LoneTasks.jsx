@@ -77,7 +77,7 @@ const LoneTasks = ({ pushView }) => {
                                 <div className="flex items-center gap-2">
                                     <Clock size={14} />
                                     <span className="text-[10px] font-bold uppercase tracking-wider">
-                                        {new Date(task.dueDate).toLocaleDateString()}
+                                        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No Date'}
                                     </span>
                                 </div>
                                 <div className="flex -space-x-2">

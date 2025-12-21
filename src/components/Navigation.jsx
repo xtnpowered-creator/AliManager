@@ -1,10 +1,14 @@
 import { LayoutDashboard, Calendar, Columns, BarChart3, Users, Settings, FolderKanban, ListTodo, ShieldAlert } from 'lucide-react';
 import { useApiData } from '../hooks/useApiData';
 import { useAuth } from '../context/AuthContext';
+import { useToast, useToastState } from '../context/ToastContext';
+import Toast from './Toast';
 
 const Navigation = ({ currentView, setView }) => {
     const { data: colleagues } = useApiData('/colleagues'); // Cached or fetched
     const { user } = useAuth();
+    const toasts = useToastState();
+    const { removeToast } = useToast();
 
     const dbUser = colleagues.find(c => c.id === user?.uid);
     const isAdmin = dbUser?.role === 'god' || dbUser?.role === 'admin';
@@ -34,7 +38,7 @@ const Navigation = ({ currentView, setView }) => {
     ];
 
     return (
-        <aside className="w-72 border-r border-slate-200 bg-white flex flex-col h-full overflow-y-auto">
+        <aside className="w-72 border-r border-slate-200 bg-white flex flex-col h-full overflow-y-auto relative">
             <div className="p-8 space-y-8">
                 {menuItems.map((group, idx) => (
                     <div key={idx} className="space-y-3">
@@ -60,11 +64,21 @@ const Navigation = ({ currentView, setView }) => {
                 ))}
             </div>
 
-            <div className="mt-auto p-6 border-t border-slate-100">
-                <div className="bg-teal-50 rounded-2xl p-4 border border-teal-100">
-                    <p className="text-xs font-bold text-teal-800 uppercase tracking-wider mb-1">Status</p>
-                    <p className="text-sm font-medium text-teal-600">All systems sync'd</p>
+            <div className="mt-auto flex flex-col gap-4 p-6 border-t border-slate-100">
+                {/* Toasts Stack - Bottom Up */}
+                <div className="flex flex-col gap-2 w-full">
+                    {toasts.map(toast => (
+                        <Toast
+                            key={toast.id}
+                            message={toast.message}
+                            type={toast.type}
+                            onClose={() => removeToast(toast.id)}
+                            className="w-full shadow-sm border border-slate-200"
+                        />
+                    ))}
                 </div>
+
+
             </div>
         </aside>
     );

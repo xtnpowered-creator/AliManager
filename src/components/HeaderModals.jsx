@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, Maximize2, Flag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '../context/ToastContext';
 
 // Shared Modal Shell
 const ModalShell = ({ isOpen, onClose, title, icon: Icon, children }) => {
@@ -97,6 +98,7 @@ export const CustomScaleModal = ({ isOpen, onClose, onApply }) => {
 };
 
 export const FlagModal = ({ isOpen, onClose, initialDate }) => {
+    const { showToast } = useToast();
     const [text, setText] = useState('Holiday');
     const [color, setColor] = useState('#fecaca'); // Red-200
 
@@ -131,7 +133,7 @@ export const FlagModal = ({ isOpen, onClose, initialDate }) => {
                     </div>
                 </div>
                 <button
-                    onClick={() => { alert('Feature Coming Soon!'); onClose(); }}
+                    onClick={() => { showToast('Feature Coming Soon!', 'info'); onClose(); }}
                     className="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95 opacity-50 cursor-not-allowed"
                 >
                     Save Flag (Mock)

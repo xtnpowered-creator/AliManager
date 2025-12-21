@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CalendarRange, ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { useToast } from '../context/ToastContext';
 
-const MoveDateModal = ({ isOpen, onClose, onSuccess, tasks, selectedTaskIds }) => {
+const MoveDateModal = ({ isOpen, onClose, onSuccess, tasks, selectedTaskIds, onConfirm }) => {
+    const { showToast } = useToast();
     const [days, setDays] = useState(1);
     const [direction, setDirection] = useState('later'); // 'earlier' or 'later'
     const [loading, setLoading] = useState(false);
@@ -17,25 +19,27 @@ const MoveDateModal = ({ isOpen, onClose, onSuccess, tasks, selectedTaskIds }) =
 
         setLoading(true);
         try {
-            const promises = taskIds.map(id => {
-                const task = tasks.find(t => t.id === id);
-                if (!task || !task.dueDate) return Promise.resolve();
-
-                const currentDate = new Date(task.dueDate);
-                const shift = direction === 'later' ? days : -days;
-                currentDate.setDate(currentDate.getDate() + shift);
-
-                return apiClient.patch(`/tasks/${id}`, {
-                    dueDate: currentDate.toISOString()
+            // Use the passed handler (Optimistic Update)
+            if (onConfirm) {
+                await onConfirm(taskIds, days, direction);
+            } else {
+                // Fallback (Legacy)
+                const promises = taskIds.map(id => {
+                    const task = tasks.find(t => t.id === id);
+                    if (!task || !task.dueDate) return Promise.resolve();
+                    const currentDate = new Date(task.dueDate);
+                    const shift = direction === 'later' ? days : -days;
+                    currentDate.setDate(currentDate.getDate() + shift);
+                    return apiClient.patch(`/tasks/${id}`, { dueDate: currentDate.toISOString() });
                 });
-            });
+                await Promise.all(promises);
+            }
 
-            await Promise.all(promises);
             onSuccess?.();
             onClose();
         } catch (err) {
             console.error("Failed to move dates:", err);
-            alert("Failed to update task dates");
+            showToast("Failed to update task dates", 'error');
         } finally {
             setLoading(false);
         }

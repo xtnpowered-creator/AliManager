@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, ArrowRight } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { useToast } from '../context/ToastContext';
 
-const RescheduleModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentDate }) => {
+const RescheduleModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentDate, onConfirm }) => {
+    const { showToast } = useToast();
     const [date, setDate] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -28,17 +30,24 @@ const RescheduleModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, curren
 
         setLoading(true);
         try {
-            const promises = taskIds.map(id =>
-                apiClient.patch(`/tasks/${id}`, {
-                    dueDate: localDate.toISOString()
-                })
-            );
-            await Promise.all(promises);
+            // Optimistic Handler
+            if (onConfirm) {
+                await onConfirm(new Set(taskIds), { dueDate: localDate.toISOString() });
+            } else {
+                // Legacy Fallback
+                const promises = taskIds.map(id =>
+                    apiClient.patch(`/tasks/${id}`, {
+                        dueDate: localDate.toISOString()
+                    })
+                );
+                await Promise.all(promises);
+            }
+
             onSuccess?.();
             onClose();
         } catch (err) {
             console.error(err);
-            alert("Failed to reschedule task(s)");
+            showToast("Failed to reschedule task(s)", 'error');
         } finally {
             setLoading(false);
         }

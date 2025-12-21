@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Shield, Clock, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { useToast } from '../context/ToastContext';
 
 const DelegationModal = ({ isOpen, onClose, colleague, onSuccess }) => {
+    const { showToast } = useToast();
     const [days, setDays] = useState(7);
     const [loading, setLoading] = useState(false);
 
@@ -21,7 +23,7 @@ const DelegationModal = ({ isOpen, onClose, colleague, onSuccess }) => {
             onClose();
         } catch (err) {
             console.error('Delegation failed:', err);
-            alert('Failed to grant delegation. See console.');
+            showToast('Failed to grant delegation. See console.', 'error');
         } finally {
             setLoading(false);
         }

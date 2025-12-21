@@ -185,14 +185,14 @@ const TaskCard = ({
 
                     zIndex: isActiveState ? 3000 : 100 - index,
                     originX: 0.5, // Center scaling
-                    borderRadius: (variant === 'BUBBLE' && !isActiveState) ? 12.5 : 11.5
+                    borderRadius: (variant === 'BUBBLE' && !isActiveState) ? "12.5px" : "11.5px"
                 }}
                 whileHover={{
                     zIndex: 3000,
                     // Hover only vertical expansion for Bubble. No width change unless expanded!
                     height: 93,
                     y: (variant === 'BUBBLE') ? hoverOffset : 0,
-                    borderRadius: 11.5,
+                    borderRadius: "11.5px",
                     transition: { duration: 0.15, ease: "easeOut", type: "tween" }
                 }}
                 className={`${isStatic ? 'relative' : 'absolute'} pointer-events-auto task-card cursor-pointer p-0 group overflow-hidden ${containerClass} ${variant === 'CAPSULE' ? CARD_VARIANTS.TIMELINE_CAPSULE.interactive : CARD_VARIANTS.MICRO.interactive} ${getTaskCardColor(task)} ${(isStatic || isSelected) ? 'ring-2 ring-slate-900' : ''}`}
