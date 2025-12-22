@@ -25,7 +25,10 @@ export const apiClient = {
         const headers = {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            ...(import.meta.env.DEV ? { 'x-god-mode-bypass': 'true' } : {}),
+            ...(import.meta.env.DEV ? {
+                'x-god-mode-bypass': 'true',
+                'x-mock-user-id': localStorage.getItem('mockUserId') || undefined
+            } : {}),
             ...options.headers,
         };
 

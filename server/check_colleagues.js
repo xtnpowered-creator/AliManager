@@ -1,11 +1,7 @@
-
 import pg from 'pg';
 import dotenv from 'dotenv';
-
 dotenv.config();
-
 const { Pool } = pg;
-
 const pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -16,15 +12,20 @@ const pool = new Pool({
 
 const run = async () => {
     try {
-        console.log('Checking for GOD user...');
-        const res = await pool.query("SELECT id, email, role, display_name, organization_id, position, avatar_url FROM users WHERE role = 'god'");
-        console.log(`Found ${res.rows.length} GOD users.`);
+        const orgId = '00000000-0000-0000-0000-111111111111';
+        console.log(`Checking colleagues for Org: ${orgId}`);
+
+        const res = await pool.query(
+            "SELECT id, email, display_name FROM users WHERE organization_id = $1 AND role != 'god'",
+            [orgId]
+        );
+
+        console.log(`Found ${res.rows.length} colleagues.`);
         res.rows.forEach(r => console.log(JSON.stringify(r)));
     } catch (err) {
-        console.error('Error:', err);
+        console.error(err);
     } finally {
         await pool.end();
     }
 };
-
 run();

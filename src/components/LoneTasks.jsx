@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApiData } from '../hooks/useApiData';
 import { ListTodo, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import NewTaskModal from './NewTaskModal';
 import Card from './common/Card';
 
-const LoneTasks = ({ pushView }) => {
+const LoneTasks = () => {
+    const navigate = useNavigate();
     const { data: tasks, loading, refetch } = useApiData('/tasks');
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
@@ -49,7 +51,7 @@ const LoneTasks = ({ pushView }) => {
                         <Card
                             key={task.id}
                             variant="MACRO"
-                            onClick={() => pushView && pushView('task-detail', { taskId: task.id })}
+                            onClick={() => navigate(`/task/${task.id}`)}
                             className="p-6 group cursor-pointer"
                         >
                             <div className="flex items-start justify-between">

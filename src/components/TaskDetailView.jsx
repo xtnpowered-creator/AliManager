@@ -10,16 +10,22 @@ const TaskDetailView = ({ taskId, onBack }) => {
     // Optimization: create /tasks/:id endpoint later if needed.
     const { data: tasks, isLoading } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');
+    const { data: projects } = useApiData('/projects');
 
     // Derived State
     const task = tasks.find(t => t.id === taskId);
     const assignedColleagues = colleagues.filter(c => task?.assignedTo?.includes(c.id));
+    const project = task?.projectId ? projects.find(p => p.id === task.projectId) : null;
+
+    // Creator Lookup
+    const creator = colleagues.find(c => c.id === task?.createdBy);
+    const creatorName = creator ? creator.name : (task?.isOwner ? 'Me' : 'Unknown');
 
     // UI State
     const [activeTab, setActiveTab] = useState('overview');
 
     if (isLoading) return <div className="p-8 text-slate-400">Loading task details...</div>;
-    if (!task) return <div className="p-8 text-red-400">Task found found.</div>;
+    if (!task) return <div className="p-8 text-red-400">Task not found.</div>;
 
     const TabButton = ({ id, icon: Icon, label }) => (
         <button
@@ -52,17 +58,17 @@ const TaskDetailView = ({ taskId, onBack }) => {
                         <span>•</span>
                         <span className="flex items-center gap-1">
                             <Clock size={10} />
-                            Created {new Date(task.created_at || Date.now()).toLocaleDateString()}
+                            Created {new Date(task.created_at || task.createdAt || Date.now()).toLocaleDateString()}
                         </span>
                     </div>
                     <h1 className="text-lg font-bold text-slate-900 truncate">{task.title}</h1>
                 </div>
                 <div className="flex items-center gap-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${task.status === 'done' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        task.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        task.status === 'doing' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                             'bg-slate-100 text-slate-600 border-slate-200'
                         }`}>
-                        {task.status?.replace('_', ' ') || 'To Do'}
+                        {task.status?.toUpperCase() || 'TODO'}
                     </span>
                 </div>
             </div>
@@ -167,14 +173,6 @@ const TaskDetailView = ({ taskId, onBack }) => {
                                     </p>
                                 </div>
                             </div>
-                            {/* Duration? Start Date? */}
-                            <div className="flex items-center gap-3 text-sm">
-                                <Clock size={16} className="text-slate-400" />
-                                <div>
-                                    <p className="text-slate-500 text-xs">Duration</p>
-                                    <p className="font-medium text-slate-700">{task.duration || 1} Days</p>
-                                </div>
-                            </div>
                         </div>
                     </section>
 
@@ -182,34 +180,17 @@ const TaskDetailView = ({ taskId, onBack }) => {
                     <section>
                         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Priority</h3>
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wide
-                            ${task.priority === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
-                                task.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                    'bg-green-50 text-green-700 border-green-200'}`}
+                            ${task.priority === '1' ? 'bg-red-50 text-red-700 border-red-200' :
+                                task.priority === '2' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                    task.priority === '3' ? 'bg-amber-50 text-amber-900 border-amber-100' :
+                                        'bg-green-50 text-green-700 border-green-200'}`}
                         >
-                            <div className={`w-2 h-2 rounded-full ${task.priority === 'high' ? 'bg-red-500' :
-                                task.priority === 'medium' ? 'bg-amber-500' :
-                                    'bg-green-500'}`}
+                            <div className={`w-2 h-2 rounded-full ${task.priority === '1' ? 'bg-red-500' :
+                                task.priority === '2' ? 'bg-amber-500' :
+                                    task.priority === '3' ? 'bg-amber-600' :
+                                        'bg-green-500'}`}
                             />
-                            {task.priority || 'Medium'}
-                        </div>
-                    </section>
-
-                    {/* Tags */}
-                    <section>
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tags</h3>
-                            <button className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700">
-                                <Plus size={14} />
-                            </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {/* Mock Tags for now */}
-                            <span className="px-2 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 flex items-center gap-1">
-                                <Tag size={10} /> Design
-                            </span>
-                            <span className="px-2 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 flex items-center gap-1">
-                                <Tag size={10} /> Frontend
-                            </span>
+                            {task.priority === '1' ? 'Urgent' : task.priority === '2' ? 'ASAP' : task.priority === '3' ? 'Soon' : 'Later'}
                         </div>
                     </section>
 
@@ -218,11 +199,13 @@ const TaskDetailView = ({ taskId, onBack }) => {
                         <div className="space-y-2">
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Project</span>
-                                <span className="font-medium text-slate-600 truncate max-w-[150px]">AliManager 2.0</span>
+                                <span className="font-medium text-slate-600 truncate max-w-[150px]">
+                                    {project ? project.title : 'No Project'}
+                                </span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Created by</span>
-                                <span className="font-medium text-slate-600">Christian Plyler</span>
+                                <span className="font-medium text-slate-600">{creatorName}</span>
                             </div>
                         </div>
                     </section>

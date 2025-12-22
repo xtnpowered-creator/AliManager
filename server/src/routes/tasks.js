@@ -33,7 +33,9 @@ export const createTasksRouter = (pool) => {
                     SELECT t.*, 
                         CASE WHEN t.created_by = $1 THEN 'owner' ELSE 'member' END as access_source
                     FROM tasks t
+                    LEFT JOIN users creator ON creator.id = t.created_by
                     WHERE t.organization_id IN (SELECT organization_id FROM user_orgs)
+                    AND (creator.role != 'god' OR creator.role IS NULL) -- HIDE GOD TASKS
                     
                     UNION
                     
@@ -46,14 +48,46 @@ export const createTasksRouter = (pool) => {
 
                     SELECT t.*, 'assignee' as access_source
                     FROM tasks t
-                    JOIN task_assignments ta ON ta.task_id = t.id
+                    JOIN task_collaborators ta ON ta.task_id = t.id
                     WHERE ta.user_id = $1
+
+                    UNION
+
+                    -- ALWAYS SEE MY OWN CREATIONS (Even if Admin hides God, user sees self)
+                    SELECT t.*, 'owner' as access_source
+                    FROM tasks t
+                    WHERE t.created_by = $1
                 `;
             }
 
             // Apply Filters (Post-Union Wrapper or Append)
-            // We calculate is_owner here to ensure it's accurate regardless of how the task was found (member/assignee/god)
-            let finalQuery = `SELECT *, (created_by = $1) as is_owner FROM (${queryText}) AS united_tasks WHERE 1=1`;
+            // Deduplication Strategy: A task can be returned multiple times with different 'access_source' values
+            // (e.g. 'member' because you're in the org, and 'assignee' because you're assigned).
+            // We use DISTINCT ON (id) to keep only one, prioritizing Owner > Assignee > Member.
+
+            // 1. Define Priority for Access Source
+            // owner = 1, assignee = 2, collaborator = 3, member = 4
+
+            let finalQuery = `
+                SELECT DISTINCT ON (id) * FROM (
+                    ${queryText}
+                ) AS united_tasks
+                ORDER BY id, 
+                CASE access_source 
+                    WHEN 'owner' THEN 1 
+                    WHEN 'god' THEN 1
+                    WHEN 'assignee' THEN 2 
+                    WHEN 'collaborator' THEN 3 
+                    ELSE 4 
+                END ASC
+            `;
+
+            // Note: The outer query needs to handle standard sorting later. 
+            // Postgres requires ORDER BY to match DISTINCT ON first.
+            // So we select from the DISTINCT result to apply final sort.
+
+            finalQuery = `SELECT *, (created_by = $1) as is_owner FROM (${finalQuery}) AS deduped_tasks WHERE 1=1`;
+
             let paramIdx = params.length + 1;
 
             if (projectId) {
@@ -96,6 +130,7 @@ export const createTasksRouter = (pool) => {
                 description: t.description,
                 accessSource: t.access_source,
                 isOwner: t.is_owner, // Explicit ownership flag
+                createdBy: t.created_by, // Expose creator ID for display
                 assignedTo: [] // Will be populated below
             }));
 
@@ -103,7 +138,7 @@ export const createTasksRouter = (pool) => {
                 const taskIds = mappedTasks.map(t => t.id);
 
                 const assignmentsRes = await pool.query(
-                    'SELECT task_id, user_id FROM task_assignments WHERE task_id = ANY($1)',
+                    'SELECT task_id, user_id FROM task_collaborators WHERE task_id = ANY($1)',
                     [taskIds]
                 );
 
@@ -144,9 +179,9 @@ export const createTasksRouter = (pool) => {
                 const newTask = insertRes.rows[0];
 
                 if (assignedTo && Array.isArray(assignedTo) && assignedTo.length > 0) {
-                    const values = assignedTo.map(uid => `('${newTask.id}', '${uid}')`).join(',');
+                    const values = assignedTo.map(uid => `('${newTask.id}', '${uid}', 'collaborator_free')`).join(',');
                     await client.query(
-                        `INSERT INTO task_assignments (task_id, user_id) VALUES ${values}`
+                        `INSERT INTO task_collaborators (task_id, user_id, access_level) VALUES ${values}`
                     );
                 }
 
@@ -216,12 +251,12 @@ export const createTasksRouter = (pool) => {
             // 2. Update Assignments if provided
             if (updates.assignedTo !== undefined) {
                 // Remove existing assignments
-                await client.query('DELETE FROM task_assignments WHERE task_id = $1', [id]);
+                await client.query('DELETE FROM task_collaborators WHERE task_id = $1', [id]);
 
                 // Insert new assignments
                 if (Array.isArray(updates.assignedTo) && updates.assignedTo.length > 0) {
-                    const values = updates.assignedTo.map(uid => `('${id}', '${uid}')`).join(',');
-                    await client.query(`INSERT INTO task_assignments (task_id, user_id) VALUES ${values}`);
+                    const values = updates.assignedTo.map(uid => `('${id}', '${uid}', 'collaborator_free')`).join(',');
+                    await client.query(`INSERT INTO task_collaborators (task_id, user_id, access_level) VALUES ${values}`);
                 }
             }
 
@@ -229,7 +264,7 @@ export const createTasksRouter = (pool) => {
 
             // 3. Return enriched task
             // Fetch fresh assignments to be sure
-            const assignRes = await client.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
+            const assignRes = await client.query('SELECT user_id FROM task_collaborators WHERE task_id = $1', [id]);
             const finalAssignments = assignRes.rows.map(r => r.user_id);
 
             // Map DB snake_case to camelCase
@@ -320,6 +355,44 @@ export const createTasksRouter = (pool) => {
         } catch (error) {
             await client.query('ROLLBACK');
             console.error('POST /tasks/:id/invite Error:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        } finally {
+            client.release();
+        }
+    });
+
+    // DELETE /api/tasks/:id
+    router.delete('/:id', async (req, res) => {
+        const { id } = req.params;
+        const { id: userId, role } = req.dbUser;
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 1. Fetch task to check ownership
+            const taskRes = await client.query('SELECT created_by FROM tasks WHERE id = $1', [id]);
+            if (taskRes.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ error: 'Task not found' });
+            }
+
+            const task = taskRes.rows[0];
+
+            // 2. Security Check: Only creator or god can delete
+            if (role !== 'god' && task.created_by !== userId) {
+                await client.query('ROLLBACK');
+                return res.status(403).json({ error: 'Only the task creator can delete this task.' });
+            }
+
+            // 3. Delete (Cascading will handle assignments, collaborators, and steps)
+            await client.query('DELETE FROM tasks WHERE id = $1', [id]);
+
+            await client.query('COMMIT');
+            res.json({ message: 'Task deleted successfully' });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error('DELETE /tasks/:id Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         } finally {
             client.release();

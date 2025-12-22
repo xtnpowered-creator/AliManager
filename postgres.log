@@ -574,3 +574,179 @@
 	            
 2025-12-20 10:38:15.559 CST [18764] LOG:  checkpoint starting: time
 2025-12-20 10:38:17.232 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.302 s, sync=0.295 s, total=1.674 s; sync files=13, longest=0.027 s, average=0.023 s; distance=22 kB, estimate=32 kB; lsn=0/1BAB820, redo lsn=0/1BAB7E8
+2025-12-20 19:40:02.273 CST [24424] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-20 19:43:16.171 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 19:43:17.150 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.770 s, sync=0.072 s, total=0.980 s; sync files=8, longest=0.026 s, average=0.009 s; distance=10 kB, estimate=30 kB; lsn=0/1BAE250, redo lsn=0/1BAE218
+2025-12-20 19:53:16.165 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 19:53:17.059 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.763 s, sync=0.076 s, total=0.895 s; sync files=7, longest=0.025 s, average=0.011 s; distance=17 kB, estimate=29 kB; lsn=0/1BB28C8, redo lsn=0/1BB2890
+2025-12-20 20:53:16.172 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 20:53:16.538 CST [18764] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.218 s, sync=0.062 s, total=0.368 s; sync files=3, longest=0.032 s, average=0.021 s; distance=6 kB, estimate=26 kB; lsn=0/1BB40E8, redo lsn=0/1BB40B0
+2025-12-20 21:13:16.573 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 21:13:16.928 CST [18764] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.227 s, sync=0.051 s, total=0.356 s; sync files=3, longest=0.027 s, average=0.017 s; distance=8 kB, estimate=24 kB; lsn=0/1BB62D8, redo lsn=0/1BB62A0
+2025-12-20 21:22:44.302 CST [21956] LOG:  could not send data to client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-20 21:22:44.307 CST [21956] FATAL:  connection to client lost
+2025-12-20 21:23:16.946 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 21:23:18.248 CST [18764] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.906 s, sync=0.234 s, total=1.303 s; sync files=9, longest=0.044 s, average=0.026 s; distance=14 kB, estimate=23 kB; lsn=0/1BB9BE0, redo lsn=0/1BB9BA8
+2025-12-20 21:33:16.267 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 21:33:18.043 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.307 s, sync=0.355 s, total=1.777 s; sync files=12, longest=0.053 s, average=0.030 s; distance=22 kB, estimate=23 kB; lsn=0/1BBF508, redo lsn=0/1BBF4D0
+2025-12-20 22:03:16.100 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 22:03:17.422 CST [18764] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.911 s, sync=0.270 s, total=1.323 s; sync files=9, longest=0.071 s, average=0.030 s; distance=14 kB, estimate=22 kB; lsn=0/1BC2F98, redo lsn=0/1BC2F60
+2025-12-20 22:13:16.435 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 22:13:18.339 CST [18764] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.337 s, sync=0.455 s, total=1.905 s; sync files=12, longest=0.133 s, average=0.038 s; distance=22 kB, estimate=22 kB; lsn=0/1BC8AB0, redo lsn=0/1BC8A78
+2025-12-20 23:18:16.422 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 23:18:16.644 CST [18764] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.104 s, sync=0.044 s, total=0.224 s; sync files=2, longest=0.030 s, average=0.022 s; distance=4 kB, estimate=20 kB; lsn=0/1BC9C48, redo lsn=0/1BC9C10
+2025-12-20 23:38:16.672 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 23:38:17.019 CST [18764] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.216 s, sync=0.054 s, total=0.348 s; sync files=3, longest=0.030 s, average=0.018 s; distance=8 kB, estimate=19 kB; lsn=0/1BCBFC8, redo lsn=0/1BCBF90
+2025-12-20 23:43:16.029 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 23:43:17.085 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.756 s, sync=0.164 s, total=1.057 s; sync files=7, longest=0.033 s, average=0.024 s; distance=28 kB, estimate=28 kB; lsn=0/1BD3230, redo lsn=0/1BD31F8
+2025-12-20 23:48:16.091 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 23:48:16.435 CST [18764] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.228 s, sync=0.051 s, total=0.345 s; sync files=3, longest=0.027 s, average=0.017 s; distance=9 kB, estimate=26 kB; lsn=0/1BD5680, redo lsn=0/1BD5648
+2025-12-20 23:52:52.852 CST [19132] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-20 23:53:16.442 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 23:53:17.527 CST [18764] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.882 s, sync=0.093 s, total=1.086 s; sync files=8, longest=0.026 s, average=0.012 s; distance=19 kB, estimate=25 kB; lsn=0/1BDA5E0, redo lsn=0/1BDA5A8
+2025-12-20 23:58:16.539 CST [18764] LOG:  checkpoint starting: time
+2025-12-20 23:58:17.443 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.655 s, sync=0.162 s, total=0.906 s; sync files=7, longest=0.029 s, average=0.024 s; distance=14 kB, estimate=24 kB; lsn=0/1BDDE50, redo lsn=0/1BDDE18
+2025-12-21 00:03:16.446 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 00:03:17.327 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.650 s, sync=0.155 s, total=0.882 s; sync files=7, longest=0.029 s, average=0.023 s; distance=11 kB, estimate=23 kB; lsn=0/1BE0C70, redo lsn=0/1BE0C38
+2025-12-21 01:31:56.641 CST [20484] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 01:31:56.642 CST [1648] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 01:31:56.642 CST [15896] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 01:31:56.642 CST [15712] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 09:50:31.389 CST [14796] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 09:50:31.389 CST [10392] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 09:50:31.390 CST [9656] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 09:50:31.390 CST [24548] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 09:53:17.166 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 09:53:18.125 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.754 s, sync=0.138 s, total=0.960 s; sync files=7, longest=0.037 s, average=0.020 s; distance=19 kB, estimate=23 kB; lsn=0/1BE5A70, redo lsn=0/1BE5A38
+2025-12-21 09:58:17.131 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 09:58:18.008 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.654 s, sync=0.151 s, total=0.877 s; sync files=7, longest=0.033 s, average=0.022 s; distance=16 kB, estimate=22 kB; lsn=0/1BE9D40, redo lsn=0/1BE9D08
+2025-12-21 10:03:17.014 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 10:03:17.991 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.749 s, sync=0.160 s, total=0.978 s; sync files=7, longest=0.036 s, average=0.023 s; distance=19 kB, estimate=22 kB; lsn=0/1BEEBA8, redo lsn=0/1BEEB70
+2025-12-21 10:08:17.995 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 10:08:18.866 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.645 s, sync=0.161 s, total=0.872 s; sync files=7, longest=0.035 s, average=0.023 s; distance=14 kB, estimate=21 kB; lsn=0/1BF2770, redo lsn=0/1BF2738
+2025-12-21 11:35:26.144 CST [17924] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 11:35:26.144 CST [6780] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 11:35:26.144 CST [21632] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 11:35:26.144 CST [18716] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 11:35:27.346 CST [5272] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 11:38:17.566 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 11:38:18.675 CST [18764] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.869 s, sync=0.140 s, total=1.110 s; sync files=8, longest=0.024 s, average=0.018 s; distance=20 kB, estimate=21 kB; lsn=0/1BF79C0, redo lsn=0/1BF7988
+2025-12-21 11:43:17.690 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 11:43:18.517 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.650 s, sync=0.122 s, total=0.828 s; sync files=7, longest=0.023 s, average=0.018 s; distance=16 kB, estimate=20 kB; lsn=0/1BFBD90, redo lsn=0/1BFBD58
+2025-12-21 11:48:17.531 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 11:48:18.689 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 1 WAL file(s) added, 0 removed, 0 recycled; write=0.650 s, sync=0.142 s, total=1.159 s; sync files=7, longest=0.034 s, average=0.021 s; distance=17 kB, estimate=20 kB; lsn=0/1C004B0, redo lsn=0/1C00478
+2025-12-21 11:58:17.698 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 11:58:18.551 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.657 s, sync=0.127 s, total=0.854 s; sync files=7, longest=0.028 s, average=0.019 s; distance=18 kB, estimate=20 kB; lsn=0/1C04F20, redo lsn=0/1C04EE8
+2025-12-21 12:03:17.561 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 12:03:19.142 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.307 s, sync=0.193 s, total=1.582 s; sync files=10, longest=0.036 s, average=0.020 s; distance=39 kB, estimate=39 kB; lsn=0/1C0EC48, redo lsn=0/1C0EC10
+2025-12-21 12:48:17.219 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 12:48:18.266 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.769 s, sync=0.165 s, total=1.048 s; sync files=8, longest=0.030 s, average=0.021 s; distance=8 kB, estimate=36 kB; lsn=0/1C11038, redo lsn=0/1C11000
+2025-12-21 14:23:17.408 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 14:23:18.632 CST [18764] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.972 s, sync=0.162 s, total=1.225 s; sync files=8, longest=0.029 s, average=0.021 s; distance=7 kB, estimate=33 kB; lsn=0/1C12E50, redo lsn=0/1C12E18
+2025-12-21 15:15:19.116 CST [24288] ERROR:  invalid input syntax for type uuid: "undefined"
+2025-12-21 15:15:19.116 CST [24288] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-12-21 15:15:19.116 CST [24288] STATEMENT:  SELECT * FROM users WHERE id = $1
+2025-12-21 15:15:19.116 CST [14964] ERROR:  invalid input syntax for type uuid: "undefined"
+2025-12-21 15:15:19.116 CST [14964] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-12-21 15:15:19.116 CST [14964] STATEMENT:  SELECT * FROM users WHERE id = $1
+2025-12-21 15:15:19.214 CST [19956] ERROR:  invalid input syntax for type uuid: "undefined"
+2025-12-21 15:15:19.214 CST [19956] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-12-21 15:15:19.214 CST [19956] STATEMENT:  SELECT * FROM users WHERE id = $1
+2025-12-21 15:15:19.227 CST [17588] ERROR:  invalid input syntax for type uuid: "undefined"
+2025-12-21 15:15:19.227 CST [17588] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-12-21 15:15:19.227 CST [17588] STATEMENT:  SELECT * FROM users WHERE id = $1
+2025-12-21 15:15:19.330 CST [22220] ERROR:  invalid input syntax for type uuid: "undefined"
+2025-12-21 15:15:19.330 CST [22220] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-12-21 15:15:19.330 CST [22220] STATEMENT:  SELECT * FROM users WHERE id = $1
+2025-12-21 15:15:19.411 CST [19140] ERROR:  invalid input syntax for type uuid: "undefined"
+2025-12-21 15:15:19.411 CST [19140] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-12-21 15:15:19.411 CST [19140] STATEMENT:  SELECT * FROM users WHERE id = $1
+2025-12-21 15:16:55.869 CST [23352] ERROR:  invalid input value for enum user_role: "member"
+2025-12-21 15:16:55.869 CST [23352] CONTEXT:  unnamed portal parameter $4 = '...'
+2025-12-21 15:16:55.869 CST [23352] STATEMENT:  
+	                INSERT INTO users (id, email, display_name, role, organization_id, position, firebase_uid, avatar_url, created_at)
+	                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+	                ON CONFLICT (id) DO UPDATE SET
+	                    email = EXCLUDED.email,
+	                    display_name = EXCLUDED.display_name,
+	                    role = EXCLUDED.role,
+	                    organization_id = EXCLUDED.organization_id,
+	                    position = EXCLUDED.position,
+	                    avatar_url = EXCLUDED.avatar_url;
+	            
+2025-12-21 15:18:17.722 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 15:18:18.956 CST [18764] LOG:  checkpoint complete: wrote 10 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.975 s, sync=0.185 s, total=1.236 s; sync files=10, longest=0.027 s, average=0.019 s; distance=9 kB, estimate=30 kB; lsn=0/1C15418, redo lsn=0/1C153E0
+2025-12-21 15:34:44.675 CST [21004] ERROR:  invalid input value for enum user_role: "member"
+2025-12-21 15:34:44.675 CST [21004] CONTEXT:  unnamed portal parameter $4 = '...'
+2025-12-21 15:34:44.675 CST [21004] STATEMENT:  
+	                INSERT INTO users (id, email, display_name, role, organization_id, position, firebase_uid, avatar_url, created_at)
+	                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+	            
+2025-12-21 15:38:17.986 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 15:38:20.073 CST [18764] LOG:  checkpoint complete: wrote 17 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.730 s, sync=0.279 s, total=2.087 s; sync files=15, longest=0.025 s, average=0.019 s; distance=40 kB, estimate=40 kB; lsn=0/1C1F688, redo lsn=0/1C1F650
+2025-12-21 15:39:45.559 CST [21048] ERROR:  invalid input value for enum user_role: "member"
+2025-12-21 15:39:45.559 CST [21048] CONTEXT:  unnamed portal parameter $4 = '...'
+2025-12-21 15:39:45.559 CST [21048] STATEMENT:  
+	                INSERT INTO users (id, email, display_name, role, organization_id, position, firebase_uid, avatar_url, created_at)
+	                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+	            
+2025-12-21 15:43:17.091 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 15:43:22.060 CST [18764] LOG:  checkpoint complete: wrote 44 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.647 s, sync=0.220 s, total=4.970 s; sync files=99, longest=0.040 s, average=0.003 s; distance=211 kB, estimate=211 kB; lsn=0/1C54650, redo lsn=0/1C54618
+2025-12-21 15:48:17.063 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 15:48:21.941 CST [18764] LOG:  checkpoint complete: wrote 43 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.537 s, sync=0.225 s, total=4.879 s; sync files=52, longest=0.017 s, average=0.005 s; distance=104 kB, estimate=201 kB; lsn=0/1C6E7C0, redo lsn=0/1C6E788
+2025-12-21 15:53:17.947 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 15:53:23.776 CST [18764] LOG:  checkpoint complete: wrote 50 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=5.294 s, sync=0.443 s, total=5.829 s; sync files=53, longest=0.034 s, average=0.009 s; distance=135 kB, estimate=194 kB; lsn=0/1C90748, redo lsn=0/1C90710
+2025-12-21 16:56:28.960 CST [21744] ERROR:  relation "task_assignees" does not exist at character 22
+2025-12-21 16:56:28.960 CST [21744] STATEMENT:  SELECT COUNT(*) FROM task_assignees
+2025-12-21 17:17:17.655 CST [23992] ERROR:  column "owner_id" of relation "projects" does not exist at character 60
+2025-12-21 17:17:17.655 CST [23992] STATEMENT:  
+	                INSERT INTO projects (title, description, owner_id, organization_id, status, created_at)
+	                VALUES ($1, $2, $3, $4, 'active', NOW())
+	                RETURNING id
+	            
+2025-12-21 17:18:17.871 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 17:18:24.043 CST [18764] LOG:  checkpoint complete: wrote 52 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=5.498 s, sync=0.569 s, total=6.172 s; sync files=62, longest=0.036 s, average=0.010 s; distance=175 kB, estimate=192 kB; lsn=0/1CBC490, redo lsn=0/1CBC458
+2025-12-21 17:23:17.048 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 17:23:18.359 CST [18764] LOG:  checkpoint complete: wrote 11 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.088 s, sync=0.168 s, total=1.311 s; sync files=8, longest=0.034 s, average=0.021 s; distance=27 kB, estimate=176 kB; lsn=0/1CC31D0, redo lsn=0/1CC3198
+2025-12-21 17:29:50.279 CST [19916] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 17:29:50.279 CST [19048] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 17:29:50.279 CST [4904] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 17:29:50.279 CST [19628] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 18:18:52.146 CST [12292] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 18:23:17.455 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 18:23:18.333 CST [18764] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.755 s, sync=0.059 s, total=0.878 s; sync files=7, longest=0.017 s, average=0.009 s; distance=19 kB, estimate=160 kB; lsn=0/1CC7DF0, redo lsn=0/1CC7DB8
+2025-12-21 19:38:06.546 CST [11680] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 19:38:17.455 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 19:38:18.248 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.646 s, sync=0.072 s, total=0.795 s; sync files=7, longest=0.017 s, average=0.011 s; distance=10 kB, estimate=145 kB; lsn=0/1CCA680, redo lsn=0/1CCA648
+2025-12-21 19:43:17.255 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 19:43:18.073 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.667 s, sync=0.072 s, total=0.818 s; sync files=7, longest=0.017 s, average=0.011 s; distance=10 kB, estimate=131 kB; lsn=0/1CCD028, redo lsn=0/1CCCFF0
+2025-12-21 20:43:17.151 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 20:43:22.296 CST [18764] LOG:  checkpoint complete: wrote 42 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.442 s, sync=0.619 s, total=5.146 s; sync files=34, longest=0.034 s, average=0.019 s; distance=126 kB, estimate=131 kB; lsn=0/1CECB30, redo lsn=0/1CECAF8
+2025-12-21 20:58:01.427 CST [21956] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-21 20:58:17.325 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 20:58:18.913 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.306 s, sync=0.211 s, total=1.588 s; sync files=10, longest=0.031 s, average=0.022 s; distance=17 kB, estimate=120 kB; lsn=0/1CF1188, redo lsn=0/1CF1150
+2025-12-21 21:03:17.922 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 21:03:18.746 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.646 s, sync=0.108 s, total=0.825 s; sync files=7, longest=0.030 s, average=0.016 s; distance=10 kB, estimate=109 kB; lsn=0/1CF3B90, redo lsn=0/1CF3B58

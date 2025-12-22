@@ -143,7 +143,14 @@ export const useTimelineState = (user) => {
         // 1. Optimistic Update
         setTasks(prev => prev.map(t => {
             if (ids.includes(t.id)) {
-                return { ...t, ...updates };
+                const newT = { ...t, ...updates };
+                // Handle completedAt logic for immediate UI feedback (location in timeline)
+                if (updates.status === 'done') {
+                    newT.completedAt = new Date().toISOString();
+                } else if (updates.status) {
+                    newT.completedAt = null; // Clear if moving out of done
+                }
+                return newT;
             }
             return t;
         }));
@@ -166,6 +173,7 @@ export const useTimelineState = (user) => {
             } else {
                 showToast(`Updated (${taskLabel})`, 'success');
             }
+            refetchTasks(); // Force refresh to ensure consistency
         } catch (err) {
             console.error('Bulk update failed:', err);
             showToast('Some updates failed', 'error');

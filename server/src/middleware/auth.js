@@ -5,6 +5,50 @@ const DEFAULT_ORG_ID = '00000000-0000-0000-0000-111111111111'; // Mattamay Homes
 
 export const createAuthMiddleware = (pool) => {
     return async (req, res, next) => {
+        const isDev = process.env.NODE_ENV !== 'production';
+
+        // ------------------------------------------------------------------
+        // 3. DEVELOPMENT "GOD MODE" & MOCK USER SWITCHING
+        // ------------------------------------------------------------------
+        if (isDev) {
+            const mockUserId = req.headers['x-mock-user-id'];
+            const godModeBypass = req.headers['x-god-mode-bypass'];
+
+            // Priority 1: Specific Mock User (Switched via UI)
+            if (mockUserId) {
+                console.log(`[DEV ERROR BYPASS] Mock User ID provided: ${mockUserId}`);
+                try {
+                    const mockUserRes = await pool.query('SELECT * FROM users WHERE id = $1', [mockUserId]);
+                    if (mockUserRes.rows.length > 0) {
+                        const mockUser = mockUserRes.rows[0];
+                        req.user = { uid: mockUser.firebase_uid, email: mockUser.email, picture: mockUser.avatar_url, name: mockUser.display_name };
+                        req.dbUser = mockUser;
+                        return next();
+                    } else {
+                        console.warn(`[DEV] Mock User ID ${mockUserId} not found in DB.`);
+                    }
+                } catch (err) {
+                    console.error('[DEV] Failed to fetch mock user:', err);
+                }
+            }
+
+            // Priority 2: Legacy God Mode Bypass (Default)
+            if (godModeBypass === 'true') {
+                console.log('[DEV ERROR BYPASS] God Mode header detected. Searching for Christian...');
+                try {
+                    const godUserRes = await pool.query("SELECT * FROM users WHERE email = 'xtnpowered@gmail.com'");
+                    if (godUserRes.rows.length > 0) {
+                        const godUser = godUserRes.rows[0];
+                        req.user = { uid: godUser.firebase_uid, email: godUser.email, picture: godUser.avatar_url, name: godUser.display_name };
+                        req.dbUser = godUser;
+                        return next();
+                    }
+                } catch (err) {
+                    console.error('[DEV] God Mode lookup failed:', err);
+                }
+            }
+        }
+
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ error: 'Unauthorized: No token provided' });
@@ -19,52 +63,6 @@ export const createAuthMiddleware = (pool) => {
             console.log(`[Auth] Token Verified. UID: ${decodedToken.uid}, Email: ${decodedToken.email}`);
 
             let { uid, email, picture, name } = decodedToken;
-
-            // FIX: Emulator tokens sometimes lack 'email'. Fetch full profile if missing.
-            if (!email) {
-                console.log('[Auth] Email missing in token. Fetching full user record...');
-                try {
-                    const userRecord = await admin.auth().getUser(uid);
-                    email = userRecord.email;
-                    name = name || userRecord.displayName;
-                    picture = picture || userRecord.photoURL;
-                    console.log(`[Auth] User Record Fetched. Email: ${email}`);
-                } catch (fetchErr) {
-                    console.error('[Auth] Failed to fetch user record:', fetchErr);
-                }
-            }
-
-            // FINAL SAFETY NET: Database requires email.
-            if (!email) {
-                console.warn('[Auth] Email still missing. Using placeholder.');
-                email = `${uid}@placeholder.com`;
-            }
-
-            req.user = { uid, email, picture, name };
-
-            // --- GOD MODE BYPASS (DEV ONLY) ---
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('[Auth] DEV MODE DETECTED: Activating God Mode Bypass...');
-                const godUserRes = await pool.query("SELECT * FROM users WHERE role = 'god' ORDER BY id ASC LIMIT 1");
-
-                if (godUserRes.rows.length > 0) {
-                    const godUser = godUserRes.rows[0];
-                    console.log('[Auth] God Mode: Target Acquired ->', godUser.email);
-
-                    // FORCE LINKING: If I am authenticated (uid exists) but the God record has different/null UID
-                    // Update the God record to own this Token.
-                    if (uid && godUser.firebase_uid !== uid) {
-                        console.log(`[Auth] God Mode: Linking Token (${uid}) to God Record...`);
-                        await pool.query('UPDATE users SET firebase_uid = $1 WHERE id = $2', [uid, godUser.id]);
-                        godUser.firebase_uid = uid; // Sync local object
-                    }
-
-                    req.dbUser = godUser;
-                    // Note: We keep req.user.uid as the valid Firebase Token UID
-                    return next();
-                }
-            }
-            // ----------------------------------
 
             // 2. Fetch User from Postgres
             console.log('[Auth] Fetching from DB...');

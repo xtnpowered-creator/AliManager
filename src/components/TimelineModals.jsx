@@ -76,7 +76,7 @@ const TimelineModals = ({
             <NewTaskModal
                 isOpen={showNewTaskModal}
                 onClose={() => setShowNewTaskModal(false)}
-                onSuccess={refetchTasks}
+                onSuccess={() => { refetchTasks(); setSelectedTaskIds(new Set()); }}
                 initialData={newTaskDefaults}
             />
 

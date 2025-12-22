@@ -51,7 +51,8 @@ const TaskCard = ({
     const icons = (
         <div className={`flex flex-col items-center justify-center gap-[3px] pointer-events-none absolute right-0 top-0 bottom-0 w-[23px]`}>
             {/* 1. Created by Me (Owner) -> Crown */}
-            <div className={`w-[15px] h-[15px] rounded-full border flex items-center justify-center ${(task.isOwner || ['owner', 'god'].includes(accessSrc)) ? 'border-slate-900 bg-white' : 'border-transparent bg-white/50'}`}>
+            {/* God Mode: Do NOT show crown. Crown = "I created this". God has implicit power, not explicit ownership. */}
+            <div className={`w-[15px] h-[15px] rounded-full border flex items-center justify-center ${(task.isOwner) ? 'border-slate-900 bg-white' : 'border-transparent bg-white/50'}`}>
                 <Crown size={11} strokeWidth={2.5} className="text-slate-900 fill-slate-900" />
             </div>
 

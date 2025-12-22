@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import { Search, Bell, Menu } from 'lucide-react';
 import Navigation from './Navigation';
 import Logo from './Logo';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, MOCK_USERS } from '../context/AuthContext';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { ChevronDown, RefreshCcw, LogOut } from 'lucide-react'; // Added Icons
 
-const Shell = ({ children, currentView, setView }) => {
-    const { user } = useAuth();
+const Shell = ({ children }) => {
+    const { user, switchUser } = useAuth();
+    const [showProfileMenu, setShowProfileMenu] = React.useState(false);
 
     // Custom Login Helper (Restored)
     useEffect(() => {
@@ -64,19 +66,53 @@ const Shell = ({ children, currentView, setView }) => {
                             <Bell size={20} />
                         </button>
                         <div className="h-4 w-[1px] bg-slate-200 mx-2"></div>
-                        <div className="flex items-center gap-3 pl-2">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-bold text-slate-900">{user?.displayName || user?.email || 'Guest'}</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-teal-600 leading-none">
-                                    {user?.role === 'god' ? 'System God' : (user?.role || 'Member')}
-                                </p>
+                        <div className="relative">
+                            <div
+                                className="flex items-center gap-3 pl-2 cursor-pointer"
+                                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                            >
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-sm font-bold text-slate-900">{user?.displayName || user?.email || 'Guest'}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-teal-600 leading-none">
+                                        {user?.role === 'god' ? 'System God' : (user?.role || 'Member')}
+                                    </p>
+                                </div>
+                                <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-slate-200 transition-transform active:scale-95">
+                                    {getInitials(user?.displayName || user?.email)}
+                                </div>
+                                <ChevronDown size={14} className="text-slate-400" />
                             </div>
-                            <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-slate-200 transition-transform active:scale-95 cursor-pointer">
-                                {getInitials(user?.displayName || user?.email)}
-                            </div>
-                            <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
-                                <Menu size={24} />
-                            </button>
+
+                            {/* Profile Dropdown */}
+                            {showProfileMenu && (
+                                <div className="absolute right-0 top-14 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-[200]">
+                                    {import.meta.env.DEV && (
+                                        <div className="mb-2 pb-2 border-b border-slate-100">
+                                            <p className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Dev: Switch User</p>
+                                            {MOCK_USERS.map(u => (
+                                                <button
+                                                    key={u.id}
+                                                    onClick={() => {
+                                                        switchUser(u.id);
+                                                        setShowProfileMenu(false);
+                                                    }}
+                                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium flex items-center justify-between ${user?.id === u.id ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                                                >
+                                                    {u.label}
+                                                    {user?.id === u.id && <div className="w-2 h-2 rounded-full bg-teal-500"></div>}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <button
+                                        className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                        onClick={() => alert("Logout not implemented for Mock Mode yet")}
+                                    >
+                                        <LogOut size={16} />
+                                        Sign Out
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -84,14 +120,12 @@ const Shell = ({ children, currentView, setView }) => {
 
             <div className="flex flex-1 overflow-hidden">
                 <div className="relative z-[90] h-full shadow-[1px_0_20px_0_rgba(0,0,0,0.05)]">
-                    <Navigation currentView={currentView} setView={setView} />
+                    <Navigation />
                 </div>
                 <main className="flex-1 bg-[#f8fafc]/50 overflow-hidden relative z-0">
-                    {['timelines', 'kanban', 'gantt'].includes(currentView) ? children : (
-                        <div className="h-full overflow-y-auto custom-scrollbar">
-                            {children}
-                        </div>
-                    )}
+                    <div className="h-full overflow-y-auto custom-scrollbar">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>

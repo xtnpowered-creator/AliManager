@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { apiClient } from '../api/client';
 import { Clock, Calendar, GripVertical, User, UserPlus, CalendarDays, Eye, CheckCircle2, RotateCw, RotateCcw, Trash2, Plus, Play, Pause, Square, Maximize2, Flag, Zap, Ban, Shield } from 'lucide-react';
@@ -20,7 +21,10 @@ const safeDate = (dateVal) => {
     return isNaN(d.getTime()) ? null : d;
 };
 
-const TimelineView = ({ highlightTaskId, pushView }) => {
+const TimelineView = () => {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const highlightTaskId = searchParams.get('highlightTaskId');
     const { user } = useAuth();
     const { showToast } = useToast();
     const scrollContainerRef = useRef(null);
@@ -80,8 +84,8 @@ const TimelineView = ({ highlightTaskId, pushView }) => {
 
     // Double Click: Navigate to Full Details Page
     const handleTaskDoubleClick = useCallback((task) => {
-        if (pushView) pushView('task-detail', { taskId: task.id });
-    }, [pushView]);
+        navigate(`/task/${task.id}`);
+    }, [navigate]);
 
     // Deep Link Scroll & Auto-Expand
     useEffect(() => {
@@ -286,7 +290,7 @@ const TimelineView = ({ highlightTaskId, pushView }) => {
                             <span>You are acting as a Temporary Admin. Access expires on {new Date(user.delegationExpiresAt).toLocaleDateString()}.</span>
                         </div>
                     )}
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Timeline Directory</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Timelines</h2>
                     <p className="text-slate-500 mt-1 text-lg">Manage assignments and schedules.</p>
                 </div>
                 <div className="flex-1 flex justify-center">
@@ -368,7 +372,7 @@ const TimelineView = ({ highlightTaskId, pushView }) => {
             {contextMenu && (
                 <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)}
                     items={contextMenu.type === 'task' ? [
-                        { label: 'View Details', icon: Eye, onClick: () => { if (pushView) pushView('task-detail', { taskId: contextMenu.data.id }); setContextMenu(null); } },
+                        { label: 'View Details', icon: Eye, onClick: () => { navigate(`/task/${contextMenu.data.id}`); setContextMenu(null); } },
                         { type: 'separator' },
                         { label: `Change Due Date...${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: CalendarDays, disabled: isAnySelectedTaskDone, onClick: () => { setRescheduleTask(contextMenu.data); setContextMenu(null); } },
                         { label: `Move Due Date X days...${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Clock, disabled: isAnySelectedTaskDone, onClick: () => { setShowMoveDateModal(true); setContextMenu(null); } },
@@ -378,18 +382,18 @@ const TimelineView = ({ highlightTaskId, pushView }) => {
                         ...((contextMenu.data.isOwner || user?.role === 'god') ? [{
                             label: `Set Priority${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Zap,
                             submenu: [
-                                { label: '1 - NOW!', icon: () => <div className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center">1</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '1' }); setContextMenu(null); } },
-                                { label: '2 - ASAP', icon: () => <div className="w-4 h-4 rounded-full border border-slate-900 text-slate-900 text-[9px] font-black flex items-center justify-center">2</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '2' }); setContextMenu(null); } },
-                                { label: '3 - Soon', icon: () => <div className="w-4 h-4 rounded-full border border-slate-900 text-slate-900 text-[9px] font-black flex items-center justify-center">3</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '3' }); setContextMenu(null); } },
-                                { label: '4 - Later', icon: () => <div className="w-4 h-4 rounded-full border border-slate-900 text-slate-900 text-[9px] font-black flex items-center justify-center">4</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '4' }); setContextMenu(null); } },
-                                { label: 'None', icon: Ban, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: null }); setContextMenu(null); } }
+                                { label: '1 - NOW!', icon: () => <div className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center">1</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '1' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                                { label: '2 - ASAP', icon: () => <div className="w-4 h-4 rounded-full border border-slate-900 text-slate-900 text-[9px] font-black flex items-center justify-center">2</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '2' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                                { label: '3 - Soon', icon: () => <div className="w-4 h-4 rounded-full border border-slate-900 text-slate-900 text-[9px] font-black flex items-center justify-center">3</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '3' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                                { label: '4 - Later', icon: () => <div className="w-4 h-4 rounded-full border border-slate-900 text-slate-900 text-[9px] font-black flex items-center justify-center">4</div>, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: '4' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                                { label: 'None', icon: Ban, onClick: () => { handleBulkUpdate(selectedTaskIds, { priority: null }); setSelectedTaskIds(new Set()); setContextMenu(null); } }
                             ]
                         }] : []),
                         { type: 'separator' },
-                        { label: `Mark Doing${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Play, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'doing' }); setContextMenu(null); } },
-                        { label: `Mark Paused${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Pause, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'paused' }); setContextMenu(null); } },
-                        { label: `Mark Done${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: CheckCircle2, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'done' }); setContextMenu(null); } },
-                        { label: `Mark Pending${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Square, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'todo' }); setContextMenu(null); } },
+                        { label: `Mark Doing${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Play, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'doing' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                        { label: `Mark Paused${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Pause, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'paused' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                        { label: `Mark Done${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: CheckCircle2, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'done' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
+                        { label: `Mark Pending${selectedTaskIds.size > 1 ? ` (${selectedTaskIds.size})` : ''}`, icon: Square, onClick: () => { handleBulkUpdate(selectedTaskIds, { status: 'todo' }); setSelectedTaskIds(new Set()); setContextMenu(null); } },
                         {
                             label: `Delete Task${selectedTaskIds.size > 1 ? `s (${selectedTaskIds.size})` : ''}`, icon: Trash2, danger: true, onClick: () => {
                                 setShowDeleteModal(true);
@@ -407,7 +411,7 @@ const TimelineView = ({ highlightTaskId, pushView }) => {
                                 ...(delegationMap.has(contextMenu.data.id) ? [{ label: 'Revoke Admin Access', icon: Ban, danger: true, onClick: () => { handleRevokeDelegation(delegationMap.get(contextMenu.data.id).id); setContextMenu(null); } }] : [{ label: 'Delegate Admin Access...', icon: Shield, onClick: () => { setDelegationUser(contextMenu.data); setContextMenu(null); } }]),
                                 { type: 'separator' }
                             ] : []),
-                            { label: 'View Profile', icon: Eye, onClick: () => { if (pushView) pushView('user-profile', { userId: contextMenu.data.id }); setContextMenu(null); } }
+                            { label: 'View Profile', icon: Eye, onClick: () => { console.warn("User Profile Route pending"); setContextMenu(null); } }
                         ])
                     ] : [
                         { label: 'Create Task Here...', icon: Plus, onClick: () => { setNewTaskDefaults({ dueDate: contextMenu.data.date, assigneeId: contextMenu.data.colleagueId }); setShowNewTaskModal(true); setContextMenu(null); } }

@@ -97,15 +97,15 @@ const TimelineRow = ({
                             const isTodayCol = dayDate.getTime() === today.getTime();
 
                             const dailyTasks = getTasksForColleague(colleague.id).filter(t => {
-                                // Floating Logic for Priority 1
-                                const p = String(t.priority || '');
-                                const isP1 = p === '1';
+                                // Floating Logic for Priority 1 - DISABLED
+                                // User prefers strict date placement matching color coding.
+                                // const p = String(t.priority || '');
+                                // const isP1 = p === '1';
                                 const isDone = t.status === 'done';
 
-                                if (isP1 && !isDone) {
-                                    // If P1 and Active, it ONLY appears on Today's column
-                                    return isTodayCol;
-                                }
+                                // if (isP1 && !isDone) {
+                                //    return isTodayCol;
+                                // }
 
                                 // Done Task Logic: Use completedAt if available, else fallback to dueDate
                                 if (isDone && t.completedAt) {
@@ -163,18 +163,38 @@ const TimelineRow = ({
                             const colWidth = getColumnWidth(day);
                             // Layout calculations...
                             const doneStackWidth = doneTasks.length > 0 ? (Math.ceil(doneTasks.length / 6) * 15) + 25 : 0;
-                            const activeAvailable = colWidth - 16 - 28;
-                            const totalActiveWidth = activeTasks.length * 25;
-                            let negativeMargin = 0;
-                            if (totalActiveWidth > activeAvailable && activeTasks.length > 1) {
-                                negativeMargin = Math.min(18, (totalActiveWidth - activeAvailable) / (activeTasks.length - 1));
+                            // 2. UNIFIED "EVEN SPINE" STACKING LOGIC - v2 (Done Column Parity)
+                            // Goal: Treat each Done Column and each Active Capsule as equal peers.
+
+                            const doneColumns = Math.ceil(doneTasks.length / 6);
+                            const activeColumns = activeTasks.length;
+                            const totalItems = doneColumns + activeColumns;
+
+                            const availableWidth = colWidth - 4;
+                            const itemWidth = 25;
+
+                            // Calculate Target Spine Width (k)
+                            // Formula: (k * (TotalItems - 1)) + ItemWidth <= AvailableWidth
+
+                            let k = 25; // Default: Full width (No squeeze)
+                            if (totalItems > 1) {
+                                const maxK = (availableWidth - itemWidth) / (totalItems - 1);
+                                k = Math.min(25, Math.max(3, maxK)); // Clamp between 3px and 25px
                             }
+
+                            // Calculate global squeeze for ALL gaps (Done-Done, Done-Active, Active-Active)
+                            const squeeze = Math.max(0, 25 - k);
+
+                            // Apply squeeze to the gap between Last Done Col and First Active Task
+                            // Note: Done Container has ~5px extra width (margin/border/padding) that we need to eat to match visual spine.
+                            const DONE_SEGMENT_PADDING = 5;
+                            const containerShift = (doneColumns > 0 && activeColumns > 0) ? squeeze + DONE_SEGMENT_PADDING : 0;
 
                             return (
                                 <div
                                     key={dIdx}
                                     style={{ minWidth: colWidth }}
-                                    className={`relative flex h-full group/day pointer-events-auto pl-1 pb-1 items-end`}
+                                    className={`relative flex h-full group/day pointer-events-auto pl-1 items-center`}
                                 // onClick={() => onExpandDay(key)} // Removed to prevent accidental expansion during panning
                                 >
                                     {/* Done Task Bubbles (Smart Stacking) */}
@@ -206,7 +226,7 @@ const TimelineRow = ({
                                                             key={colIndex}
                                                             className="flex flex-col-reverse relative w-[25px] transition-all"
                                                             style={{
-                                                                marginRight: colIndex < chunks.length - 1 ? '-10px' : '0',
+                                                                marginRight: colIndex < chunks.length - 1 ? `-${squeeze}px` : '0',
                                                                 // REMOVED zIndex here to avoid Stacking Context Traps
                                                             }}
                                                         >
@@ -247,15 +267,15 @@ const TimelineRow = ({
                                     })()}
 
                                     {/* Active Task Capsules */}
-                                    <div className="flex items-end h-full relative">
+                                    <div className="flex items-center h-full relative pointer-events-none" style={{ marginLeft: containerShift > 0 ? `-${containerShift}px` : 0 }}>
                                         {activeTasks.map((task, i) => {
                                             const isExpanded = expandedTaskId === task.id;
                                             return (
                                                 <div
-                                                    key={task.id}
+                                                    key={`${task.id}-${dIdx}-${i}`}
                                                     className={`transition-all ${isExpanded ? 'z-[2000]' : 'hover:z-[3000]'} relative`}
                                                     style={{
-                                                        marginLeft: i > 0 ? `-${negativeMargin}px` : 0,
+                                                        marginLeft: i > 0 ? `-${squeeze}px` : 0,
                                                         zIndex: isExpanded ? 2000 : (activeTasks.length - i), // Base stacking for overlap
                                                         width: '25px',
                                                         height: '93px'

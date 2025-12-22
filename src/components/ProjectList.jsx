@@ -13,7 +13,7 @@ const ProjectList = () => {
         <div className="p-8 h-full flex flex-col space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Project Portfolio</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Projects</h2>
                     <p className="text-slate-500 mt-1 text-lg">High-level oversight of active and planned initiatives.</p>
                 </div>
                 <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2">

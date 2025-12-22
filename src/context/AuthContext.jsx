@@ -7,41 +7,66 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+export const MOCK_USERS = [
+    { id: '9f449545-700a-4ce5-8dd5-4d221041e15e', name: 'Christian Plyler', role: 'god', label: 'Christian (Owner)' },
+    { id: '11111111-0000-0000-0000-000000000002', name: 'Alisara Plyler', role: 'admin', label: 'Alisara (Purchasing Dir)' },
+    { id: '11111111-0000-0000-0000-000000000003', name: 'Jenna Staff', role: 'user', label: 'Jenna (Purchasing Coord)' },
+    { id: '11111111-0000-0000-0000-000000000004', name: 'Candice Staff', role: 'user', label: 'Candice (Purchasing Agent)' },
+    { id: '11111111-0000-0000-0000-000000000005', name: 'Nick Staff', role: 'user', label: 'Nick (Purchasing Agent)' },
+    { id: '11111111-0000-0000-0000-000000000006', name: 'Stuart Staff', role: 'user', label: 'Stuart (Lead Builder)' },
+    { id: '11111111-0000-0000-0000-000000000007', name: 'Julie Staff', role: 'user', label: 'Julie (Sales Dir)' },
+];
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // FORCE GOD MODE (Frontend Bypass for Dev)
-        if (import.meta.env.DEV) {
-            const godUser = {
-                id: '9f449545-700a-4ce5-8dd5-4d221041e15e',
-                name: 'Christian Plyler',
-                displayName: 'Christian Plyler', // For Frontend
-                display_name: 'Christian Plyler', // For DB Compat
-                email: 'xtnpowered@gmail.com',
-                role: 'god',
-                organization_id: '00000000-0000-0000-0000-111111111111',
-                position: 'Owner', // Retrieved from DB
-                avatar_url: null,
-                isDelegated: false
-            };
-            // DEV MODE: Instant "God" Login
-            // The Backend accepts 'x-god-mode-bypass' header (see client.js)
-            console.log("DEV MODE: Forcing Frontend God User", godUser);
-            setUser(godUser);
-            setLoading(false);
-            return; // EXIT: Do not attach Firebase listener
+    // DEV: Handle Mock User Switching
+    const switchUser = async (mockUserId) => {
+        if (!import.meta.env.DEV) return;
+
+        setLoading(true);
+        if (mockUserId) {
+            localStorage.setItem('mockUserId', mockUserId);
+        } else {
+            localStorage.removeItem('mockUserId');
         }
 
-        // For Production: Standard Auth
+        // Reload user data
+        try {
+            // Wait a tick for localStorage to propagate if needed (usually sync)
+            const res = await apiClient.get('/users/me');
+            setUser({ ...res, uid: res.id, displayName: res.name });
+            console.log("Switched to User:", res.name);
+        } catch (err) {
+            console.error("Failed to switch user:", err);
+            // Fallback: If 'me' fails (e.g. no mock ID), maybe logout?
+            if (!mockUserId) setUser(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (import.meta.env.DEV) {
+            // Initial Load for Dev Mode
+            const storedMockId = localStorage.getItem('mockUserId');
+            // Default to God if nothing stored
+            if (!storedMockId) {
+                switchUser(MOCK_USERS[0].id);
+            } else {
+                switchUser(storedMockId);
+            }
+            return;
+        }
+
+        // Production: Firebase Listener
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
                     const res = await apiClient.get('/users/me');
                     setUser({ ...firebaseUser, ...res, displayName: res.name || firebaseUser.displayName });
                 } catch (err) {
-                    console.error("AuthContext: Failed to sync user profile:", err);
                     setUser(firebaseUser);
                 }
             } else {
@@ -54,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading }}>
+        <AuthContext.Provider value={{ user, loading, switchUser }}>
             {!loading && children}
         </AuthContext.Provider>
     );

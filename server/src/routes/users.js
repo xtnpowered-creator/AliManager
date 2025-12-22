@@ -59,7 +59,8 @@ export const createUsersRouter = (pool) => {
                         SELECT u.id, u.display_name, u.role::text, u.email, u.avatar_url, u.company_label, u.department, u.position, 'member' as source
                         FROM users u
                         LEFT JOIN memberships m ON m.user_id = u.id
-                        WHERE m.organization_id = $1 OR u.organization_id = $1
+                        WHERE (m.organization_id = $1 OR u.organization_id = $1)
+                        AND u.role != 'god' -- HIDE SYSTEM GODS
                     ),
                     org_guests AS (
                         -- External users collaborating on this Org's tasks
@@ -69,6 +70,7 @@ export const createUsersRouter = (pool) => {
                         JOIN tasks t ON t.id = tc.task_id
                         WHERE t.organization_id = $1
                         AND u.id NOT IN (SELECT id FROM org_members) -- Exclude existing members
+                        AND u.role != 'god' -- HIDE SYSTEM GODS
                     )
                     SELECT * FROM org_members
                     UNION ALL
