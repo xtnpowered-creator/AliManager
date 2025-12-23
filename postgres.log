@@ -759,3 +759,4 @@
 2025-12-22 00:21:59.218 CST [19668] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
 	
 2025-12-22 07:44:00.156 CST [21388] LOG:  could not reserve shared memory region (addr=0000027C552D0000) for child 00000000000014BC: error code 487
+2025-12-23 14:00:24.412 CST [21388] LOG:  could not reserve shared memory region (addr=0000027C552D0000) for child 0000000000000840: error code 487

@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { useTimelineData } from './timeline/useTimelineData';
-import { useTimelineFilters } from './timeline/useTimelineFilters';
+
 import { useTimelineActions } from './timeline/useTimelineActions';
+import { useFilterAndSortTool } from './useFilterAndSortTool';
 
 export const useTimelineState = (user) => {
     // 1. Data Fetching
@@ -19,11 +20,16 @@ export const useTimelineState = (user) => {
 
     // 2. Filters & Computed Lists
     const {
-        filterText,
-        setFilterText,
+        searchText, setSearchText,
+        colleagueFilters, setColleagueFilters,
+        taskFilters, setTaskFilters,
+        sortConfig, setSortConfig,
+        hideEmptyRows, setHideEmptyRows,
+        resetAll,
+        projectFilters, setProjectFilters,
         filteredTasks,
         visibleColleagues
-    } = useTimelineFilters(tasks, colleagues, projectsData, user);
+    } = useFilterAndSortTool(tasks, colleagues, projectsData, user);
 
     // 3. Actions
     // Pass 'tasks' so actions can look up task details for API calls
@@ -49,8 +55,14 @@ export const useTimelineState = (user) => {
         loading,
 
         // Filter State
-        filterText,
-        setFilterText,
+        searchText, setSearchText,
+        colleagueFilters, setColleagueFilters,
+        taskFilters, setTaskFilters,
+        projectFilters, setProjectFilters,
+        sortConfig, setSortConfig,
+        hideEmptyRows, setHideEmptyRows,
+        resetAll,
+
         visibleColleagues,
         filteredTasks,
 

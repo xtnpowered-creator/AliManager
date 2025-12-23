@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Clock, Calendar, Shield } from 'lucide-react';
-import TimelineFilters from './TimelineFilters';
+import FilterAndSortToolbar from './shared/filters/FilterAndSortToolbar';
 import { useAuth } from '../context/AuthContext';
 import { useTimelineState } from '../hooks/useTimelineState';
 import TimelineSkeleton from './TimelineSkeleton';
@@ -16,8 +16,13 @@ const TimelineView = () => {
 
     // -- State Hooks --
     const {
-        tasks, refetchTasks, colleagues,
-        filterText, setFilterText,
+        tasks, refetchTasks, colleagues, projectsData,
+        colleagueFilters, setColleagueFilters,
+        taskFilters, setTaskFilters,
+        projectFilters, setProjectFilters,
+        sortConfig, setSortConfig,
+        hideEmptyRows, setHideEmptyRows,
+        resetAll,
         visibleColleagues, filteredTasks,
         delegationMap, handleRevokeDelegation,
         handleUpdateTask, handleBulkUpdate, handleMoveDate, handleDeleteTasks,
@@ -78,7 +83,29 @@ const TimelineView = () => {
                 <p className="text-slate-500 mt-1 text-lg">Manage assignments and schedules.</p>
             </div>
             <div className="flex-1 flex justify-center">
-                <TimelineFilters filterText={filterText} setFilterText={setFilterText} />
+                <FilterAndSortToolbar
+                    tasks={tasks}
+                    colleagues={visibleColleagues}
+                    projectsData={projectsData}
+
+                    colleagueFilters={colleagueFilters}
+                    setColleagueFilters={setColleagueFilters}
+
+                    taskFilters={taskFilters}
+                    setTaskFilters={setTaskFilters}
+
+                    projectFilters={projectFilters}
+                    setProjectFilters={setProjectFilters}
+
+                    sortConfig={sortConfig}
+                    setSortConfig={setSortConfig}
+
+                    hideEmptyRows={hideEmptyRows}
+                    setHideEmptyRows={setHideEmptyRows}
+                    resetAll={resetAll}
+
+                    showProjectControls={true}
+                />
             </div>
             <div className="flex items-center gap-4 shrink-0">
                 <TimelineControls
