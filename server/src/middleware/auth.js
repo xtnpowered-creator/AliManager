@@ -14,6 +14,13 @@ export const createAuthMiddleware = (pool) => {
             const mockUserId = req.headers['x-mock-user-id'];
             const godModeBypass = req.headers['x-god-mode-bypass'];
 
+            console.log(`[AUTH DEBUG] Headers:`, {
+                host: req.headers.host,
+                bypass: godModeBypass,
+                mockId: mockUserId,
+                auth: req.headers.authorization ? 'Bearer [HIDDEN]' : 'None'
+            });
+
             // Priority 1: Specific Mock User (Switched via UI)
             if (mockUserId) {
                 console.log(`[DEV ERROR BYPASS] Mock User ID provided: ${mockUserId}`);

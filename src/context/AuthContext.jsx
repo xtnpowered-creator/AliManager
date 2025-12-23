@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React from 'react';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from '../firebase';
 import { apiClient } from '../api/client';
 
-const AuthContext = createContext();
+const AuthContext = React.createContext();
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => React.useContext(AuthContext);
 
 export const MOCK_USERS = [
     { id: '9f449545-700a-4ce5-8dd5-4d221041e15e', name: 'Christian Plyler', role: 'god', label: 'Christian (Owner)' },
@@ -18,8 +18,8 @@ export const MOCK_USERS = [
 ];
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
 
     // DEV: Handle Mock User Switching
     const switchUser = async (mockUserId) => {
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (import.meta.env.DEV) {
             // Initial Load for Dev Mode
             const storedMockId = localStorage.getItem('mockUserId');

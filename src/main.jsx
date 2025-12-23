@@ -5,12 +5,23 @@ import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-        <ToastProvider>
-            <AuthProvider>
-                <App />
-            </AuthProvider>
-        </ToastProvider>
-    </React.StrictMode>,
-)
+console.log("[MAIN] Starting App...");
+
+const rootElement = document.getElementById('root');
+console.log("[MAIN] Root Element:", rootElement);
+
+if (!rootElement) {
+    console.error("[MAIN] FATAL: Root element not found!");
+} else {
+    console.log("[MAIN] Root found, mounting React...");
+    ReactDOM.createRoot(rootElement).render(
+        <React.StrictMode>
+            {console.log("[MAIN] Rendering Providers...")}
+            <ToastProvider>
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            </ToastProvider>
+        </React.StrictMode>
+    );
+}

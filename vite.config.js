@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
+    /* VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
@@ -28,10 +28,10 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }) */
   ],
   server: {
-    port: 5180,
+    port: 5181,
     strictPort: true
   }
 })

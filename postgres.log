@@ -750,3 +750,12 @@
 2025-12-21 20:58:18.913 CST [18764] LOG:  checkpoint complete: wrote 13 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.306 s, sync=0.211 s, total=1.588 s; sync files=10, longest=0.031 s, average=0.022 s; distance=17 kB, estimate=120 kB; lsn=0/1CF1188, redo lsn=0/1CF1150
 2025-12-21 21:03:17.922 CST [18764] LOG:  checkpoint starting: time
 2025-12-21 21:03:18.746 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.646 s, sync=0.108 s, total=0.825 s; sync files=7, longest=0.030 s, average=0.016 s; distance=10 kB, estimate=109 kB; lsn=0/1CF3B90, redo lsn=0/1CF3B58
+2025-12-21 21:13:17.764 CST [18764] LOG:  checkpoint starting: time
+2025-12-21 21:13:18.654 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.647 s, sync=0.175 s, total=0.891 s; sync files=7, longest=0.047 s, average=0.025 s; distance=11 kB, estimate=99 kB; lsn=0/1CF6A98, redo lsn=0/1CF6A60
+2025-12-21 21:24:37.824 CST [16508] ERROR:  column "position" does not exist at character 62
+2025-12-21 21:24:37.824 CST [16508] STATEMENT:  SELECT * FROM task_steps WHERE 1=1 AND task_id = $1 ORDER BY position ASC, created_at ASC
+2025-12-21 21:24:37.830 CST [20660] ERROR:  column "position" does not exist at character 62
+2025-12-21 21:24:37.830 CST [20660] STATEMENT:  SELECT * FROM task_steps WHERE 1=1 AND task_id = $1 ORDER BY position ASC, created_at ASC
+2025-12-22 00:21:59.218 CST [19668] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-22 07:44:00.156 CST [21388] LOG:  could not reserve shared memory region (addr=0000027C552D0000) for child 00000000000014BC: error code 487

@@ -21,7 +21,7 @@ const AdminDashboard = () => { // RENAMED
     };
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 pb-16">
+        <div className="p-8 space-y-8 pb-16">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Admin Dashboard</h2>

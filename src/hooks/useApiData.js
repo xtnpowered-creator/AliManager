@@ -10,7 +10,7 @@ export const useApiData = (endpoint, dependencies = []) => {
     const { user } = useAuth(); // Wait for user to be logged in before fetching
 
     useEffect(() => {
-        if (!user) return; // Don't fetch if not logged in
+        if (!user || !endpoint) return; // Don't fetch if not logged in or endpoint not ready
 
         const fetchData = async () => {
             setLoading(true);

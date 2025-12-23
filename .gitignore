@@ -43,3 +43,5 @@ coverage/
 
 # Misc
 cardcolors.xlsx
+.eslintcache
+.prettiercache

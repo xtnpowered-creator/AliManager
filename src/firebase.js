@@ -39,6 +39,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // --- EMULATOR CONNECTION ---
+// DISABLED: We use "God Mode" (AuthContext) and Postgres (API) for local dev.
+// Connecting to emulators forces the app to crash if they aren't running.
+/*
 if (isLocal) {
     connectAuthEmulator(auth, "http://localhost:9099");
     connectFirestoreEmulator(db, "localhost", 8080);
@@ -46,6 +49,7 @@ if (isLocal) {
 } else {
     console.log("🌐 Connected to Production Firebase");
 }
+*/
 
 export { auth, db };
 export default app;

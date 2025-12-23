@@ -81,7 +81,22 @@ export const CustomScaleModal = ({ isOpen, onClose, onApply }) => {
                         min="3"
                         max="33"
                         value={days}
-                        onChange={e => setDays(Math.min(33, Math.max(3, parseInt(e.target.value) || 3)))}
+                        onChange={e => {
+                            const val = e.target.value;
+                            // Allow empty string or digits. Do not clamp yet.
+                            // But we stored 'days' as number (7).
+                            // If we change state to allow string, we need to update state definition? 
+                            // Or just parse int? 
+                            // If I type "1", and clamp is min 3, it forces 3. Correct.
+                            // To fix: I need to allow "1", "2" temporarily.
+                            // So onChange should just set state. Clamping happens on Blur.
+                            setDays(val);
+                        }}
+                        onBlur={() => {
+                            let val = parseInt(days);
+                            if (isNaN(val)) val = 10;
+                            setDays(Math.min(33, Math.max(3, val)));
+                        }}
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">Adjusts column width to fit {days} days on screen.</p>
