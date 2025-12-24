@@ -1,18 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ChevronRight } from 'lucide-react';
 
-const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {}, onSelect, color = 'neutral' }) => {
+const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {}, onSelect, parser, color = 'neutral' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');
+    const [activeCategory, setActiveCategory] = useState(null); // Track hovered category
     const containerRef = useRef(null);
     const inputRef = useRef(null);
+
+    // Initialize active category when opening or suggestions change
+    useEffect(() => {
+        if (isOpen && !activeCategory) {
+            const firstKey = Object.keys(suggestions)[0];
+            if (firstKey) setActiveCategory(firstKey);
+        }
+    }, [isOpen, suggestions, activeCategory]);
 
     // Close on click outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (containerRef.current && !containerRef.current.contains(event.target)) {
                 setIsOpen(false);
-                setInputValue(''); // Reset on close
+                setInputValue('');
+                setActiveCategory(null);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -20,54 +30,56 @@ const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {
     }, []);
 
     const handleSelect = (type, value) => {
-        onSelect({ type, value, label: `${type.charAt(0).toUpperCase() + type.slice(1)}: ${value}` });
+        onSelect({ type, value, label: `${type.charAt(0).toUpperCase() + type.slice(1)}: ${value} ` });
         setIsOpen(false);
         setInputValue('');
+        setActiveCategory(null);
     };
 
-    // Derived Suggestions based on input
-    const filteredGroups = Object.entries(suggestions).reduce((acc, [type, values]) => {
+    // SEARCH MODE: Flattened Search + Dynamic Parser
+    const getSearchResults = () => {
+        const results = [];
+
+        // 1. Static Suggestions Match
         const lowerInput = inputValue.toLowerCase();
-        const terms = lowerInput.split(/\s+/).filter(Boolean); // Split into tokens
+        const terms = lowerInput.split(/\s+/).filter(Boolean);
 
-        // Fuzzy subsequence match helper
-        const fuzzyMatch = (text, pattern) => {
-            let tp = 0; // text pointer
-            let pp = 0; // pattern pointer
-            while (tp < text.length && pp < pattern.length) {
-                if (text[tp] === pattern[pp]) {
-                    pp++;
-                }
-                tp++;
-            }
-            return pp === pattern.length;
-        };
-
-        const matches = values.filter(v => {
-            if (terms.length === 0) return true; // Show all if empty
-            const fullString = `${type} ${v}`.toLowerCase();
-            // All terms must be present as subsequences in the Type + Value string
-            return terms.every(term => fuzzyMatch(fullString, term));
+        Object.entries(suggestions).forEach(([type, values]) => {
+            values.forEach(v => {
+                const fullString = `${type} ${v} `.toLowerCase();
+                const match = terms.every(term => fullString.includes(term));
+                if (match) results.push({ type, value: v });
+            });
         });
-        if (matches.length > 0) acc[type] = matches;
-        return acc;
-    }, {});
 
-    const hasSuggestions = Object.keys(filteredGroups).length > 0;
+        // 2. Dynamic Parser (if provided)
+        if (parser) {
+            const parsed = parser(inputValue);
+            if (parsed && Array.isArray(parsed)) {
+                results.push(...parsed);
+            }
+        }
+
+        return results;
+    };
+
+    const searchResults = inputValue ? getSearchResults() : [];
+    const categories = Object.keys(suggestions);
 
     return (
         <div className="relative inline-block" ref={containerRef}>
             <button
                 onClick={() => { setIsOpen(!isOpen); setTimeout(() => inputRef.current?.focus(), 10); }}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors border
-                    ${isOpen ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'}`}
+                className={`flex items - center gap - 1.5 text - xs font - semibold px - 3 py - 1.5 rounded - md transition - colors border
+                    ${isOpen ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'} `}
             >
                 <Plus size={14} className={color === 'blue' ? 'text-blue-500' : color === 'green' ? 'text-emerald-500' : 'text-slate-400'} />
                 <span>{label}</span>
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-1 z-[1000] w-64 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute top-full left-0 mt-1 z-[1000] min-w-[300px] bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    {/* Search Bar */}
                     <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 bg-slate-50">
                         <Search size={14} className="text-slate-400" />
                         <input
@@ -78,45 +90,63 @@ const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                    setIsOpen(false);
-                                    setInputValue('');
-                                }
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const firstGroup = Object.keys(filteredGroups)[0];
-                                    if (firstGroup) {
-                                        const firstValue = filteredGroups[firstGroup][0];
-                                        handleSelect(firstGroup, firstValue);
-                                    }
-                                }
+                                if (e.key === 'Escape') setIsOpen(false);
                             }}
                         />
                     </div>
 
-                    <div className="max-h-60 overflow-y-auto py-1">
-                        {hasSuggestions ? (
-                            Object.entries(filteredGroups).map(([type, values]) => (
-                                <div key={type} className="mb-1 last:mb-0">
-                                    <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                        {type}
-                                    </div>
-                                    {values.map(val => (
-                                        <button
-                                            key={`${type}-${val}`}
-                                            onClick={() => handleSelect(type, val)}
-                                            className="w-full text-left px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900 flex items-center gap-2 transition-colors"
+                    {/* Content Area */}
+                    <div className="flex max-h-[400px]">
+                        {inputValue ? (
+                            /* SEARCH RESULT VIEW (Flat List) */
+                            <div className="w-full overflow-y-auto py-1">
+                                {searchResults.length > 0 ? (
+                                    searchResults.map((item, i) => (
+                                        <div
+                                            key={i}
+                                            onClick={() => handleSelect(item.type, item.value)}
+                                            className="px-3 py-2 hover:bg-slate-50 cursor-pointer flex items-center gap-2"
                                         >
-                                            <span className="font-medium text-slate-400 w-16 shrink-0 text-xs text-right overflow-hidden uppercase">{type}</span>
-                                            <span className="truncate flex-1">{val}</span>
-                                        </button>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 w-16 text-right">{item.type}</span>
+                                            <span className="text-sm text-slate-700 font-medium">{item.value}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-4 text-center text-slate-400 text-xs italic">No matches found</div>
+                                )}
+                            </div>
+                        ) : (
+                            /* SPLIT VIEW (Categories | Options) */
+                            <>
+                                {/* Left Col: Categories */}
+                                <div className="w-1/3 border-r border-slate-100 bg-slate-50/50 overflow-y-auto py-1">
+                                    {categories.map(cat => (
+                                        <div
+                                            key={cat}
+                                            onMouseEnter={() => setActiveCategory(cat)}
+                                            className={`px - 3 py - 2 cursor - pointer text - xs font - bold transition - colors flex items - center justify - between
+                                                ${activeCategory === cat ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-500 hover:bg-slate-100'} `}
+                                        >
+                                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                            {activeCategory === cat && <ChevronRight size={12} />}
+                                        </div>
                                     ))}
                                 </div>
-                            ))
-                        ) : (
-                            <div className="px-4 py-3 text-sm text-slate-400 text-center italic">
-                                No matches found
-                            </div>
+
+                                {/* Right Col: Options */}
+                                <div className="w-2/3 overflow-y-auto py-1 bg-white">
+                                    {activeCategory && suggestions[activeCategory]?.map(val => (
+                                        <div
+                                            key={val}
+                                            onClick={() => handleSelect(activeCategory, val)}
+                                            className="px-3 py-1.5 hover:bg-teal-50 cursor-pointer text-sm text-slate-700 hover:text-teal-700 transition-colors flex items-center gap-2"
+                                        >
+                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-teal-400"></div>
+                                            {val}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>

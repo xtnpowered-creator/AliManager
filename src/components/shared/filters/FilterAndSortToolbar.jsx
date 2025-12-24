@@ -34,21 +34,18 @@ const FilterAndSortToolbar = ({
     }, [colleagues]);
 
     const taskSuggestions = useMemo(() => {
-        const statuses = new Set();
-        const priorities = new Set();
-
-        (tasks || []).forEach(t => {
-            if (t.status) statuses.add(t.status);
-            if (t.priority) priorities.add(t.priority);
-        });
-
-        ['Todo', 'In Progress', 'Done', 'Blocked'].forEach(s => statuses.add(s));
-
         return {
-            'status': Array.from(statuses).sort(),
-            'priority': Array.from(priorities).sort()
+            'status': ['Todo', 'In Progress', 'Done', 'Blocked'],
+            'priority': ['Priority 1', 'Priority 2', 'Priority 3'],
+            'due date': ['Overdue', 'Today', 'Tomorrow', 'This Week', 'Next Week'],
+            'created': ['Today', 'Yesterday', 'Last 7 Days'],
+            'content': ['Has Steps', 'Has Deliverables', 'Has Files'],
+            // Placeholder for Steps/Metadata - would need specific extraction logic
+            // For now, static list or derived from tasks if we want dynamic steps?
+            // User asked for "Step Name, Step Description". That's a lot of unique values.
+            // Let's stick to the high level buckets for now unless requested.
         };
-    }, [tasks]);
+    }, []);
 
     const projectSuggestions = useMemo(() => {
         const clients = new Set();
@@ -126,9 +123,70 @@ const FilterAndSortToolbar = ({
                                 show: true,
                                 component: FilterCommandButton,
                                 props: {
-                                    label: "Filter Tsk",
+                                    label: "Filter Task",
                                     color: "green",
                                     placeholder: "Status, Priority...",
+                                    parser: (input) => {
+                                        const results = [];
+                                        const lower = input.toLowerCase();
+
+                                        // 1. Due Date Parsing
+                                        // Pattern: "due [date]" or just a date-like string
+                                        // VALIDATION: Does any task actually have this due date?
+                                        const dateMatch = lower.match(/(\d{1,2})[\/\-\.](\d{1,2})/); // Simple MM/DD
+                                        if (lower.startsWith('due ') || dateMatch) {
+                                            let val = lower.replace('due ', '').trim();
+
+                                            // Normalize input "12/24" -> "2025-12-24" for comparison?
+                                            // Simpler: Just check if any task's stringified due date matches the input input
+                                            // Or smarter: parse input, check against task.dueDate objects
+
+                                            const hasMatchingTask = (tasks || []).some(t => {
+                                                if (!t.dueDate) return false;
+                                                // Flexible check: Does the ISO string contain "12-24"?
+                                                // Or better: construct local date string
+                                                const d = new Date(t.dueDate);
+                                                const localDateStr = d.toLocaleDateString(); // "12/24/2025" or similar
+                                                return localDateStr.includes(val) || t.dueDate.includes(val);
+                                            });
+
+                                            if (val && hasMatchingTask) {
+                                                results.push({ type: 'due date', value: val });
+                                            }
+                                        }
+
+                                        // 2. Priority Shortcuts (Check existence)
+                                        if (['p1', 'priority 1'].includes(lower)) {
+                                            if (tasks.some(t => t.priority === '1')) results.push({ type: 'priority', value: 'Priority 1' });
+                                        }
+                                        if (['p2', 'priority 2'].includes(lower)) {
+                                            if (tasks.some(t => t.priority === '2')) results.push({ type: 'priority', value: 'Priority 2' });
+                                        }
+                                        if (['p3', 'priority 3'].includes(lower)) {
+                                            if (tasks.some(t => t.priority === '3')) results.push({ type: 'priority', value: 'Priority 3' });
+                                        }
+
+                                        // 3. Status Shortcuts (Check existence)
+                                        if (lower.startsWith('st ') || lower.startsWith('status ')) {
+                                            const val = lower.replace(/^(st|status)\s+/, '').trim();
+                                            const match = (tasks || []).find(t => t.status?.toLowerCase() === val);
+                                            if (match) {
+                                                const displayVal = match.status; // Use actual casing
+                                                results.push({ type: 'status', value: displayVal });
+                                            }
+                                        }
+
+                                        // 4. Generic Title Search
+                                        // VALIDATION: Only suggest if a task title actually contains this text
+                                        if (input.length > 1) {
+                                            const titleMatch = (tasks || []).some(t => t.title?.toLowerCase().includes(lower));
+                                            if (titleMatch) {
+                                                results.push({ type: 'title', value: input });
+                                            }
+                                        }
+
+                                        return results;
+                                    },
                                     suggestions: taskSuggestions,
                                     onSelect: addTaskFilter
                                 }
