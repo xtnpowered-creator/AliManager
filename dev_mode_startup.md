@@ -35,7 +35,8 @@ npm run dev
 cd D:\MyApps\ForAlisara\AliManager
 npm run dev
 ```
-*Access the app at the Local URL provided (e.g., http://localhost:5181).*
+*Access the app here:*
+**[http://localhost:5181](http://localhost:5181)**
 
 ---
 
