@@ -1,11 +1,10 @@
 # Developer Mode Startup Guide
 
 This document outlines the architecture and startup procedures for the AliManager development environment.
-If you encounter **Missing Data**, **"Guest" Login State**, or **Connection Refused** errors, verify that **ALL THREE** of the following processes are running.
 
 ## 1. System Architecture
 
-The local development environment consists of three distinct processes that must run simultaneously:
+The local development environment requires **TWO (2)** processes:
 
 1.  **Frontend (Vite)**: Serves the React Application.
     -   Port: `5181` (usually)
@@ -13,25 +12,16 @@ The local development environment consists of three distinct processes that must
 2.  **Backend API (Express)**: Custom Node.js server.
     -   Port: `5001`
     -   Role: Handles API requests (`/api/users`, `/api/tasks`), connects to PostgreSQL, bypasses Auth in Dev.
-3.  **Firebase Emulators**: Local Firebase instance.
-    -   Ports: `9099` (Auth), `8080` (Firestore), `4000` (UI)
-    -   Role: Handles Authentication tokens and legacy Firedata.
+
+**Note:** Firebase Emulators are **NO LONGER REQUIRED** for daily development. The app has been configured to bypass Firebase in dev mode.
 
 ---
 
 ## 2. Startup Instructions
 
-Open **Three (3) Separate Terminals** and run the following commands in order:
+Open **Two (2) Separate Terminals** and run the following commands in order:
 
-### Terminal 1: Firebase Emulators (The Backbone)
-*Required for Auth and Database services.*
-```powershell
-cd D:\MyApps\ForAlisara\AliManager
-npm run emulators
-```
-*Wait until you see "All emulators ready".*
-
-### Terminal 2: Backend API (The Logic)
+### Terminal 1: Backend API (The Logic)
 *Required for Data and User Profiles. If this is down, you will be stuck as **Guest**.*
 ```powershell
 cd D:\MyApps\ForAlisara\AliManager\server
@@ -39,7 +29,7 @@ npm run dev
 ```
 *Wait until you see "Server running on http://localhost:5001/api".*
 
-### Terminal 3: Frontend (The UI)
+### Terminal 2: Frontend (The UI)
 *The React App itself.*
 ```powershell
 cd D:\MyApps\ForAlisara\AliManager
@@ -52,19 +42,16 @@ npm run dev
 ## 3. Troubleshooting Common Issues
 
 ### Issue: "I am logged in as Guest" / "White Screen" / "No Data"
-**Cause:** The **Backend API** (Terminal 2) is likely not running or crashed.
--   The Frontend (`useAuth`) tries to fetch `/users/me`.
--   If the Backend is down, this request fails.
--   The App falls back to `null` user (Guest).
-**Fix:** Check Terminal 2. If stopped, run `npm run dev` in `server/` directory.
+**Cause:** The **Backend API** (Terminal 1) is likely not running or crashed.
+**Fix:** Check Terminal 1. If stopped, run `npm run dev` in `server/` directory.
 
 ### Issue: "Network Error" on all requests
-**Cause:** The **Backend API** (Terminal 2) is down OR **Firebase Emulators** (Terminal 1) are down.
-**Fix:** Restart both.
+**Cause:** The **Backend API** (Terminal 1) is down.
+**Fix:** Restart it.
 
 ### Issue: "React Query" / Import Errors
 **Cause:** `npm install` dependencies might be out of sync.
-**Fix:** Restart Terminal 3 (Frontend).
+**Fix:** Restart Terminal 2 (Frontend).
 
 ---
 
@@ -72,6 +59,5 @@ npm run dev
 In Development, we bypass Firebase Auth tokens using custom headers:
 -   **Header**: `x-god-mode-bypass: true`
 -   **Header**: `x-mock-user-id: [UUID]`
-
-This logic resides in `server/index.js` (Middleware) and `src/api/client.js` (Client).
-**If you cannot switch users**, ensure the Backend API is running, as it validates these headers.
+-   **Switch User**: Click your Profile Icon -> Select a User from the "Dev: Switch User" list.
+-   **Sign Out**: Clears the mocked ID and resets to "Guest" (or default).

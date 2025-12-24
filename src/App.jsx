@@ -13,6 +13,8 @@ import Directory from './components/Directory';
 import TaskDetailView from './components/TaskDetailView';
 import { TimelineViewProvider } from './context/TimelineViewContext';
 import { DataProvider } from './context/DataContext';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './api/queryClient';
 
 // Wrapper to inject Navigation Props into Shell
 const AppShell = () => {
@@ -51,11 +53,13 @@ function App() {
     return (
         <ErrorBoundary>
             <Router>
-                <TimelineViewProvider>
-                    <DataProvider>
-                        <AppShell />
-                    </DataProvider>
-                </TimelineViewProvider>
+                <QueryClientProvider client={queryClient}>
+                    <TimelineViewProvider>
+                        <DataProvider>
+                            <AppShell />
+                        </DataProvider>
+                    </TimelineViewProvider>
+                </QueryClientProvider>
             </Router>
         </ErrorBoundary>
     );

@@ -18,7 +18,7 @@ export const apiClient = {
     async request(endpoint, options = {}) {
         let token = null;
         // In PROD: Get real token. In DEV: Skip to rely on x-god-mode-bypass header.
-        if (auth.currentUser && !import.meta.env.DEV) {
+        if (!import.meta.env.DEV && auth?.currentUser) {
             token = await auth.currentUser.getIdToken();
         }
 

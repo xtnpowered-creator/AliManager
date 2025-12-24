@@ -8,6 +8,13 @@ export const useCollection = (collectionName, orderByField = null) => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        // Legacy Support / Dev Mode Bypass
+        if (import.meta.env.DEV) {
+            console.warn(`[useCollection] Bypassing Firestore fetch for ${collectionName}`);
+            setLoading(false);
+            return;
+        }
+
         let q = query(collection(db, collectionName));
 
         if (orderByField) {

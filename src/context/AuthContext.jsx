@@ -57,11 +57,11 @@ export const AuthProvider = ({ children }) => {
             } else {
                 switchUser(storedMockId);
             }
-            return;
+            return () => { }; // No cleanup needed
         }
 
         // Production: Firebase Listener
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = onAuthStateChanged(auth || {}, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
                     const res = await apiClient.get('/users/me');

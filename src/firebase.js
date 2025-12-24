@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // --- PRODUCTION CONFIG ---
 // TO DO: Replace these values with your actual keys from the Firebase Console!
@@ -15,41 +16,39 @@ const prodConfig = {
     measurementId: "G-2E1505VX24"
 };
 
-// --- EMULATOR CONFIG ---
-const emulatorConfig = {
-    apiKey: "ali-manager-local-key",
-    authDomain: "ali-manager-local.firebaseapp.com",
-    projectId: "ali-manager-local",
-    storageBucket: "ali-manager-local.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
-};
+let app = null;
+let auth = null;
+let db = null;
+let storage = null;
 
-// --- ENVIRONMENT DETECTION ---
-const isLocal = typeof window !== 'undefined' && (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1" ||
-    window.location.hostname.startsWith("192.168.")
-);
-
-const firebaseConfig = isLocal ? emulatorConfig : prodConfig;
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// --- EMULATOR CONNECTION ---
-// DISABLED: We use "God Mode" (AuthContext) and Postgres (API) for local dev.
-// Connecting to emulators forces the app to crash if they aren't running.
-/*
-if (isLocal) {
-    connectAuthEmulator(auth, "http://localhost:9099");
-    connectFirestoreEmulator(db, "localhost", 8080);
-    console.log("🚀 Connected to Firebase Emulators");
-} else {
+// Only initialize Firebase if NOT in Dev mode (or explicitly requested via flag)
+// This prevents the app from crashing if Emulators are not running.
+if (!import.meta.env.DEV) {
     console.log("🌐 Connected to Production Firebase");
-}
-*/
+    app = initializeApp(prodConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+} else {
+    // DEV MODE MOCKS
+    // We export dummy objects so imports don't crash.
+    console.log("🛠️ Dev Mode: Firebase Bypassed (Emulators Override)");
 
-export { auth, db };
+    // Minimal Mock for Auth
+    auth = {
+        currentUser: null,
+        signOut: async () => console.log("Mock SignOut"),
+        onAuthStateChanged: (cb) => {
+            // Immediately return logic if needed, or just do nothing
+            return () => { }; // Unsubscribe function
+        }
+    };
+
+    // Minimal Mock for DB
+    db = {};
+    storage = {};
+    app = {};
+}
+
+export { auth, db, storage };
 export default app;

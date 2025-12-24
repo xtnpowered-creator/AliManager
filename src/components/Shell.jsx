@@ -35,6 +35,19 @@ const Shell = ({ children }) => {
         return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     };
 
+    const handleSignOut = async () => {
+        try {
+            if (import.meta.env.DEV) {
+                localStorage.removeItem('mockUserId');
+                window.location.reload();
+            } else {
+                await signOut(auth);
+            }
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
+    };
+
     return (
         <div className="h-screen w-screen overflow-hidden flex flex-col bg-slate-50 text-slate-900 selection:bg-teal-100 selection:text-teal-900">
             {/* FIXED LOGIN BUTTON REMOVED (Use window.loginGod() in console if needed) */}
@@ -106,7 +119,7 @@ const Shell = ({ children }) => {
                                     )}
                                     <button
                                         className="w-full text-left px-3 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                        onClick={() => alert("Logout not implemented for Mock Mode yet")}
+                                        onClick={handleSignOut}
                                     >
                                         <LogOut size={16} />
                                         Sign Out
