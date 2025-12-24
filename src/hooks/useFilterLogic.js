@@ -38,8 +38,13 @@ export const useFilterLogic = ({
                     const val = f.value;
 
                     // 1. Status & Priority
-                    if (type === 'status') return task.status?.toLowerCase() === val.toLowerCase();
-                    if (type === 'priority') return task.priority?.toLowerCase() === val.toLowerCase();
+                    if (type === 'status') return String(task.status || '').toLowerCase() === val.toLowerCase();
+                    if (type === 'priority') {
+                        // Normalize: "Priority 1" -> "1", and handle both number/string data
+                        const dataPrio = String(task.priority || '').toLowerCase();
+                        const filterPrio = val.toLowerCase().replace('priority ', '').trim();
+                        return dataPrio === filterPrio;
+                    }
 
                     // 2. Title (Fuzzy)
                     if (type === 'title') return task.title?.toLowerCase().includes(val.toLowerCase());

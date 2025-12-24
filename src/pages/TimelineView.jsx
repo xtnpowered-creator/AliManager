@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Clock, Calendar, Shield } from 'lucide-react';
-import FilterAndSortToolbar from './shared/filters/FilterAndSortToolbar';
+import FilterAndSortToolbar from '../components/shared/filters/FilterAndSortToolbar';
 import { useAuth } from '../context/AuthContext';
 import { useTimelineState } from '../hooks/useTimelineState';
-import TimelineSkeleton from './TimelineSkeleton';
-import TimelineControls from './TimelineControls';
-import UnifiedTimelineBoard from './UnifiedTimelineBoard';
+import TimelineSkeleton from '../components/TimelineSkeleton';
+import TimelineControls from '../components/TimelineControls';
+import UnifiedTimelineBoard from '../components/UnifiedTimelineBoard';
 
 const TimelineView = () => {
     const navigate = useNavigate();

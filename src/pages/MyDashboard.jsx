@@ -1,9 +1,9 @@
 import React from 'react';
 import { useApiData } from '../hooks/useApiData';
 import { useAuth } from '../context/AuthContext';
-import DashboardTimeline from './dashboard/DashboardTimeline';
-import TaskColumn from './dashboard/TaskColumn';
-import TimelineControls from './TimelineControls';
+import DashboardTimeline from '../components/dashboard/DashboardTimeline';
+import TaskColumn from '../components/dashboard/TaskColumn';
+import TimelineControls from '../components/TimelineControls';
 
 const MyDashboard = () => {
     const { user } = useAuth();

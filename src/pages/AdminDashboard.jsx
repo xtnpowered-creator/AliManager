@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ArrowDownRight, Users, Activity, Zap, Clock, CheckCircle2 } from 'lucide-react';
 import { useApiData } from '../hooks/useApiData';
-import Card from './common/Card';
-import NewTaskModal from './NewTaskModal';
+import Card from '../components/common/Card';
+import NewTaskModal from '../components/NewTaskModal';
 import SystemRequests from './SystemRequests';
 
 const AdminDashboard = () => { // RENAMED
