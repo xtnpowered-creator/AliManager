@@ -27,10 +27,28 @@ const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {
 
     // Derived Suggestions based on input
     const filteredGroups = Object.entries(suggestions).reduce((acc, [type, values]) => {
-        const matches = values.filter(v =>
-            v.toLowerCase().includes(inputValue.toLowerCase()) ||
-            type.toLowerCase().includes(inputValue.toLowerCase())
-        );
+        const lowerInput = inputValue.toLowerCase();
+        const terms = lowerInput.split(/\s+/).filter(Boolean); // Split into tokens
+
+        // Fuzzy subsequence match helper
+        const fuzzyMatch = (text, pattern) => {
+            let tp = 0; // text pointer
+            let pp = 0; // pattern pointer
+            while (tp < text.length && pp < pattern.length) {
+                if (text[tp] === pattern[pp]) {
+                    pp++;
+                }
+                tp++;
+            }
+            return pp === pattern.length;
+        };
+
+        const matches = values.filter(v => {
+            if (terms.length === 0) return true; // Show all if empty
+            const fullString = `${type} ${v}`.toLowerCase();
+            // All terms must be present as subsequences in the Type + Value string
+            return terms.every(term => fuzzyMatch(fullString, term));
+        });
         if (matches.length > 0) acc[type] = matches;
         return acc;
     }, {});
@@ -63,6 +81,14 @@ const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {
                                 if (e.key === 'Escape') {
                                     setIsOpen(false);
                                     setInputValue('');
+                                }
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const firstGroup = Object.keys(filteredGroups)[0];
+                                    if (firstGroup) {
+                                        const firstValue = filteredGroups[firstGroup][0];
+                                        handleSelect(firstGroup, firstValue);
+                                    }
                                 }
                             }}
                         />

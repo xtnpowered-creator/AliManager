@@ -43,7 +43,16 @@ export const useTimelineState = (user) => {
 
     // 4. Adapters & Helpers
     const getTasksForColleague = useCallback((colleagueId) =>
-        filteredTasks.filter(t => t.assignedTo?.includes(colleagueId)),
+        filteredTasks.filter(t => {
+            // 1. Explicit Assignment
+            if (t.assignedTo && t.assignedTo.includes(colleagueId)) return true;
+
+            // 2. Unassigned Fallback (Treat as Self-Assigned to Creator)
+            const isUnassigned = !t.assignedTo || t.assignedTo.length === 0;
+            if (isUnassigned && t.createdBy === colleagueId) return true;
+
+            return false;
+        }),
         [filteredTasks]);
 
     return {

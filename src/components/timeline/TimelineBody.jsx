@@ -24,7 +24,11 @@ const TimelineBody = ({
     return (
         <div className="flex flex-col min-w-max">
             {colleagues.map((colleague, cIdx) => (
-                <div key={colleague.id} className={cIdx === 0 ? "sticky top-[73px] z-[150] shadow-xl border-y-2 border-slate-900 bg-white" : "border-b border-slate-200 last:border-0"}>
+                <div
+                    key={colleague.id}
+                    id={`timeline-row-${colleague.id}`}
+                    className={cIdx === 0 ? "sticky top-[73px] z-[150] shadow-xl border-y-2 border-slate-900 bg-white" : "border-b border-slate-200 last:border-0"}
+                >
                     <TimelineRow
                         colleague={colleague}
                         colleagues={colleagues}

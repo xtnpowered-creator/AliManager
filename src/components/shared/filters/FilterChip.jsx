@@ -11,7 +11,7 @@ const colors = {
 
 const FilterChip = ({ label, onRemove, color = 'blue', icon: Icon }) => {
     return (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${colors[color] || colors.blue} transition-colors`}>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${colors[color] || colors.blue} transition-colors`}>
             {Icon && <Icon size={12} className="opacity-70" />}
             <span>{label}</span>
             <button

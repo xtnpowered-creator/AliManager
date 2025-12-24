@@ -72,8 +72,8 @@ const TimelineDayCell = ({
 
     return (
         <div
-            style={{ minWidth: colWidth }}
-            className={`h-full border-r border-slate-200/70 flex items-center justify-center relative last:border-0 group/day ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}
+            style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}
+            className={`flex-none h-full border-r border-slate-200/70 flex items-center justify-center relative last:border-0 group/day ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}
             onContextMenu={(e) => onGridContextMenu && onGridContextMenu(day, colleagueId, e)}
         >
             {/* Visual Guides */}

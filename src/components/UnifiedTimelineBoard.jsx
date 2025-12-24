@@ -33,11 +33,18 @@ const UnifiedTimelineBoard = ({
     handleRevokeDelegation = () => { },
     onDelegateConfig = () => { },
     loading = false,
-    controlsRef
+    controlsRef,
+    // Indicators
+    minTaskDate,
+    maxTaskDate
 }) => {
     const navigate = useNavigate();
     const scrollContainerRef = React.useRef(null);
     const selectionBoxRef = React.useRef(null);
+
+    // Scroll Arrows State
+    const [showLeftArrow, setShowLeftArrow] = React.useState(false);
+    const [showRightArrow, setShowRightArrow] = React.useState(false);
 
     // 1. Column Width
     // 1. Column Width
@@ -62,10 +69,6 @@ const UnifiedTimelineBoard = ({
     } = useTimelineSelection(scrollContainerRef, selectionBoxRef);
 
     const { isRestored, syncedScale, setInteracted } = useSyncedTimelineState(scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset);
-
-    React.useEffect(() => {
-        if (syncedScale) setScale(syncedScale);
-    }, [syncedScale, setScale]);
 
     // 3. UI State
     const [contextMenu, setContextMenu] = React.useState(null);
@@ -131,31 +134,69 @@ const UnifiedTimelineBoard = ({
     }, [setSelectedTaskIds]);
 
     // Scroll Logic
-    const scrollToDate = (date, smooth = true) => {
+    const scrollToTarget = (date, colleagueId, smooth = true) => {
         if (!scrollContainerRef.current) return;
-        if (setInteracted) setInteracted(); // Allow state to update since user explicitly requested this position
-        let offset = 0;
-        for (const day of days) {
-            if (day.getTime() === date.getTime()) break;
-            offset += getColumnWidth(day);
+        if (setInteracted) setInteracted();
+
+        // 1. Calculate Left (Date)
+        let finalLeft = undefined;
+        if (date) {
+            const targetTime = new Date(date).setHours(0, 0, 0, 0);
+            let offset = 0;
+
+            // Handle out of bounds
+            const startDay = days[0].getTime();
+            const endDay = days[days.length - 1].getTime();
+
+            if (targetTime < startDay) offset = 0;
+            else if (targetTime > endDay) offset = days.reduce((acc, d) => acc + getColumnWidth(d), 0);
+            else {
+                for (const day of days) {
+                    if (day.getTime() === targetTime) break;
+                    offset += getColumnWidth(day);
+                }
+            }
+            finalLeft = Math.max(0, offset + viewOffset - 350);
         }
-        // ScrollLeft = offset + viewOffset - 350.
-        // Sets the Date to be exactly 350px from the left edge of the container (accounting for sidebar offset).
-        scrollContainerRef.current.scrollTo({ left: Math.max(0, offset + viewOffset - 350), behavior: smooth ? 'smooth' : 'auto' });
+
+        // 2. Calculate Top (Colleague)
+        let finalTop = undefined;
+        if (colleagueId) {
+            const row = document.getElementById(`timeline-row-${colleagueId}`);
+            if (row) {
+                finalTop = Math.max(0, row.offsetTop - 180);
+            }
+        }
+
+        // 3. Execute Unified Scroll
+        const scrollOptions = {
+            ...(finalLeft !== undefined && { left: finalLeft }),
+            ...(finalTop !== undefined && { top: finalTop }),
+            behavior: smooth ? 'smooth' : 'auto'
+        };
+
+        scrollContainerRef.current.scrollTo(scrollOptions);
     };
+
+    const scrollToDate = (date, smooth = true) => scrollToTarget(date, null, smooth);
+    const scrollToColleague = (colleagueId, smooth = true) => scrollToTarget(null, colleagueId, smooth);
 
     React.useEffect(() => {
         if (controlsRef && controlsRef.current) {
             controlsRef.current.scrollToDate = scrollToDate;
+            controlsRef.current.scrollToColleague = scrollToColleague;
+            controlsRef.current.scrollToTarget = scrollToTarget;
         }
     }, [controlsRef, days, getColumnWidth]);
+
+
 
     const handleScaleChange = (newScale) => setScale(newScale);
 
     // 5. Render
     return (
         <div className="flex flex-col h-full overflow-hidden select-none relative">
-            {headerContent && <div className="shrink-0 mb-6">{headerContent}</div>}
+            {headerContent && <div className="shrink-0 mb-0">{headerContent}</div>}
 
             <TimelineOverlay
                 selectionBoxRef={selectionBoxRef}
@@ -172,7 +213,7 @@ const UnifiedTimelineBoard = ({
                         position: 'absolute',
                         left: '350px',
                         top: '0',
-                        zIndex: 1000,
+                        zIndex: 600,
                         width: 0,
                         height: 0,
                         borderLeft: '10px solid transparent',
@@ -182,6 +223,7 @@ const UnifiedTimelineBoard = ({
                         pointerEvents: 'none'
                     }}
                 />
+
                 <div
                     ref={scrollContainerRef}
                     onPointerDown={handlePointerDown}

@@ -760,3 +760,24 @@
 	
 2025-12-22 07:44:00.156 CST [21388] LOG:  could not reserve shared memory region (addr=0000027C552D0000) for child 00000000000014BC: error code 487
 2025-12-23 14:00:24.412 CST [21388] LOG:  could not reserve shared memory region (addr=0000027C552D0000) for child 0000000000000840: error code 487
+2025-12-23 22:01:39.223 CST [16756] ERROR:  column "assigned_to" does not exist at character 48
+2025-12-23 22:01:39.223 CST [16756] STATEMENT:  
+	            SELECT title, due_date, priority, assigned_to
+	            FROM tasks 
+	            WHERE priority = '1' 
+	            ORDER BY due_date ASC 
+	            LIMIT 10
+	        
+2025-12-23 22:02:36.362 CST [4288] ERROR:  column u.first_name does not exist at character 54
+2025-12-23 22:02:36.362 CST [4288] STATEMENT:  
+	            SELECT t.title, t.due_date, t.priority, u.first_name as assignee
+	            FROM tasks t
+	            JOIN task_assignments ta ON t.id = ta.task_id
+	            JOIN users u ON ta.user_id = u.id
+	            WHERE t.priority = '1'
+	            AND u.first_name ILIKE '%Candice%'
+	            ORDER BY t.due_date ASC
+	            LIMIT 10
+	        
+2025-12-23 22:03:23.586 CST [18764] LOG:  checkpoint starting: time
+2025-12-23 22:03:24.308 CST [18764] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.542 s, sync=0.099 s, total=0.732 s; sync files=4, longest=0.037 s, average=0.025 s; distance=7 kB, estimate=90 kB; lsn=0/1CF87E8, redo lsn=0/1CF87B0

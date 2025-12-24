@@ -112,90 +112,122 @@ const FilterAndSortToolbar = ({
 
     // -- 3. Render --
     return (
-        <div className="flex flex-col gap-3 w-full max-w-5xl mx-auto">
+        <div className="flex flex-col gap-0 w-full">
 
             {/* ROW 1: COMMANDS */}
-            <div className="flex items-center gap-4 h-[30px]">
-
-                {/* A. People Commands */}
-                {showPeopleControls && (
-                    <>
-                        <FilterCommandButton
-                            label="+ Filter Ppl"
-                            color="blue"
-                            placeholder="Dept, Position..."
-                            suggestions={peopleSuggestions}
-                            onSelect={addColleagueFilter}
-                        />
-
-                        {showSortControls && (
-                            <div className="relative inline-block">
-                                <select
-                                    className="appearance-none pl-3 pr-8 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-md hover:bg-slate-50 focus:outline-none cursor-pointer text-slate-700"
-                                    value={sortConfig.field}
-                                    onChange={handleSortChange}
-                                >
-                                    <option value="name">+ Sort Ppl: Name</option>
-                                    <option value="position">+ Sort Ppl: Position</option>
-                                    <option value="taskCount">+ Sort Ppl: Workload</option>
-                                </select>
-                                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* Divider? */}
-                {(showPeopleControls && (showTaskControls || showProjectControls)) && <div className="w-px h-4 bg-slate-200" />}
-
-                {/* B. Task Commands */}
-                {showTaskControls && (
-                    <FilterCommandButton
-                        label="+ Filter Tsk"
-                        color="green"
-                        placeholder="Status, Priority..."
-                        suggestions={taskSuggestions}
-                        onSelect={addTaskFilter}
-                    />
-                )}
-
-                {/* Divider? */}
-                {(showTaskControls && showProjectControls) && <div className="w-px h-4 bg-slate-200" />}
-
-                {/* C. Project Commands */}
-                {showProjectControls && (
-                    <>
-                        <FilterCommandButton
-                            label="+ Filter Proj"
-                            color="purple"
-                            placeholder="Client, Status..."
-                            suggestions={projectSuggestions}
-                            onSelect={addProjectFilter}
-                        />
-                        <div className="relative inline-block">
-                            <select
-                                className="appearance-none pl-3 pr-8 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-md hover:bg-slate-50 focus:outline-none cursor-pointer text-slate-700"
-                                onChange={(e) => console.log('Sort Proj not implemented for Timeline View')}
-                                disabled
-                                title="Sort capability for Projects View"
-                            >
-                                <option value="name">+ Sort Proj</option>
-                            </select>
-                            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                        </div>
-                    </>
-                )}
+            <div className="flex items-center gap-4 h-[30px] mb-[-1px]">
+                {[
+                    {
+                        id: 'task',
+                        show: showTaskControls,
+                        buttons: [
+                            {
+                                id: 'tsk-filter',
+                                show: true,
+                                component: FilterCommandButton,
+                                props: {
+                                    label: "Filter Tsk",
+                                    color: "green",
+                                    placeholder: "Status, Priority...",
+                                    suggestions: taskSuggestions,
+                                    onSelect: addTaskFilter
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 'project',
+                        show: showProjectControls,
+                        buttons: [
+                            {
+                                id: 'proj-filter',
+                                show: true,
+                                component: FilterCommandButton,
+                                props: {
+                                    label: "Filter Proj",
+                                    color: "blue",
+                                    placeholder: "Client, Status...",
+                                    suggestions: projectSuggestions,
+                                    onSelect: addProjectFilter
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 'people',
+                        show: showPeopleControls,
+                        buttons: [
+                            {
+                                id: 'ppl-filter',
+                                show: true,
+                                component: FilterCommandButton,
+                                props: {
+                                    label: "Filter Ppl",
+                                    color: "purple",
+                                    placeholder: "Dept, Position...",
+                                    suggestions: peopleSuggestions,
+                                    onSelect: addColleagueFilter
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 'sort',
+                        show: showSortControls,
+                        buttons: [
+                            {
+                                id: 'sort-rows',
+                                show: true, // Always show if the section is shown
+                                component: FilterCommandButton,
+                                props: {
+                                    label: "Sort Rows",
+                                    color: "neutral", // Gray
+                                    placeholder: "Sort by...",
+                                    suggestions: { "Order By": ["Name", "Position", "Workload"] },
+                                    onSelect: (selection) => {
+                                        const map = { 'Name': 'name', 'Position': 'position', 'Workload': 'taskCount' };
+                                        setSortConfig({ ...sortConfig, field: map[selection.value] || 'name' });
+                                    }
+                                }
+                            },
+                            {
+                                id: 'remove-all',
+                                show: true, // Always show
+                                render: () => {
+                                    const hasActiveFilters = (colleagueFilters.length > 0 || taskFilters.length > 0 || (projectFilters && projectFilters.length > 0) || sortConfig.field !== 'name');
+                                    return (
+                                        <button
+                                            key="remove-all-btn"
+                                            onClick={hasActiveFilters ? resetAll : undefined}
+                                            disabled={!hasActiveFilters}
+                                            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors border
+                                                ${hasActiveFilters
+                                                    ? 'bg-white border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-400 cursor-pointer'
+                                                    : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            <X size={14} />
+                                            <span>Remove All</span>
+                                        </button>
+                                    );
+                                }
+                            }
+                        ]
+                    }
+                ].filter(s => s.show).map((section, idx, arr) => (
+                    <React.Fragment key={section.id}>
+                        {section.buttons.filter(b => b.show).map(btn => (
+                            btn.render ? btn.render() : (
+                                <FilterCommandButton key={btn.id} {...btn.props} />
+                            )
+                        ))}
+                        {idx < arr.length - 1 && <div className="w-px h-4 bg-slate-200" />}
+                    </React.Fragment>
+                ))}
 
 
                 {/* D. Global Commands */}
-                {resetAll && (colleagueFilters.length > 0 || taskFilters.length > 0 || (projectFilters && projectFilters.length > 0) || sortConfig.field !== 'name') && (
-                    <button
-                        onClick={resetAll}
-                        className="text-xs font-medium text-slate-400 hover:text-red-600 ml-auto transition-colors"
-                    >
-                        Clear All
-                    </button>
-                )}
+
 
                 {/* Clean Up Toggle */}
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-800 ml-4 select-none">
@@ -213,41 +245,14 @@ const FilterAndSortToolbar = ({
             </div>
 
             {/* ROW 2: THE SENTENCE (Active Chips) */}
-            <div className="flex flex-wrap items-center gap-2 min-h-[30px] p-2 bg-slate-50/50 rounded-lg border border-slate-100/50">
+            <div className="flex flex-wrap items-center gap-2 h-[30px] py-1 px-0 bg-slate-50/50 rounded-lg border border-slate-100/50">
 
                 {/* Placeholder if empty */}
                 {(colleagueFilters.length === 0 && taskFilters.length === 0 && (!projectFilters || projectFilters.length === 0) && sortConfig.field === 'name') && (
-                    <span className="text-xs text-slate-400 italic pl-1">Showing everyone...</span>
+                    <span className="text-xs text-slate-400 italic pl-1">Showing everything...</span>
                 )}
 
-                {/* People Chips */}
-                {colleagueFilters.map((f, i) => (
-                    <FilterChip
-                        key={`ppl-${i}`}
-                        label={f.label}
-                        onRemove={() => removeColleagueFilter(i)}
-                        color="blue"
-                    />
-                ))}
-
-                {/* Sort Chip (Read Only) */}
-                {sortConfig.field !== 'name' && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300">
-                        Sort: {sortConfig.field === 'taskCount' ? 'Workload' : sortConfig.field}
-                    </span>
-                )}
-
-                {/* Project Chips */}
-                {projectFilters && projectFilters.map((f, i) => (
-                    <FilterChip
-                        key={`proj-${i}`}
-                        label={f.label}
-                        onRemove={() => removeProjectFilter(i)}
-                        color="purple"
-                    />
-                ))}
-
-                {/* Task Chips */}
+                {/* 1. Task Chips (Green) */}
                 {taskFilters.map((f, i) => (
                     <FilterChip
                         key={`tsk-${i}`}
@@ -256,6 +261,34 @@ const FilterAndSortToolbar = ({
                         color="green"
                     />
                 ))}
+
+                {/* 2. Project Chips (Blue) */}
+                {projectFilters && projectFilters.map((f, i) => (
+                    <FilterChip
+                        key={`proj-${i}`}
+                        label={f.label}
+                        onRemove={() => removeProjectFilter(i)}
+                        color="blue"
+                    />
+                ))}
+
+                {/* 3. People Chips (Purple) */}
+                {colleagueFilters.map((f, i) => (
+                    <FilterChip
+                        key={`ppl-${i}`}
+                        label={f.label}
+                        onRemove={() => removeColleagueFilter(i)}
+                        color="purple"
+                    />
+                ))}
+
+                {/* 4. Sort Chip (Gray) */}
+                {sortConfig.field !== 'name' && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300">
+                        Sort: {sortConfig.field === 'taskCount' ? 'Workload' : sortConfig.field}
+                    </span>
+                )}
+
             </div>
         </div>
     );
