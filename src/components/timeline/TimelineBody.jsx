@@ -28,6 +28,10 @@ const TimelineBody = ({
                     key={colleague.id}
                     id={`timeline-row-${colleague.id}`}
                     className={cIdx === 0 ? "sticky top-[73px] z-[150] shadow-xl border-y-2 border-slate-900 bg-white" : "border-b border-slate-200 last:border-0"}
+                    style={cIdx === 0 ? {} : {
+                        contentVisibility: 'auto',
+                        containIntrinsicSize: '0 150px' // Estimate average row height to prevent scrollbar jump
+                    }}
                 >
                     <TimelineRow
                         colleague={colleague}

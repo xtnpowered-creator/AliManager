@@ -1,37 +1,42 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Shell from './components/Shell';
-import MyDashboard from './pages/MyDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import TimelineView from './pages/TimelineView';
-import KanbanBoard from './components/KanbanBoard';
-import GanttChart from './components/GanttChart';
-import ProjectList from './components/ProjectList';
-import LoneTasks from './components/LoneTasks';
-import Directory from './components/Directory';
-import TaskDetailView from './components/TaskDetailView';
 import { TimelineViewProvider } from './context/TimelineViewContext';
 import { DataProvider } from './context/DataContext';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './api/queryClient';
+import TimelineSkeleton from './components/TimelineSkeleton';
+
+// Lazy Load Pages
+const MyDashboard = React.lazy(() => import('./pages/MyDashboard'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const TimelineView = React.lazy(() => import('./pages/TimelineView'));
+const KanbanBoard = React.lazy(() => import('./components/KanbanBoard'));
+const GanttChart = React.lazy(() => import('./components/GanttChart'));
+const ProjectList = React.lazy(() => import('./components/ProjectList'));
+const LoneTasks = React.lazy(() => import('./components/LoneTasks'));
+const Directory = React.lazy(() => import('./components/Directory'));
+const TaskDetailView = React.lazy(() => import('./components/TaskDetailView'));
 
 // Wrapper to inject Navigation Props into Shell
 const AppShell = () => {
     return (
         <Shell>
-            <Routes>
-                <Route path="/" element={<Navigate to="/my-dashboard" replace />} />
-                <Route path="/my-dashboard" element={<MyDashboard />} />
-                <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/timelines" element={<TimelineView />} />
-                <Route path="/kanban" element={<KanbanBoard />} />
-                <Route path="/gantt" element={<GanttChart />} />
-                <Route path="/projects" element={<ProjectList />} />
-                <Route path="/lone-tasks" element={<LoneTasks />} />
-                <Route path="/team" element={<Directory />} />
-                <Route path="/task/:taskId" element={<TaskDetailPage />} />
-            </Routes>
+            <Suspense fallback={<div className="p-8"><TimelineSkeleton /></div>}>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/my-dashboard" replace />} />
+                    <Route path="/my-dashboard" element={<MyDashboard />} />
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                    <Route path="/timelines" element={<TimelineView />} />
+                    <Route path="/kanban" element={<KanbanBoard />} />
+                    <Route path="/gantt" element={<GanttChart />} />
+                    <Route path="/projects" element={<ProjectList />} />
+                    <Route path="/lone-tasks" element={<LoneTasks />} />
+                    <Route path="/team" element={<Directory />} />
+                    <Route path="/task/:taskId" element={<TaskDetailPage />} />
+                </Routes>
+            </Suspense>
         </Shell>
     );
 };
