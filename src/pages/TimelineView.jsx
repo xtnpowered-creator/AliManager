@@ -7,6 +7,7 @@ import { useTimelineState } from '../hooks/useTimelineState';
 import TimelineSkeleton from '../components/TimelineSkeleton';
 import TimelineControls from '../components/TimelineControls';
 import UnifiedTimelineBoard from '../components/UnifiedTimelineBoard';
+import { TimelineRegistryProvider } from '../context/TimelineRegistryContext';
 
 const TimelineView = () => {
     const navigate = useNavigate();
@@ -212,38 +213,40 @@ const TimelineView = () => {
         <div className="p-8 h-full flex flex-col space-y-0 overflow-hidden select-none">
             {headerWithClick}
 
-            <UnifiedTimelineBoard
-                user={user}
-                colleagues={visibleColleagues}
-                tasks={tasks}
-                getTasksForColleague={getTasksForColleague}
+            <TimelineRegistryProvider>
+                <UnifiedTimelineBoard
+                    user={user}
+                    colleagues={visibleColleagues}
+                    tasks={tasks}
+                    getTasksForColleague={getTasksForColleague}
 
-                days={days}
-                isToday={isToday}
-                isWeekend={(d) => [0, 6].includes(d.getDay())}
-                scale={scale}
-                setScale={setScale}
+                    days={days}
+                    isToday={isToday}
+                    isWeekend={(d) => [0, 6].includes(d.getDay())}
+                    scale={scale}
+                    setScale={setScale}
 
-                onUpdateTask={handleUpdateTask}
-                onBulkUpdate={handleBulkUpdate}
-                onDeleteTasks={handleDeleteTasks}
-                onMoveDate={handleMoveDate}
-                refetchTasks={refetchTasks}
+                    onUpdateTask={handleUpdateTask}
+                    onBulkUpdate={handleBulkUpdate}
+                    onDeleteTasks={handleDeleteTasks}
+                    onMoveDate={handleMoveDate}
+                    refetchTasks={refetchTasks}
 
-                showSidebar={true}
-                viewOffset={200}
-                headerContent={filterToolbar}
+                    showSidebar={true}
+                    viewOffset={200}
+                    headerContent={filterToolbar}
 
-                // Expose controls
-                controlsRef={controlsRef}
+                    // Expose controls
+                    controlsRef={controlsRef}
 
-                // Indicators (moved to top)
+                    // Indicators (moved to top)
 
-                // Delegation
-                delegationMap={delegationMap}
-                handleRevokeDelegation={handleRevokeDelegation}
-                onDelegateConfig={setDelegations}
-            />
+                    // Delegation
+                    delegationMap={delegationMap}
+                    handleRevokeDelegation={handleRevokeDelegation}
+                    onDelegateConfig={setDelegations}
+                />
+            </TimelineRegistryProvider>
         </div>
     );
 };

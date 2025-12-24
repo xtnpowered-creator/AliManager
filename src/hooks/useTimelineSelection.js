@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTimelineRegistry } from '../context/TimelineRegistryContext';
 
 export const useTimelineSelection = (scrollContainerRef, selectionBoxRef) => {
+    const { getTasks } = useTimelineRegistry();
     const [selectedTaskIds, setSelectedTaskIds] = useState(new Set());
     const [isSelectingState, setIsSelectingState] = useState(false); // Only for showing/hiding the box
 
@@ -106,24 +108,27 @@ export const useTimelineSelection = (scrollContainerRef, selectionBoxRef) => {
 
             if (scrollBox) {
                 try {
-                    // Optimization: Only query visible tasks? No, queryAll is fine for <1000 items usually.
-                    // Ideally we'd use a spatial index, but simple bounding box check is okay if not inside render loop.
+                    // OPTIMIZED: Use Registry instead of DOM Query
+                    const taskMap = getTasks(); // From Registry
                     const scrollBoxRect = scrollBox.getBoundingClientRect();
-                    const taskElements = scrollBox.querySelectorAll('.task-card');
 
-                    taskElements.forEach(el => {
+                    taskMap.forEach((entry, id) => {
+                        const el = entry.element;
+                        if (!el) return;
+
+                        // We still read rects here, but we skip the heavy querySelectorAll search.
+                        // Ideally, entry.rect would be cached, but simple bounding client rect on known elements is fast enough for <1000 items.
                         const elRect = el.getBoundingClientRect();
-                        const tRect = {
-                            id: el.getAttribute('data-task-id'),
-                            top: elRect.top - scrollBoxRect.top + scrollBox.scrollTop,
-                            left: elRect.left - scrollBoxRect.left + scrollBox.scrollLeft,
-                            bottom: elRect.bottom - scrollBoxRect.top + scrollBox.scrollTop,
-                            right: elRect.right - scrollBoxRect.left + scrollBox.scrollLeft
-                        };
 
-                        const overlap = !(tRect.left > marqueeRight || tRect.right < marqueeLeft || tRect.top > marqueeBottom || tRect.bottom < marqueeTop);
-                        if (overlap) newSelected.add(tRect.id);
+                        const top = elRect.top - scrollBoxRect.top + scrollBox.scrollTop;
+                        const left = elRect.left - scrollBoxRect.left + scrollBox.scrollLeft;
+                        const bottom = elRect.bottom - scrollBoxRect.top + scrollBox.scrollTop;
+                        const right = elRect.right - scrollBoxRect.left + scrollBox.scrollLeft;
+
+                        const overlap = !(left > marqueeRight || right < marqueeLeft || top > marqueeBottom || bottom < marqueeTop);
+                        if (overlap) newSelected.add(id);
                     });
+
                 } catch (err) {
                     console.error("Selection detection failed", err);
                 }

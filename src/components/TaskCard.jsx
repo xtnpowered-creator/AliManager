@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Crown, Zap, Play, Layers, User, Square, Pause, Check } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
 import { useAuth } from '../context/AuthContext';
+import { useTimelineRegistry } from '../context/TimelineRegistryContext'; // Import Registry
 import { CARD_VARIANTS } from '../styles/designSystem';
 
 const TaskCard = ({
@@ -23,8 +24,19 @@ const TaskCard = ({
     isSelected = false // NEW: Selected state for bulk actions
 }) => {
     const { user } = useAuth();
+    const { registerTask, unregisterTask } = useTimelineRegistry(); // Use Registry
     const [isHovered, setIsHovered] = useState(false);
     const cardRef = useRef(null);
+
+    // Register Task with Context on Mount/Update
+    React.useEffect(() => {
+        if (cardRef.current && task.id) {
+            registerTask(task.id, cardRef.current);
+        }
+        return () => {
+            if (task.id) unregisterTask(task.id);
+        };
+    }, [task.id, registerTask, unregisterTask]);
 
     // Alternating horizontal offset (Visual interest for stacks)
     // Only applies to MICRO stacks usually, but kept for legacy/safety.

@@ -156,8 +156,8 @@ const UnifiedTimelineBoard = ({
             {headerContent && <div className="shrink-0 mb-0">{headerContent}</div>}
 
             <TimelineOverlay
-                selectionBoxRef={selectionBoxRef}
-                isSelecting={isSelecting}
+                // REMOVED Selection Box Ref from here (It goes inside scroll container now)
+                isSelecting={false} // Overlay no longer handles selection box
                 showSidebar={showSidebar}
                 onTodayClick={() => scrollToDate(new Date(new Date().setHours(0, 0, 0, 0)), true)}
                 scale={scale}
@@ -193,6 +193,17 @@ const UnifiedTimelineBoard = ({
                     style={{ userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}
                     className={`flex-1 overflow-auto invisible-scrollbar relative cursor-grab active:cursor-grabbing ${isShiftKey ? '!cursor-crosshair' : ''}`}
                 >
+                    {/* MOVED SELECTION BOX INSIDE SCROLL CONTAINER */}
+                    <div ref={selectionBoxRef} style={{
+                        display: isSelecting ? 'block' : 'none',
+                        position: 'absolute',
+                        left: 0, top: 0, width: 0, height: 0,
+                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                        border: '1px solid #14b8a6',
+                        zIndex: 99999, pointerEvents: 'none', borderRadius: '4px',
+                        willChange: 'left, top, width, height'
+                    }} />
+
                     <TimelineHeader
                         days={days}
                         getColumnWidth={getColumnWidth}
