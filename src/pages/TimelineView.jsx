@@ -8,6 +8,7 @@ import TimelineSkeleton from '../components/TimelineSkeleton';
 import TimelineControls from '../components/TimelineControls';
 import UnifiedTimelineBoard from '../components/UnifiedTimelineBoard';
 import { TimelineRegistryProvider } from '../context/TimelineRegistryContext';
+import PageLayout from '../components/layout/PageLayout';
 
 const TimelineView = () => {
     const navigate = useNavigate();
@@ -194,7 +195,7 @@ const TimelineView = () => {
                     <p className="text-slate-500 text-lg">Manage assignments and schedules.</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-end gap-4 shrink-0 translate-y-[42px] z-50"> {/* Changed items-center to items-end */}
                 <TimelineControls
                     onTodayClick={handleTodayClick}
                     onGoToFirst={handleGoToFirst}
@@ -208,11 +209,60 @@ const TimelineView = () => {
     // Initial Load Only - Show Skeleton if we have no data yet
     // if (loading && (!tasks || tasks.length === 0)) return <TimelineSkeleton />;
 
-
     return (
-        <div className="p-8 h-full flex flex-col space-y-0 overflow-hidden select-none">
-            {headerWithClick}
+        <PageLayout
+            title="Timelines"
+            subtitle="Manage assignments and schedules."
+            actions={
+                <div className="flex items-center gap-4">
+                    {user?.isDelegated && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-bold text-amber-900 shadow-sm animate-in slide-in-from-top-2 fade-in mr-4">
+                            <Shield size={14} className="text-amber-600" />
+                            <span>Acting as Temp Admin (Expires {new Date(user.delegationExpiresAt).toLocaleDateString()})</span>
+                        </div>
+                    )}
+                    {/* TimelineControls moved to filters area for vertical alignment */}
+                </div>
+            }
+            filters={
+                <div className="flex items-end justify-between gap-4 w-full">
+                    <div className="flex-1 min-w-0">
+                        <FilterAndSortToolbar
+                            tasks={tasks}
+                            colleagues={visibleColleagues}
+                            projectsData={projectsData}
 
+                            colleagueFilters={colleagueFilters}
+                            setColleagueFilters={setColleagueFilters}
+
+                            taskFilters={taskFilters}
+                            setTaskFilters={setTaskFilters}
+
+                            projectFilters={projectFilters}
+                            setProjectFilters={setProjectFilters}
+
+                            sortConfig={sortConfig}
+                            setSortConfig={setSortConfig}
+
+                            hideEmptyRows={hideEmptyRows}
+                            setHideEmptyRows={setHideEmptyRows}
+                            resetAll={resetAll}
+
+                            showProjectControls={true}
+                        />
+                    </div>
+                    {/* Controls aligned with bottom of filters */}
+                    <div className="shrink-0">
+                        <TimelineControls
+                            onTodayClick={handleTodayClick}
+                            onGoToFirst={handleGoToFirst}
+                            showGoToFirst={taskFilters.length > 0}
+                            scale={scale}
+                        />
+                    </div>
+                </div>
+            }
+        >
             <TimelineRegistryProvider>
                 <UnifiedTimelineBoard
                     user={user}
@@ -234,12 +284,10 @@ const TimelineView = () => {
 
                     showSidebar={true}
                     viewOffset={200}
-                    headerContent={filterToolbar}
+                    // Header Content removed (Now handled by PageLayout)
 
                     // Expose controls
                     controlsRef={controlsRef}
-
-                    // Indicators (moved to top)
 
                     // Delegation
                     delegationMap={delegationMap}
@@ -247,7 +295,7 @@ const TimelineView = () => {
                     onDelegateConfig={setDelegations}
                 />
             </TimelineRegistryProvider>
-        </div>
+        </PageLayout>
     );
 };
 

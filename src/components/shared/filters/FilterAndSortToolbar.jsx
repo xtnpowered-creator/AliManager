@@ -112,7 +112,7 @@ const FilterAndSortToolbar = ({
         <div className="flex flex-col gap-0 w-full">
 
             {/* ROW 1: COMMANDS */}
-            <div className="flex items-center gap-4 h-[30px] mb-[-1px]">
+            <div className="flex items-center gap-2 h-[30px] mb-[-1px]">
                 {[
                     {
                         id: 'task',
@@ -260,8 +260,8 @@ const FilterAndSortToolbar = ({
                                             disabled={!hasActiveFilters}
                                             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors border
                                                 ${hasActiveFilters
-                                                    ? 'bg-white border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-400 cursor-pointer'
-                                                    : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
+                                                    ? 'bg-white border-slate-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-500 cursor-pointer'
+                                                    : 'bg-slate-50 border-slate-300 text-slate-400 cursor-not-allowed'
                                                 }`}
                                         >
                                             <X size={14} />
@@ -279,7 +279,6 @@ const FilterAndSortToolbar = ({
                                 <FilterCommandButton key={btn.id} {...btn.props} />
                             )
                         ))}
-                        {idx < arr.length - 1 && <div className="w-px h-4 bg-slate-200" />}
                     </React.Fragment>
                 ))}
 

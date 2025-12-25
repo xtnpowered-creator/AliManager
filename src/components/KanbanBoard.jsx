@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PageLayout from './layout/PageLayout';
 import { motion } from 'framer-motion';
 import { useApiData } from '../hooks/useApiData';
 import { MoreHorizontal, Plus, Clock, Users } from 'lucide-react';
@@ -20,14 +21,12 @@ const KanbanBoard = () => {
     const getTasksByStatus = (status) => tasks.filter(t => t.status === status);
 
     return (
-        <div className="p-8 h-full flex flex-col space-y-6 overflow-hidden">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Kanban Board</h2>
-                    <p className="text-slate-500 mt-1 text-lg">Manage task progression and bottlenecks.</p>
-                </div>
+        <PageLayout
+            title="Kanban Board"
+            subtitle="Manage task progression and bottlenecks."
+            actions={
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                    <button className="px-4 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                         Filters
                     </button>
                     <button
@@ -38,8 +37,8 @@ const KanbanBoard = () => {
                         New Task
                     </button>
                 </div>
-            </header>
-
+            }
+        >
             {/* Modal */}
             <NewTaskModal
                 isOpen={showNewTaskModal}
@@ -84,7 +83,7 @@ const KanbanBoard = () => {
                     </div>
                 ))}
             </div>
-        </div>
+        </PageLayout>
     );
 };
 

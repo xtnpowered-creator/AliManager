@@ -1,4 +1,5 @@
 import React from 'react';
+import PageLayout from './layout/PageLayout';
 import { motion } from 'framer-motion';
 import { useApiData } from '../hooks/useApiData';
 import { FolderKanban, Plus, MoreHorizontal, Target, Calendar } from 'lucide-react';
@@ -10,19 +11,17 @@ const ProjectList = () => {
     const { data: tasks } = useApiData('/tasks');
 
     return (
-        <div className="p-8 h-full flex flex-col space-y-6">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Projects</h2>
-                    <p className="text-slate-500 mt-1 text-lg">High-level oversight of active and planned initiatives.</p>
-                </div>
+        <PageLayout
+            title="Projects"
+            subtitle="High-level oversight of active and planned initiatives."
+            actions={
                 <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2">
                     <Plus size={18} />
                     New Project
                 </button>
-            </header>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            }
+        >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-8 pr-2 custom-scrollbar flex-1">
                 {loading ? (
                     [1, 2, 3].map(i => <div key={i} className="h-64 bg-white rounded-2xl animate-pulse"></div>)
                 ) : (
@@ -79,7 +78,7 @@ const ProjectList = () => {
                     })
                 )}
             </div>
-        </div>
+        </PageLayout>
     );
 };
 

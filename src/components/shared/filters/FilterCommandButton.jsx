@@ -70,10 +70,10 @@ const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {
         <div className="relative inline-block" ref={containerRef}>
             <button
                 onClick={() => { setIsOpen(!isOpen); setTimeout(() => inputRef.current?.focus(), 10); }}
-                className={`flex items - center gap - 1.5 text - xs font - semibold px - 3 py - 1.5 rounded - md transition - colors border
-                    ${isOpen ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'} `}
+                className={`flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-md transition-colors border whitespace-nowrap
+                    ${isOpen ? 'bg-slate-100 border-slate-400' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'} `}
             >
-                <Plus size={14} className={color === 'blue' ? 'text-blue-500' : color === 'green' ? 'text-emerald-500' : 'text-slate-400'} />
+                <Plus size={14} className={color === 'blue' ? 'text-blue-500' : color === 'green' ? 'text-emerald-500' : color === 'purple' ? 'text-purple-500' : 'text-slate-400'} />
                 <span>{label}</span>
             </button>
 

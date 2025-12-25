@@ -51,9 +51,9 @@ const Shell = ({ children }) => {
     return (
         <div className="h-screen w-screen overflow-hidden flex flex-col bg-slate-50 text-slate-900 selection:bg-teal-100 selection:text-teal-900">
             {/* FIXED LOGIN BUTTON REMOVED (Use window.loginGod() in console if needed) */}
-            <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center sticky top-0 z-[100] p-0 shadow-sm">
+            <header className="h-16 border-b border-slate-300 bg-white/80 backdrop-blur-md flex items-center sticky top-0 z-[100] p-0 shadow-sm">
                 {/* Fixed Logo/Brand area matching sidebar width */}
-                <div className="w-72 border-r border-slate-200 h-full flex items-center px-8 shrink-0 bg-white/95 backdrop-blur z-[101]">
+                <div className="w-72 border-r border-slate-300 h-full flex items-center px-8 shrink-0 bg-white/95 backdrop-blur z-[101]">
                     <div className="flex items-center gap-3">
                         <Logo className="w-12 h-12" />
                         <h1 className="text-3xl font-bold tracking-tight">
@@ -65,7 +65,7 @@ const Shell = ({ children }) => {
 
                 {/* Flexible UI area for Search and Profile */}
                 <div className="flex-1 flex items-center justify-between px-6">
-                    <div className="flex items-center bg-slate-100 px-4 py-2 rounded-xl border border-slate-200/50 w-80 group focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+                    <div className="flex items-center bg-slate-100 px-4 py-2 rounded-xl border border-slate-300/50 w-80 group focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
                         <Search className="text-slate-400 group-focus-within:text-teal-600 transition-colors" size={18} />
                         <input
                             type="text"
@@ -78,7 +78,7 @@ const Shell = ({ children }) => {
                         <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors">
                             <Bell size={20} />
                         </button>
-                        <div className="h-4 w-[1px] bg-slate-200 mx-2"></div>
+                        <div className="h-4 w-[1px] bg-slate-300 mx-2"></div>
                         <div className="relative">
                             <div
                                 className="flex items-center gap-3 pl-2 cursor-pointer"

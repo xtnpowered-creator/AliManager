@@ -11,7 +11,6 @@ import { getMenuOptions } from './timeline/contextMenuHelpers.jsx';
 // Sub-Components
 import TimelineHeader from './timeline/TimelineHeader';
 import TimelineBody from './timeline/TimelineBody';
-import TimelineOverlay from './timeline/TimelineOverlay';
 import { TIMELINE_LAYOUT } from '../config/layoutConstants';
 
 const UnifiedTimelineBoard = ({
@@ -153,17 +152,10 @@ const UnifiedTimelineBoard = ({
     // 5. Render
     return (
         <div className="flex flex-col h-full overflow-hidden select-none relative">
-            {headerContent && <div className="shrink-0 mb-0">{headerContent}</div>}
+            {/* Header / Filters */}
+            {headerContent && <div className="shrink-0 mb-1.5">{headerContent}</div>}
 
-            <TimelineOverlay
-                // REMOVED Selection Box Ref from here (It goes inside scroll container now)
-                isSelecting={false} // Overlay no longer handles selection box
-                showSidebar={showSidebar}
-                onTodayClick={() => scrollToDate(new Date(new Date().setHours(0, 0, 0, 0)), true)}
-                scale={scale}
-            />
-
-            <div className={`flex-1 bg-white ${showSidebar ? 'rounded-[2.5rem] border border-slate-200' : 'rounded-2xl border border-slate-200'} shadow-sm flex flex-col overflow-hidden relative`}>
+            <div className={`flex-1 bg-white ${showSidebar ? 'rounded-[2.5rem] border border-slate-300' : 'rounded-2xl border border-slate-300'} shadow-sm flex flex-col overflow-hidden relative`}>
                 {/* Debug Alignment Arrow - 350px Anchor */}
                 <div
                     style={{

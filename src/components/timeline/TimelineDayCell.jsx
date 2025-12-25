@@ -73,7 +73,7 @@ const TimelineDayCell = ({
     return (
         <div
             style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}
-            className={`flex-none h-full border-r border-slate-200/70 flex items-center justify-center relative last:border-0 group/day ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}
+            className={`flex-none h-full border-r border-slate-300/70 flex items-center justify-center relative last:border-0 group/day ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}
             onContextMenu={(e) => onGridContextMenu && onGridContextMenu(day, colleagueId, e)}
         >
             {/* Visual Guides */}
@@ -93,7 +93,7 @@ const TimelineDayCell = ({
                         chunks.push(doneTasks.slice(i, i + MAX_BUBBLES));
                     }
                     return (
-                        <div className="flex flex-row gap-0 mr-[2px] shrink-0 border-r border-slate-200/50 pr-[2px]">
+                        <div className="flex flex-row gap-0 mr-[2px] shrink-0 border-r border-slate-300/50 pr-[2px]">
                             {chunks.map((chunk, colIndex) => {
                                 let negativeMarginSub = 0;
                                 if (chunk.length > 3) {

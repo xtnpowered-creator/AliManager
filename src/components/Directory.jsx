@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PageLayout from './layout/PageLayout';
 import { motion } from 'framer-motion';
 import { useApiData } from '../hooks/useApiData';
 import { useAuth } from '../context/AuthContext';
@@ -44,14 +45,12 @@ const Directory = () => {
     };
 
     return (
-        <div className="p-8 h-full flex flex-col space-y-6">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Directory</h2>
-                    <p className="text-slate-500 mt-1 text-lg">Coordinate with your key contacts and check availability.</p>
-                </div>
+        <PageLayout
+            title="Directory"
+            subtitle="Coordinate with your key contacts and check availability."
+            actions={
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                    <button className="px-4 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
                         Export CSV
                     </button>
                     {isAdmin && (
@@ -63,9 +62,9 @@ const Directory = () => {
                         </button>
                     )}
                 </div>
-            </header>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            }
+        >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-y-auto pb-8 pr-2 custom-scrollbar flex-1">
                 {loading ? (
                     [1, 2, 3, 4].map(i => <div key={i} className="h-80 bg-white rounded-3xl animate-pulse"></div>)
                 ) : (
@@ -141,7 +140,7 @@ const Directory = () => {
                 onClose={() => setShowAddModal(false)}
                 onSuccess={refetch}
             />
-        </div>
+        </PageLayout>
     );
 };
 
