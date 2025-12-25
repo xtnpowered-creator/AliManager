@@ -7,7 +7,8 @@ export const useTimelineScroll = ({
     getColumnWidth,
     viewOffset = 0,
     setInteracted,
-    controlsRef
+    controlsRef,
+    horiScrollAnchorX
 }) => {
 
     const scrollToTarget = useCallback((date, colleagueId, smooth = true) => {
@@ -32,7 +33,9 @@ export const useTimelineScroll = ({
                     offset += getColumnWidth(day);
                 }
             }
-            finalLeft = Math.max(0, offset + viewOffset - TIMELINE_LAYOUT.SCROLL_ANCHOR_X);
+            // Use Dynamic Anchor or Fallback
+            const anchor = horiScrollAnchorX || TIMELINE_LAYOUT.SCROLL_ANCHOR_X;
+            finalLeft = Math.max(0, offset + viewOffset - anchor);
         }
 
         // 2. Calculate Top (Colleague)
@@ -52,7 +55,7 @@ export const useTimelineScroll = ({
         };
 
         scrollContainerRef.current.scrollTo(scrollOptions);
-    }, [scrollContainerRef, days, getColumnWidth, viewOffset, setInteracted]);
+    }, [scrollContainerRef, days, getColumnWidth, viewOffset, setInteracted, horiScrollAnchorX]);
 
     const scrollToDate = useCallback((date, smooth = true) => scrollToTarget(date, null, smooth), [scrollToTarget]);
     const scrollToColleague = useCallback((colleagueId, smooth = true) => scrollToTarget(null, colleagueId, smooth), [scrollToTarget]);

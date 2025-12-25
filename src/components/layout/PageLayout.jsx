@@ -30,9 +30,10 @@ const PageLayout = ({
         <div className={`h-full flex flex-col overflow-hidden select-none bg-transparent ${className}`}>
 
             {/* 1. TITLE & ACTIONS SPACE */}
-            <header className={`${LAYOUT_DIMENSIONS.TITLE_PT} ${LAYOUT_DIMENSIONS.TITLE_PB} px-8 shrink-0 flex items-end justify-between gap-4 z-50 relative`}>
+            {/* 1. TITLE & ACTIONS SPACE */}
+            <header className={`${LAYOUT_DIMENSIONS.TITLE_PT} ${LAYOUT_DIMENSIONS.TITLE_PB} px-8 shrink-0 flex items-end justify-between gap-4 z-40 relative pointer-events-none`}>
                 {/* Title Block */}
-                <div className="flex flex-col justify-end">
+                <div className="flex flex-col justify-end pointer-events-auto">
                     {/* Optional: We could enforce fixed height here for alignment using h-[XX] */}
                     <div className="flex items-baseline gap-4">
                         <h2 className="text-3xl font-bold text-slate-900 tracking-tight leading-none">{title}</h2>
@@ -41,13 +42,13 @@ const PageLayout = ({
                 </div>
 
                 {/* Actions Block (Buttons) - Aligned to Bottom of Title line */}
-                <div className=""> {/* Tiny adjustment to align buttons with text baseline if needed */}
+                <div className="pointer-events-auto"> {/* Tiny adjustment to align buttons with text baseline if needed */}
                     {actions}
                 </div>
             </header>
 
             {/* 2. CONTROLS SPACE (Filters) */}
-            <div className={`px-8 ${LAYOUT_DIMENSIONS.CONTROLS_PB} shrink-0 flex flex-col justify-end -mt-5 relative z-40`}>
+            <div className={`px-8 ${LAYOUT_DIMENSIONS.CONTROLS_PB} shrink-0 flex flex-col justify-end -mt-5 relative z-[100]`}>
                 {/* 
                     This wrapper ensures that even if 'filters' is null, we MIGHT want to preserve space?
                     User said: "limit line... and space below it, will be content space".
@@ -62,7 +63,7 @@ const PageLayout = ({
             </div>
 
             {/* 3. CONTENT SPACE */}
-            <main className={`${LAYOUT_DIMENSIONS.CONTENT_PX} ${LAYOUT_DIMENSIONS.CONTENT_PB} flex-1 overflow-hidden relative flex flex-col`}>
+            <main className={`${LAYOUT_DIMENSIONS.CONTENT_PX} ${LAYOUT_DIMENSIONS.CONTENT_PB} flex-1 overflow-hidden relative flex flex-col z-0`}>
                 {/* The Top Edge of THIS div is the "Limit Line" the user cares about. */}
                 {children}
             </main>

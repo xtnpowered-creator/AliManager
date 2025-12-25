@@ -12,6 +12,7 @@ import { getMenuOptions } from './timeline/contextMenuHelpers.jsx';
 import TimelineHeader from './timeline/TimelineHeader';
 import TimelineBody from './timeline/TimelineBody';
 import { TIMELINE_LAYOUT } from '../config/layoutConstants';
+import HoriScrollTargetPoint from './timeline/HoriScrollTargetPoint';
 
 const UnifiedTimelineBoard = ({
     user,
@@ -63,6 +64,17 @@ const UnifiedTimelineBoard = ({
         // Weekends 50% width
         return Math.max([0, 6].includes(date.getDay()) ? width * 0.5 : width, 20);
     }, [scale]);
+
+    // -- RED TRIANGLE LOGIC --
+    const [horiScrollAnchorX, setHoriScrollAnchorX] = React.useState(() => {
+        const saved = localStorage.getItem('horiScrollAnchorX');
+        return saved ? parseFloat(saved) : TIMELINE_LAYOUT.SCROLL_ANCHOR_X;
+    });
+
+    const handleAnchorDrag = React.useCallback((newX) => {
+        setHoriScrollAnchorX(newX);
+        localStorage.setItem('horiScrollAnchorX', newX);
+    }, []);
 
     // 2. Selection & State Hooks
     const {
@@ -142,7 +154,10 @@ const UnifiedTimelineBoard = ({
         getColumnWidth,
         viewOffset,
         setInteracted,
-        controlsRef
+        viewOffset,
+        setInteracted,
+        controlsRef,
+        horiScrollAnchorX // Pass dynamic anchor
     });
 
 
@@ -156,21 +171,17 @@ const UnifiedTimelineBoard = ({
             {headerContent && <div className="shrink-0 mb-1.5">{headerContent}</div>}
 
             <div className={`flex-1 bg-white ${showSidebar ? 'rounded-[2.5rem] border border-slate-300' : 'rounded-2xl border border-slate-300'} shadow-sm flex flex-col overflow-hidden relative`}>
-                {/* Debug Alignment Arrow - 350px Anchor */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: `${TIMELINE_LAYOUT.SCROLL_ANCHOR_X}px`,
-                        top: '0',
-                        zIndex: 600,
-                        width: 0,
-                        height: 0,
-                        borderLeft: '10px solid transparent',
-                        borderRight: '10px solid transparent',
-                        borderTop: '15px solid red',
-                        transform: 'translateX(-50%)',
-                        pointerEvents: 'none'
-                    }}
+                {/* Dynamic Scroll Target (Red Triangle) */}
+                <HoriScrollTargetPoint
+                    positionX={horiScrollAnchorX}
+                    onDrag={handleAnchorDrag}
+                    // Sidebar is ~350px in layoutConstants? No, layoutConstants says ANCHOR is 350.
+                    // Sidebar hardcoded or dynamic?
+                    // In config/layoutConstants.js: Usually we assume sidebar ~272px.
+                    // Let's use a safe min: SidebarWidth (280) + Buffer (40) = 320.
+                    // If Sidebar is hidden? Then 50px.
+                    minX={showSidebar ? 320 : 50}
+                    maxX={window.innerWidth - 50}
                 />
 
                 <div

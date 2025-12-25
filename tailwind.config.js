@@ -10,9 +10,8 @@ export default {
                 slate: {
                     950: '#020617',
                 },
-                teal: {
-                    500: '#14b8a6',
-                    600: '#0d9488',
+                slate: {
+                    950: '#020617',
                 },
             },
             fontFamily: {
