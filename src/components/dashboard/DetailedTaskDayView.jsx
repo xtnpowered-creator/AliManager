@@ -12,6 +12,22 @@ const DetailedTaskDayView = forwardRef(({
     const scrollLeft = useRef(0);
     const animationFrameRef = useRef(null);
     const SNAP_TIMEOUT_MS = 150;
+    const hasScrolledRef = useRef(false);
+
+    // Initial Scroll Effect
+    React.useEffect(() => {
+        if (hasScrolledRef.current || tasks.length === 0) return;
+
+        // Wait for layout?
+        setTimeout(() => {
+            if (!scrollContainerRef.current) return;
+
+            const today = new Date();
+            // Try scrolling to Today
+            scrollToDate(today);
+            hasScrolledRef.current = true;
+        }, 100);
+    }, [tasks]); // Run when tasks load
 
     // 1. Group & Sort Tasks
     const dayGroups = useMemo(() => {
@@ -125,6 +141,39 @@ const DetailedTaskDayView = forwardRef(({
 
     const snapTimeoutRef = useRef(null);
 
+    // Custom "Slow" Smooth Scroll Helper
+    // Halving the speed effectively means doubling the duration of a standard quick flick.
+    // 1000ms is a luxurious snap.
+    const slowScrollTo = (target) => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const start = container.scrollLeft;
+        const change = target - start;
+        const duration = 1000; // 1 second duration
+        const startTime = performance.now();
+
+        const animateScroll = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            if (elapsed < duration) {
+                // Ease In Out Quad
+                let t = elapsed / (duration / 2);
+                const val = t < 1
+                    ? change / 2 * t * t + start
+                    : -change / 2 * ((--t) * (t - 2) - 1) + start;
+
+                container.scrollLeft = val;
+                animationFrameRef.current = requestAnimationFrame(animateScroll);
+            } else {
+                container.scrollLeft = target;
+            }
+        };
+
+        // Cancel any existing native smooth scroll or drag inertia
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = requestAnimationFrame(animateScroll);
+    };
+
     // Hazard Snap Logic Helper
     const scheduleSnapBack = () => {
         if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
@@ -146,18 +195,22 @@ const DetailedTaskDayView = forwardRef(({
 
             // 2. Check Start
             if (scrollLeft < BOUNDARY_WIDTH) {
-                container.scrollTo({ left: BOUNDARY_WIDTH, behavior: 'smooth' });
+                // container.scrollTo({ left: BOUNDARY_WIDTH, behavior: 'smooth' });
+                slowScrollTo(BOUNDARY_WIDTH);
             }
             // 3. Check End
             else if (scrollLeft > maxScrollLeft - BOUNDARY_WIDTH) {
-                container.scrollTo({ left: maxScrollLeft - BOUNDARY_WIDTH, behavior: 'smooth' });
+                // container.scrollTo({ left: maxScrollLeft - BOUNDARY_WIDTH, behavior: 'smooth' });
+                slowScrollTo(maxScrollLeft - BOUNDARY_WIDTH);
             }
-        }, 1000);
+        }, 2000);
     };
 
     const handlePointerDown = (e) => {
         // Cancel any pending snap immediately when user grabs
         if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
+        // Cancel any ongoing slow snap animation
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
 
         isDragging.current = true;
         startX.current = e.pageX - scrollContainerRef.current.offsetLeft;

@@ -1,27 +1,15 @@
-import React, { useMemo, useRef, useCallback, useState } from 'react';
-import { useTimelineSelection } from '../../hooks/useTimelineSelection';
+import React, { useCallback } from 'react';
 import { useTimelineActions } from '../../hooks/timeline/useTimelineActions';
-import { apiClient } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import UnifiedTimelineBoard from '../UnifiedTimelineBoard';
 import { TimelineRegistryProvider } from '../../context/TimelineRegistryContext';
+import { useTimelineDateRange } from '../../hooks/useTimelineDateRange';
 
-const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, setScale, controlsRef, onDateScroll }) => {
+const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, setScale, controlsRef, onDateScroll, showDoneTasks, toggleShowDoneTasks }) => {
     const { showToast } = useToast();
 
-    // 1. Time Logic (Passed to UnifiedBoard)
-    const days = useMemo(() => {
-        const result = [];
-        const start = new Date();
-        start.setHours(0, 0, 0, 0);
-        start.setDate(start.getDate() - 30); // 30 days back
-        for (let i = 0; i < 90; i++) { // 3 months total
-            const date = new Date(start);
-            date.setDate(start.getDate() + i);
-            result.push(date);
-        }
-        return result;
-    }, []);
+    // 1. Time Logic (Shared)
+    const days = useTimelineDateRange();
 
     // 2. Shared Actions Logic (Replaces local implementations)
     const {
@@ -74,6 +62,8 @@ const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, 
 
                     // Delegation (Not applicable for simplified dashboard usually, but passed safely)
                     delegationMap={new Map()}
+                    showDoneTasks={showDoneTasks}
+                    toggleShowDoneTasks={toggleShowDoneTasks}
                 />
             </TimelineRegistryProvider>
         </div>

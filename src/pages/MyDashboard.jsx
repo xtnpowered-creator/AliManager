@@ -1,4 +1,5 @@
 import React from 'react';
+import { Clock } from 'lucide-react';
 import PageLayout from '../components/layout/PageLayout';
 import { useApiData } from '../hooks/useApiData';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +10,8 @@ import FilterAndSortToolbar from '../components/shared/filters/FilterAndSortTool
 import { useFilterAndSortTool } from '../hooks/useFilterAndSortTool';
 import DetailedTaskDayView from '../components/dashboard/DetailedTaskDayView';
 import { TimelineRegistryProvider } from '../context/TimelineRegistryContext';
+
+import { useTimelineScale } from '../hooks/useTimelineScale';
 
 const MyDashboard = () => {
     const { user } = useAuth();
@@ -29,7 +32,8 @@ const MyDashboard = () => {
     } = useFilterAndSortTool(tasks, colleagues, projects, user);
 
     // Timeline Controls State
-    const [scale, setScale] = React.useState(25);
+    const { scale, setScale } = useTimelineScale();
+    const [showDoneTasks, setShowDoneTasks] = React.useState(true); // Default: Show Done Tasks
     const controlsRef = React.useRef({}); // Timeline Controls
     const dayViewControlsRef = React.useRef({}); // DayView Controls
 
@@ -52,11 +56,16 @@ const MyDashboard = () => {
         if (!user || !filteredTasks) return { myTasks: [], delegatedTasks: [], myCompleted: [] };
 
         const userId = user.uid || user.id;
-        const myPending = [];
-        const delegated = [];
-        const completed = [];
+        const overdue = [];
+        const upcoming = [];
+        const delegated = [];  // <--- Restored
+        const completed = [];  // <--- Restored
 
-        // Fast Lookup for Visible Colleagues (for Delegation Filtering)
+        // Helper: Is Overdue?
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        // Fast Lookup for Visible Colleagues
         const visibleIds = new Set(visibleColleagues.map(c => c.id));
 
         filteredTasks.forEach(task => {
@@ -64,19 +73,26 @@ const MyDashboard = () => {
             const isCreatedByMe = task.createdBy === userId;
             const isUnassigned = (!task.assignedTo || task.assignedTo.length === 0);
 
+            // Handle DONE tasks
             if (task.status === 'done') {
                 if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
                     completed.push(task);
                 }
-                return;
+                if (!showDoneTasks) return;
             }
 
             if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
-                myPending.push(task);
+                // Check Overdue (Internal split for potential logic, but we merge for display)
+                if (task.status !== 'done' && task.dueDate) {
+                    const d = new Date(task.dueDate);
+                    d.setHours(0, 0, 0, 0);
+                    if (d < now) {
+                        overdue.push(task);
+                        return;
+                    }
+                }
+                upcoming.push(task);
             } else if (isCreatedByMe && !isAssignedToMe && !isUnassigned) {
-                // Delegation: Only show if the assignee is in the visible list
-                // This allows "Filter Ppl" to filter the delegation column.
-                // If multiple assignees, verify at least one is visible.
                 const isDelegateVisible = task.assignedTo.some(id => visibleIds.has(id));
                 if (isDelegateVisible) {
                     delegated.push(task);
@@ -84,7 +100,6 @@ const MyDashboard = () => {
             }
         });
 
-        // Sorting: Priority '1' (Now) is Top, then Due Date Asc
         const sortFn = (a, b) => {
             if (a.priority === '1' && b.priority !== '1') return -1;
             if (a.priority !== '1' && b.priority === '1') return 1;
@@ -93,12 +108,18 @@ const MyDashboard = () => {
             return dateA - dateB;
         };
 
+        // Merge Overdue + Upcoming for a single "My Priorities" list, sorted by date/priority
+        // Since sortFn handles dates, a simple merge + sort is enough. 
+        // Or specific: Overdue (sorted) + Upcoming (sorted).
+        // Let's just merge and sort to be safe and simple.
+        const allMyTasks = [...overdue, ...upcoming].sort(sortFn);
+
         return {
-            myTasks: myPending.sort(sortFn),
+            myTasks: allMyTasks,
             delegatedTasks: delegated.sort(sortFn),
             myCompleted: completed
         };
-    }, [filteredTasks, user, visibleColleagues]);
+    }, [filteredTasks, user, visibleColleagues, showDoneTasks]);
 
     const handleGoToFirst = () => {
         if (!myTasks || myTasks.length === 0) return;
@@ -183,6 +204,7 @@ const MyDashboard = () => {
                             onGoToFirst={handleGoToFirst}
                             showGoToFirst={taskFilters.length > 0 || projectFilters.length > 0 || colleagueFilters.length > 0}
                             scale={scale}
+                            onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
                         />
                     </div>
                 </div>
@@ -205,6 +227,8 @@ const MyDashboard = () => {
                                 dayViewControlsRef.current.scrollToDate(d);
                             }
                         }}
+                        showDoneTasks={showDoneTasks}
+                        toggleShowDoneTasks={() => setShowDoneTasks(prev => !prev)}
                     />
                 </div>
 

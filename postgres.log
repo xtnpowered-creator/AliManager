@@ -793,3 +793,7 @@
 2025-12-25 03:43:26.997 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.645 s, sync=0.125 s, total=0.876 s; sync files=7, longest=0.025 s, average=0.018 s; distance=16 kB, estimate=76 kB; lsn=0/1D00648, redo lsn=0/1D00610
 2025-12-25 03:58:27.022 CST [18764] LOG:  checkpoint starting: time
 2025-12-25 03:58:27.230 CST [18764] LOG:  checkpoint complete: wrote 1 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.116 s, sync=0.020 s, total=0.209 s; sync files=1, longest=0.020 s, average=0.020 s; distance=8 kB, estimate=69 kB; lsn=0/1D02658, redo lsn=0/1D02620
+2025-12-25 11:22:52.959 CST [24732] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2025-12-25 11:23:27.873 CST [18764] LOG:  checkpoint starting: time
+2025-12-25 11:23:28.731 CST [18764] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.653 s, sync=0.130 s, total=0.858 s; sync files=7, longest=0.028 s, average=0.019 s; distance=15 kB, estimate=63 kB; lsn=0/1D065D0, redo lsn=0/1D06598

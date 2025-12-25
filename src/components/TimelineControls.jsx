@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, SkipBack } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
-const TimelineControls = ({ onTodayClick, onGoToFirst, showGoToFirst, scale, className = "" }) => {
+const TimelineControls = ({ onTodayClick, onGoToFirst, showGoToFirst, scale, onScaleClick, className = "" }) => {
     return (
         <div className={`flex flex-col gap-1 shrink-0 ${className}`}>
             <button
@@ -22,9 +22,13 @@ const TimelineControls = ({ onTodayClick, onGoToFirst, showGoToFirst, scale, cla
             >
                 FIRST MATCH
             </button>
-            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 text-center">
-                {scale >= 120 ? 'Wide' : (scale > 30 && scale <= 60) ? 'Compact' : 'Standard'} Zoom
-            </div>
+            <button
+                onClick={onScaleClick}
+                className="text-[11px] font-bold text-slate-500 uppercase tracking-widest px-2 text-center hover:text-teal-600 hover:bg-teal-50 rounded cursor-pointer transition-colors select-none"
+                title="Click to set custom density"
+            >
+                {(scale / 96).toFixed(2)} IN / DAY
+            </button>
         </div>
     );
 };

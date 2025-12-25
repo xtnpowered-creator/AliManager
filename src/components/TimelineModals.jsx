@@ -15,6 +15,7 @@ const TimelineModals = ({
     setSelectedTaskIds,
     refetchTasks,
     scrollToDate,
+    scale,
     handleScaleChange,
 
     // State & Setters
@@ -90,6 +91,7 @@ const TimelineModals = ({
                 isOpen={showCustomScale}
                 onClose={() => setShowCustomScale(false)}
                 onApply={handleScaleChange}
+                currentScale={scale}
             />
 
             <FlagModal

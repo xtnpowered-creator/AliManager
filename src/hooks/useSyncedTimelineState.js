@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useTimelineViewContext } from '../context/TimelineViewContext';
 
-export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset = 0) => {
+export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset = 0, anchorOffset = 350) => {
     const [isRestored, setIsRestored] = useState(false);
     const [syncedScale, setSyncedScale] = useState(null);
     const initialRestoreDone = useRef(false);
@@ -24,9 +24,9 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
         if (!userInteracted.current) return;
 
         const scrollLeft = scrollContainerRef.current.scrollLeft;
-        // Search strictly based on ScrollLeft - ViewOffset + 350px.
+        // Search strictly based on ScrollLeft - ViewOffset + Anchor.
         // Add 10px buffer to handle sub-pixel rounding errors (prevents jumping to previous day).
-        const effectiveScrollLeft = Math.max(0, scrollLeft - viewOffset + 350 + 10);
+        const effectiveScrollLeft = Math.max(0, scrollLeft - viewOffset + anchorOffset + 10);
 
         // Find date at this scroll position
         let currentOffset = 0;
@@ -50,7 +50,7 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
 
         updateViewState(newState);
 
-    }, [scrollContainerRef, days, getColumnWidth, scale, updateViewState, viewOffset]);
+    }, [scrollContainerRef, days, getColumnWidth, scale, updateViewState, viewOffset, anchorOffset]);
 
 
     // 2. Attach Listener
@@ -102,10 +102,10 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
                 offset += getColumnWidth(day);
             }
 
-            // Snap to correct position (350px anchor)
-            scrollContainerRef.current.scrollLeft = Math.max(0, offset + viewOffset - 350);
+            // Snap to correct position (anchor)
+            scrollContainerRef.current.scrollLeft = Math.max(0, offset + viewOffset - anchorOffset);
         }
-    }, [scale, isRestored, days, getColumnWidth, viewState, viewOffset]);
+    }, [scale, isRestored, days, getColumnWidth, viewState, viewOffset, anchorOffset]);
 
 
     // 3. Restore State OR Scroll to Today (ONCE)
@@ -141,8 +141,8 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
 
         if (targetOffset !== -1) {
             // Found saved state
-            // ScrollLeft = DayOffset + ViewOffset - 350.
-            el.scrollLeft = Math.max(0, targetOffset + viewOffset - 350);
+            // ScrollLeft = DayOffset + ViewOffset - Anchor.
+            el.scrollLeft = Math.max(0, targetOffset + viewOffset - anchorOffset);
         } else {
             // Fallback: Scroll to Today (Default)
             // Use Saved Scale if available? Default to 10 effectively if not.
@@ -153,14 +153,14 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
                 for (let i = 0; i < todayIndex; i++) {
                     offset += getColumnWidth(days[i]); // Use current scale
                 }
-                // Align Today to Visual 350px
-                el.scrollLeft = Math.max(0, offset + viewOffset - 350);
+                // Align Today to Visual Anchor
+                el.scrollLeft = Math.max(0, offset + viewOffset - anchorOffset);
             }
         }
 
         setIsRestored(true);
 
-    }, [days, getColumnWidth, isToday, viewState, viewOffset]); // Run when days ready. relies on ref to run once.
+    }, [days, getColumnWidth, isToday, viewState, viewOffset, anchorOffset]); // Run when days ready. relies on ref to run once.
 
     return { isRestored, syncedScale, setInteracted };
 };

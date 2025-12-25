@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, CalendarDays, Clock, User, UserPlus, Zap, Play, Pause, CheckCircle2, Square, Trash2, Ban, Maximize2, RotateCcw, Flag, Plus, Shield, Calendar } from 'lucide-react';
+import { Eye, EyeOff, CalendarDays, Clock, User, UserPlus, Zap, Play, Pause, CheckCircle2, Square, Trash2, Ban, Maximize2, RotateCcw, Flag, Plus, Shield, Calendar } from 'lucide-react';
 
 export const getMenuOptions = ({
     type,
@@ -93,6 +93,8 @@ export const getMenuOptions = ({
 
     // Default: Empty Slot (Create Task)
     return [
-        { label: 'Create Task Here...', icon: Plus, onClick: withClose(() => { setNewTaskDefaults({ dueDate: data.date, assigneeId: data.colleagueId }); setShowNewTaskModal(true); }) }
+        { label: 'Create Task Here...', icon: Plus, onClick: withClose(() => { setNewTaskDefaults({ dueDate: data.date, assigneeId: data.colleagueId }); setShowNewTaskModal(true); }) },
+        { type: 'separator' },
+        { label: callbacks.showDoneTasks ? 'Hide DONE Tasks' : 'Show DONE Tasks', icon: callbacks.showDoneTasks ? EyeOff : Eye, onClick: withClose(callbacks.toggleShowDoneTasks) }
     ];
 };

@@ -1,10 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useTimelineData } from './timeline/useTimelineData';
 
 import { useTimelineActions } from './timeline/useTimelineActions';
 import { useFilterAndSortTool } from './useFilterAndSortTool';
 
 export const useTimelineState = (user) => {
+    // 0. UI State
+    const [showDoneTasks, setShowDoneTasks] = useState(true);
+
     // 1. Data Fetching
     const {
         tasks,
@@ -44,6 +47,9 @@ export const useTimelineState = (user) => {
     // 4. Adapters & Helpers
     const getTasksForColleague = useCallback((colleagueId) =>
         filteredTasks.filter(t => {
+            // 0. Done Toggle Check
+            if (t.status === 'done' && !showDoneTasks) return false;
+
             // 1. Explicit Assignment
             if (t.assignedTo && t.assignedTo.includes(colleagueId)) return true;
 
@@ -53,7 +59,7 @@ export const useTimelineState = (user) => {
 
             return false;
         }),
-        [filteredTasks]);
+        [filteredTasks, showDoneTasks]);
 
     return {
         // Data
@@ -71,6 +77,7 @@ export const useTimelineState = (user) => {
         sortConfig, setSortConfig,
         hideEmptyRows, setHideEmptyRows,
         resetAll,
+        showDoneTasks, setShowDoneTasks, // Exposed
 
         visibleColleagues,
         filteredTasks,

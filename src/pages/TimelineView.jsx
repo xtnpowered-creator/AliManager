@@ -4,6 +4,8 @@ import { Clock, Calendar, Shield } from 'lucide-react';
 import FilterAndSortToolbar from '../components/shared/filters/FilterAndSortToolbar';
 import { useAuth } from '../context/AuthContext';
 import { useTimelineState } from '../hooks/useTimelineState';
+import { useTimelineScale } from '../hooks/useTimelineScale';
+import { useTimelineDateRange } from '../hooks/useTimelineDateRange';
 import TimelineSkeleton from '../components/TimelineSkeleton';
 import TimelineControls from '../components/TimelineControls';
 import UnifiedTimelineBoard from '../components/UnifiedTimelineBoard';
@@ -29,26 +31,14 @@ const TimelineView = () => {
         delegationMap, handleRevokeDelegation,
         handleUpdateTask, handleBulkUpdate, handleMoveDate, handleDeleteTasks,
         getTasksForColleague, setDelegations,
-        loading
+        loading,
+        showDoneTasks, setShowDoneTasks // New Exports
     } = useTimelineState(user);
 
-    const [scale, setScale] = useState(10); // Days visible
+    const { scale, setScale } = useTimelineScale(); // Single Source of Truth
 
-    // Date Logic (Shared? UnifiedBoard calculates internal Days?)
-    // UnifiedBoard uses days prop. We calculate it here or let it handle?
-    // Let's calculate here to keep control.
-    const days = React.useMemo(() => {
-        const result = [];
-        const start = new Date();
-        start.setHours(0, 0, 0, 0);
-        start.setDate(start.getDate() - 30);
-        for (let i = 0; i < 90; i++) {
-            const d = new Date(start);
-            d.setDate(start.getDate() + i);
-            result.push(d);
-        }
-        return result;
-    }, []);
+    // Date Logic (Shared)
+    const days = useTimelineDateRange();
 
     const isToday = (d) => {
         const t = new Date(); t.setHours(0, 0, 0, 0);
@@ -201,6 +191,7 @@ const TimelineView = () => {
                     onGoToFirst={handleGoToFirst}
                     showGoToFirst={taskFilters.length > 0}
                     scale={scale}
+                    onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
                 />
             </div>
         </header>
@@ -258,6 +249,7 @@ const TimelineView = () => {
                             onGoToFirst={handleGoToFirst}
                             showGoToFirst={taskFilters.length > 0}
                             scale={scale}
+                            onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
                         />
                     </div>
                 </div>
@@ -293,6 +285,8 @@ const TimelineView = () => {
                     delegationMap={delegationMap}
                     handleRevokeDelegation={handleRevokeDelegation}
                     onDelegateConfig={setDelegations}
+                    showDoneTasks={showDoneTasks}
+                    toggleShowDoneTasks={() => setShowDoneTasks(prev => !prev)}
                 />
             </TimelineRegistryProvider>
         </PageLayout>

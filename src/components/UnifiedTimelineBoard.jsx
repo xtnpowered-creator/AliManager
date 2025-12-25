@@ -40,7 +40,9 @@ const UnifiedTimelineBoard = ({
     // Indicators
     minTaskDate,
     maxTaskDate,
-    onDateScroll // New Callback prop
+    onDateScroll, // New Callback prop
+    showDoneTasks,
+    toggleShowDoneTasks
 }) => {
     const navigate = useNavigate();
     const scrollContainerRef = React.useRef(null);
@@ -52,19 +54,16 @@ const UnifiedTimelineBoard = ({
     const [showRightArrow, setShowRightArrow] = React.useState(false);
 
     // 1. Column Width
-    // 1. Column Width
-    // 1. Fixed Column Width (Physical Units)
-    // Scale is effectively "Pixels Per Day".
-    // Migration: If scale is small (< 30), assume it's the old "Days Count" and default to 96px (1 inch).
+    // Scale is "Pixels Per Day".
+    // Legacy logic (< 30) removed. We trust the input.
+    // Default fallback to 96 if 0/null/undefined passed.
     const getColumnWidth = React.useCallback((date, overrideScale) => {
         if (!date) return 20;
 
-        let s = overrideScale || scale || 96;
-        if (s < 30) s = 96; // Fallback for legacy "10 days" setting
+        const s = overrideScale || scale || 96;
 
-        const width = s;
         // Weekends 50% width
-        return Math.max([0, 6].includes(date.getDay()) ? width * 0.5 : width, 20);
+        return ([0, 6].includes(date.getDay()) ? s * 0.5 : s);
     }, [scale]);
 
     // -- RED TRIANGLE LOGIC --
@@ -84,7 +83,7 @@ const UnifiedTimelineBoard = ({
         handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel, handleLostPointerCapture,
     } = useTimelineSelection(scrollContainerRef, selectionBoxRef);
 
-    const { isRestored, syncedScale, setInteracted } = useSyncedTimelineState(scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset);
+    const { isRestored, syncedScale, setInteracted } = useSyncedTimelineState(scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset, horiScrollAnchorX);
 
     // 3. UI State
     const [contextMenu, setContextMenu] = React.useState(null);
@@ -158,9 +157,18 @@ const UnifiedTimelineBoard = ({
         setInteracted,
         viewOffset,
         setInteracted,
+        viewOffset,
+        setInteracted,
         controlsRef,
         horiScrollAnchorX // Pass dynamic anchor
     });
+
+    // Expose Modal Controls
+    React.useImperativeHandle(controlsRef, () => ({
+        scrollToDate,
+        scrollToTarget,
+        setShowCustomScale
+    }), [scrollToDate, scrollToTarget]);
 
 
 
@@ -225,6 +233,7 @@ const UnifiedTimelineBoard = ({
                         onContextMenu={handleContextMenu}
                         showSidebar={showSidebar}
                         onWheel={handleHeaderWheel}
+                        scale={scale}
                     />
 
                     <TimelineBody
@@ -279,7 +288,10 @@ const UnifiedTimelineBoard = ({
                                 setShowMoveDateModal,
                                 selectedTaskIds,
                                 setSelectedTaskIds,
-                                scale
+                                setSelectedTaskIds,
+                                scale,
+                                showDoneTasks,
+                                toggleShowDoneTasks
                             }
                         })
                     }
@@ -292,6 +304,7 @@ const UnifiedTimelineBoard = ({
                 setSelectedTaskIds={setSelectedTaskIds}
                 refetchTasks={refetchTasks}
                 scrollToDate={handleScrollToDate}
+                scale={scale}
                 handleScaleChange={handleScaleChange}
                 reassignTask={reassignTask} setReassignTask={setReassignTask}
                 rescheduleTask={rescheduleTask} setRescheduleTask={setRescheduleTask}

@@ -68,44 +68,67 @@ export const GoToDateModal = ({ isOpen, onClose, onGo }) => {
     );
 };
 
-export const CustomScaleModal = ({ isOpen, onClose, onApply }) => {
-    const [days, setDays] = useState(7);
+export const CustomScaleModal = ({ isOpen, onClose, onApply, currentScale }) => {
+    // Default to 1.25 if undefined
+    const [density, setDensity] = useState(1.25);
+
+    useEffect(() => {
+        if (isOpen && currentScale) {
+            // Convert Pixels -> Inches
+            const inch = (currentScale / 96);
+            // Round to nearest 0.25? Or just 2 decimals.
+            setDensity(parseFloat(inch.toFixed(2)));
+        }
+    }, [isOpen, currentScale]);
+
+    const handleApply = () => {
+        // Convert Inches -> Pixels
+        const pixelVal = Math.round(density * 96);
+        onApply(pixelVal);
+        onClose();
+    };
 
     return (
-        <ModalShell isOpen={isOpen} onClose={onClose} title="Custom Scale" icon={Maximize2}>
+        <ModalShell isOpen={isOpen} onClose={onClose} title="Set Timeline Density" icon={Maximize2}>
             <div className="space-y-4">
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Visible Days (3-33)</label>
-                    <input
-                        type="number"
-                        min="3"
-                        max="33"
-                        value={days}
-                        onChange={e => {
-                            const val = e.target.value;
-                            // Allow empty string or digits. Do not clamp yet.
-                            // But we stored 'days' as number (7).
-                            // If we change state to allow string, we need to update state definition? 
-                            // Or just parse int? 
-                            // If I type "1", and clamp is min 3, it forces 3. Correct.
-                            // To fix: I need to allow "1", "2" temporarily.
-                            // So onChange should just set state. Clamping happens on Blur.
-                            setDays(val);
-                        }}
-                        onBlur={() => {
-                            let val = parseInt(days);
-                            if (isNaN(val)) val = 10;
-                            setDays(Math.min(33, Math.max(3, val)));
-                        }}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1">Adjusts column width to fit {days} days on screen.</p>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Density (Inches per Day)</label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="number"
+                            min="0.33"
+                            max="5.0"
+                            step="0.25"
+                            value={density}
+                            onChange={e => setDensity(e.target.value)}
+                            onBlur={() => {
+                                let val = parseFloat(density);
+                                if (isNaN(val)) val = 1.25;
+                                setDensity(Math.min(5.0, Math.max(0.33, val)));
+                            }}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    handleApply();
+                                }
+                            }}
+                            autoFocus
+                            onFocus={e => e.target.select()}
+                            className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        />
+                        <span className="text-sm font-bold text-slate-400">IN / DAY</span>
+                    </div>
+
+                    <p className="text-[10px] text-slate-400 mt-2">
+                        Higher = More Spacious.<br />
+                        Lower = More Compact.<br />
+                        Standard is ~1.00 - 1.25 IN.
+                    </p>
                 </div>
                 <button
-                    onClick={() => { onApply(days); onClose(); }}
+                    onClick={handleApply}
                     className="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95"
                 >
-                    Apply Scale
+                    Apply Density
                 </button>
             </div>
         </ModalShell>
