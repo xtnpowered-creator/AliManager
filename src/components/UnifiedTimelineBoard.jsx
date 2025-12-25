@@ -44,6 +44,7 @@ const UnifiedTimelineBoard = ({
     const navigate = useNavigate();
     const scrollContainerRef = React.useRef(null);
     const selectionBoxRef = React.useRef(null);
+    const boardRef = React.useRef(null);
 
     // Scroll Arrows State
     const [showLeftArrow, setShowLeftArrow] = React.useState(false);
@@ -170,18 +171,15 @@ const UnifiedTimelineBoard = ({
             {/* Header / Filters */}
             {headerContent && <div className="shrink-0 mb-1.5">{headerContent}</div>}
 
-            <div className={`flex-1 bg-white ${showSidebar ? 'rounded-[2.5rem] border border-slate-300' : 'rounded-2xl border border-slate-300'} shadow-sm flex flex-col overflow-hidden relative`}>
+            <div ref={boardRef} className={`flex-1 bg-white ${showSidebar ? 'rounded-[2.5rem] border border-slate-300' : 'rounded-2xl border border-slate-300'} shadow-sm flex flex-col overflow-hidden relative`}>
                 {/* Dynamic Scroll Target (Red Triangle) */}
                 <HoriScrollTargetPoint
                     positionX={horiScrollAnchorX}
                     onDrag={handleAnchorDrag}
-                    // Sidebar is ~350px in layoutConstants? No, layoutConstants says ANCHOR is 350.
-                    // Sidebar hardcoded or dynamic?
-                    // In config/layoutConstants.js: Usually we assume sidebar ~272px.
-                    // Let's use a safe min: SidebarWidth (280) + Buffer (40) = 320.
-                    // If Sidebar is hidden? Then 50px.
-                    minX={showSidebar ? 320 : 50}
-                    maxX={window.innerWidth - 50}
+                    // Left Limit: Sidebar Width + 50px Buffer
+                    minX={TIMELINE_LAYOUT.SIDEBAR_WIDTH + 50}
+                    containerRef={boardRef}
+                    rightBuffer={100} // Increased buffer to avoid border-radius clipping
                 />
 
                 <div

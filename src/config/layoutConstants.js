@@ -12,4 +12,7 @@ export const TIMELINE_LAYOUT = {
     // The vertical pixel offset to align content below the sticky header.
     // Adjust this if the header height changes.
     SCROLL_ANCHOR_Y: 180,
+
+    // Dimensions
+    SIDEBAR_WIDTH: 200,
 };

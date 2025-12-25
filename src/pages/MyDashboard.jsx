@@ -36,9 +36,6 @@ const MyDashboard = () => {
         }
     };
 
-    // Guard: Redirect if no user (should be handled by ProtectedRoute but this is a fail-safe)
-    if (!user) return <div className="p-8 text-center text-slate-400">Not Authenticated. Please refresh or login.</div>;
-
     const { myTasks, delegatedTasks, myCompleted } = React.useMemo(() => {
         // Use filteredTasks instead of raw tasks
         if (!user || !filteredTasks) return { myTasks: [], delegatedTasks: [], myCompleted: [] };
@@ -55,16 +52,6 @@ const MyDashboard = () => {
             const isAssignedToMe = task.assignedTo?.includes(userId);
             const isCreatedByMe = task.createdBy === userId;
             const isUnassigned = (!task.assignedTo || task.assignedTo.length === 0);
-
-            // Filter out if not visible?
-            // Logic:
-            // 1. My Pending: Always show if assigned to me (Me is always visible usually, but if I filter myself out?)
-            //    If I filter "Dept: Sales" and I am "Product", visibleColleagues excludes Me.
-            //    Should I hide my own tasks? Arguable.
-            //    "My Dashboard" -> "My Priorities" -> I probably expect to see them.
-            //    Let's enforce: My Tasks are always visible regardless of person filter, UNLESS I specifically filter tasks?
-            //    Wait, `visibleColleagues` includes Me by default in the hook logic: `return [self, ...others]`.
-            //    So `visibleIds` always has Me. So `isAssignedToMe` implies visible.
 
             if (task.status === 'done') {
                 if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
@@ -101,6 +88,38 @@ const MyDashboard = () => {
             myCompleted: completed
         };
     }, [filteredTasks, user, visibleColleagues]);
+
+    const handleGoToFirst = () => {
+        if (!myTasks || myTasks.length === 0) return;
+
+        // Helper to get effective date
+        const getEffectiveDate = (t) => {
+            if (t.status === 'done' && t.completedAt) return new Date(t.completedAt);
+            if (t.dueDate) return new Date(t.dueDate);
+            return null;
+        };
+
+        const validTasks = myTasks.filter(t => {
+            const d = getEffectiveDate(t);
+            return d && !isNaN(d.getTime());
+        });
+
+        if (validTasks.length > 0) {
+            // Sort by Date ASC to find the earliest occurrence
+            validTasks.sort((a, b) => getEffectiveDate(a) - getEffectiveDate(b));
+
+            const firstTask = validTasks[0];
+            const minDate = getEffectiveDate(firstTask);
+
+            if (minDate && controlsRef.current.scrollToDate) {
+                minDate.setHours(0, 0, 0, 0);
+                controlsRef.current.scrollToDate(minDate);
+            }
+        }
+    };
+
+    // Guard: Redirect if no user (should be handled by ProtectedRoute but this is a fail-safe)
+    if (!user) return <div className="p-8 text-center text-slate-400">Not Authenticated. Please refresh or login.</div>;
 
     return (
         <PageLayout
@@ -141,6 +160,8 @@ const MyDashboard = () => {
                     <div className="shrink-0">
                         <TimelineControls
                             onTodayClick={handleTodayClick}
+                            onGoToFirst={handleGoToFirst}
+                            showGoToFirst={taskFilters.length > 0 || projectFilters.length > 0 || colleagueFilters.length > 0}
                             scale={scale}
                         />
                     </div>
