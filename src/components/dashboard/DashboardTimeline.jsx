@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import UnifiedTimelineBoard from '../UnifiedTimelineBoard';
 import { TimelineRegistryProvider } from '../../context/TimelineRegistryContext';
 
-const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, setScale, controlsRef }) => {
+const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, setScale, controlsRef, onDateScroll }) => {
     const { showToast } = useToast();
 
     // 1. Time Logic (Passed to UnifiedBoard)
@@ -63,6 +63,8 @@ const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, 
                     onDeleteTasks={handleDeleteTasks}
                     onMoveDate={handleMoveDate}
                     refetchTasks={refetchTasks}
+
+                    onDateScroll={onDateScroll} // Pass Prop
 
                     showSidebar={false}
                     viewOffset={0} // No sidebar offset

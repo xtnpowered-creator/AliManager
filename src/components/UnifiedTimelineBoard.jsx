@@ -39,7 +39,8 @@ const UnifiedTimelineBoard = ({
     controlsRef,
     // Indicators
     minTaskDate,
-    maxTaskDate
+    maxTaskDate,
+    onDateScroll // New Callback prop
 }) => {
     const navigate = useNavigate();
     const scrollContainerRef = React.useRef(null);
@@ -165,7 +166,18 @@ const UnifiedTimelineBoard = ({
 
     const handleScaleChange = (newScale) => setScale(newScale);
 
-    // 5. Render
+    // Header Wheel Logic
+    const handleHeaderWheel = React.useCallback((e) => {
+        if (e.deltaY !== 0 && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollLeft += e.deltaY;
+        }
+    }, []);
+
+    const handleScrollToDate = (d) => {
+        scrollToDate(d);
+        if (onDateScroll) onDateScroll(d);
+    };
+
     return (
         <div className="flex flex-col h-full overflow-hidden select-none relative">
             {/* Header / Filters */}
@@ -212,6 +224,7 @@ const UnifiedTimelineBoard = ({
                         isWeekend={isWeekend}
                         onContextMenu={handleContextMenu}
                         showSidebar={showSidebar}
+                        onWheel={handleHeaderWheel}
                     />
 
                     <TimelineBody
@@ -278,7 +291,7 @@ const UnifiedTimelineBoard = ({
                 selectedTaskIds={selectedTaskIds}
                 setSelectedTaskIds={setSelectedTaskIds}
                 refetchTasks={refetchTasks}
-                scrollToDate={scrollToDate}
+                scrollToDate={handleScrollToDate}
                 handleScaleChange={handleScaleChange}
                 reassignTask={reassignTask} setReassignTask={setReassignTask}
                 rescheduleTask={rescheduleTask} setRescheduleTask={setRescheduleTask}

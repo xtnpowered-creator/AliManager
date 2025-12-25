@@ -23,32 +23,35 @@ export const getTaskCardColor = (task) => {
     // 1. Completed Tasks (Gray Bubbles)
     if (isCompleted) {
         if (type === 'PROJ') return 'bg-slate-400'; // Darker gray for Project completion
-        if (type === 'LTASK') return 'bg-blue-200'; // Lone tasks stay blueish? (User said "project task marked Done")
+        if (type === 'LTASK') return 'bg-purple-200'; // Lone tasks -> Pale Purple (Done)
         // "I'm not concerned with them [Lone Tasks]" -> Keep existing behavior
         return 'bg-slate-200'; // Project Tasks -> Gray
     }
 
-    // 2. Lone Tasks (Active) -> Blue
-    if (type === 'LTASK') {
-        return 'bg-blue-400';
+    // Calculate Days Left
+    // diffTime positive = Future, negative = Past
+    let daysLeft = null;
+    if (dueDate) {
+        const diffTime = dueDate.getTime() - today.getTime();
+        daysLeft = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // 3. Project Tasks / Projects (Active) -> Color by Proximity
+    // 2. Overdue (Past) -> Red (Applies to ALL Active Tasks, including Lone Tasks)
+    if (daysLeft !== null && daysLeft < 0) {
+        return 'bg-red-500';
+    }
+
+    // 3. Lone Tasks (Active, Not Overdue) -> Purple
+    if (type === 'LTASK') {
+        return 'bg-purple-400';
+    }
+
+    // 4. Project Tasks / Projects (Active) -> Color by Proximity
     if (!dueDate) {
         return 'bg-purple-200'; // No deadline
     }
 
-    // Calculate Days Left
-    // diffTime positive = Future, negative = Past
-    const diffTime = dueDate.getTime() - today.getTime();
-    const daysLeft = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Use Floor for full day buckets? 
-    // Example: Due Today (0 diff) -> 0. Due Tmrrw (24h) -> 1.
-    // If Overdue: -1, -2...
-
-    // 4. Overdue (Past) -> Red
-    if (daysLeft < 0) {
-        return 'bg-red-500';
-    }
+    // 5. Future Ranges (User Specified)
 
     // 5. Future Ranges (User Specified)
     // Days 0, 1 & 2 -> Orange

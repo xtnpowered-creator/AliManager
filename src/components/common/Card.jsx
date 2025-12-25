@@ -11,13 +11,13 @@ import { CARD_VARIANTS } from '../../styles/designSystem';
  * @param {React.ReactNode} children - Card content
  */
 const Card = ({
-    variant = 'MACRO',
+    variant = 'TIMELINE_DETAILED',
     onClick,
     children,
     className = '',
     ...props
 }) => {
-    const styles = CARD_VARIANTS[variant] || CARD_VARIANTS.MACRO;
+    const styles = CARD_VARIANTS[variant] || CARD_VARIANTS.TIMELINE_DETAILED;
 
     // Combine container styles + interactive styles (if clickable)
     const baseClasses = styles.container;

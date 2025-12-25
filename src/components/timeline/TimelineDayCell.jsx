@@ -1,5 +1,6 @@
 import React from 'react';
-import TaskCard from '../TaskCard'; // Adjust path if needed, likely ../TaskCard
+import TaskCard from '../TaskCard';
+import { sortTasksForDisplay } from '../../utils/taskUtils';
 
 const TimelineDayCell = ({
     day,
@@ -21,7 +22,7 @@ const TimelineDayCell = ({
     const dayDate = new Date(day);
     dayDate.setHours(0, 0, 0, 0);
 
-    const dailyTasks = getTasksForColleague(colleagueId).filter(t => {
+    const rawTasks = getTasksForColleague(colleagueId).filter(t => {
         const isDone = t.status === 'done';
         if (isDone && t.completedAt) {
             const cDate = new Date(t.completedAt);
@@ -32,24 +33,9 @@ const TimelineDayCell = ({
         if (!d) return false;
         d.setHours(0, 0, 0, 0);
         return d.getTime() === dayDate.getTime();
-    }).sort((a, b) => {
-        if (a.status === 'done' && b.status === 'done') {
-            return new Date(a.completedAt || a.updatedAt || 0).getTime() - new Date(b.completedAt || b.updatedAt || 0).getTime();
-        }
-        if (a.status === 'done') return -1;
-        if (b.status === 'done') return 1;
-
-        const getScore = (task) => {
-            const p = String(task.priority || '').toLowerCase();
-            return (p === '1') ? 0 : (p === '2' || p === 'high') ? 10 : (p === '3' || p === 'medium') ? 20 : 100;
-        };
-        const scoreA = getScore(a);
-        const scoreB = getScore(b);
-        if (scoreA === scoreB) {
-            return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
-        }
-        return scoreA - scoreB;
     });
+
+    const dailyTasks = sortTasksForDisplay(rawTasks);
 
     const doneTasks = dailyTasks.filter(t => t.status === 'done');
     const activeTasks = dailyTasks.filter(t => t.status !== 'done');

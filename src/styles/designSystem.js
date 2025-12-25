@@ -1,7 +1,7 @@
-// Design System: "Thin Black Line" Aesthetic
 export const CARD_VARIANTS = {
     // Macro Cards: Dashboard, Projects, Grid Layers
-    MACRO: {
+    // Renamed from MACRO to TIMELINE_DETAILED per user request
+    TIMELINE_DETAILED: {
         container: "bg-white rounded-2xl border border-slate-900 transition-all duration-200",
         interactive: "hover:ring-2 hover:ring-slate-900 cursor-pointer", // Thicker border on hover
         header: "flex items-center justify-between mb-4",
@@ -9,8 +9,9 @@ export const CARD_VARIANTS = {
         subtitle: "text-sm text-slate-500",
     },
 
-    // Micro Cards: Task Cards (Standard View, before Capsule impl)
-    MICRO: {
+    // Micro Cards: Task Cards (Standard View)
+    // Renamed from MICRO to TIMELINE_BUBBLE per user request (Standard Task Card)
+    TIMELINE_BUBBLE: {
         container: "rounded-xl border border-slate-900 transition-all duration-200", // No bg-white (allows color coding)
         interactive: "hover:ring-2 hover:ring-slate-900 cursor-pointer",
         header: "flex justify-between items-start",
@@ -23,6 +24,18 @@ export const CARD_VARIANTS = {
         container: "rounded-full border border-slate-900 w-[23px] h-full flex flex-col items-center justify-center gap-[3px] py-1", // 23px Wide, 3px Gap
         interactive: "hover:ring-2 hover:ring-slate-900 cursor-pointer",
         icon: "w-[14px] h-[14px] rounded-full", // 14px dots
+    },
+
+    // Detailed Day View Card (New)
+    DAYVIEW_DETAILED: {
+        // Same as MICRO but distinct key for semantic clarity and potential future divergence
+        container: "rounded-xl border border-slate-900 transition-all duration-200 block w-full h-full",
+        interactive: "hover:shadow-md cursor-grab active:cursor-grabbing", // Unique hover (Shadow instead of ring?) User asked for match timeline... 
+        // User said: "DetailedTaskDayView tasks have a different default... They should match the timelines in this regard."
+        // Timeline Match = hover:ring-2 hover:ring-slate-900.
+        // I will align it strictly with MICRO/TIMELINE for now.
+        interactive: "hover:ring-2 hover:ring-slate-900 cursor-pointer",
+        header: "flex flex-col items-start gap-1",
     },
 
     // Ghost/Empty Placeholders

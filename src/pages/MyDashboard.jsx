@@ -7,6 +7,8 @@ import TaskColumn from '../components/dashboard/TaskColumn';
 import TimelineControls from '../components/TimelineControls';
 import FilterAndSortToolbar from '../components/shared/filters/FilterAndSortToolbar';
 import { useFilterAndSortTool } from '../hooks/useFilterAndSortTool';
+import DetailedTaskDayView from '../components/dashboard/DetailedTaskDayView';
+import { TimelineRegistryProvider } from '../context/TimelineRegistryContext';
 
 const MyDashboard = () => {
     const { user } = useAuth();
@@ -28,11 +30,20 @@ const MyDashboard = () => {
 
     // Timeline Controls State
     const [scale, setScale] = React.useState(25);
-    const controlsRef = React.useRef({});
+    const controlsRef = React.useRef({}); // Timeline Controls
+    const dayViewControlsRef = React.useRef({}); // DayView Controls
 
     const handleTodayClick = () => {
+        const today = new Date(new Date().setHours(0, 0, 0, 0));
+
+        // Scroll Timeline
         if (controlsRef.current.scrollToDate) {
-            controlsRef.current.scrollToDate(new Date(new Date().setHours(0, 0, 0, 0)));
+            controlsRef.current.scrollToDate(today);
+        }
+
+        // Scroll DayView
+        if (dayViewControlsRef.current.scrollToDate) {
+            dayViewControlsRef.current.scrollToDate(today);
         }
     };
 
@@ -111,9 +122,18 @@ const MyDashboard = () => {
             const firstTask = validTasks[0];
             const minDate = getEffectiveDate(firstTask);
 
-            if (minDate && controlsRef.current.scrollToDate) {
+            if (minDate) {
                 minDate.setHours(0, 0, 0, 0);
-                controlsRef.current.scrollToDate(minDate);
+
+                // Scroll Timeline
+                if (controlsRef.current.scrollToDate) {
+                    controlsRef.current.scrollToDate(minDate);
+                }
+
+                // Scroll DayView
+                if (dayViewControlsRef.current.scrollToDate) {
+                    dayViewControlsRef.current.scrollToDate(minDate);
+                }
             }
         }
     };
@@ -169,8 +189,9 @@ const MyDashboard = () => {
             }
         >
             <div className="flex flex-col h-full gap-8">
+
                 {/* Timeline View - Duplicated User Row */}
-                <div className="shrink-0 bg-white rounded-2xl shadow-sm border border-slate-300">
+                <div className="shrink-0">
                     <DashboardTimeline
                         initialTasks={myTasks}
                         setTasks={setTasks}
@@ -179,10 +200,28 @@ const MyDashboard = () => {
                         scale={scale}
                         setScale={setScale}
                         controlsRef={controlsRef}
+                        onDateScroll={(d) => {
+                            if (dayViewControlsRef.current.scrollToDate) {
+                                dayViewControlsRef.current.scrollToDate(d);
+                            }
+                        }}
                     />
                 </div>
 
+
+                {/* NEW: Detailed Day View */}
+                <div className="shrink-0">
+                    <TimelineRegistryProvider>
+                        <DetailedTaskDayView
+                            ref={dayViewControlsRef}
+                            tasks={myTasks}
+                        // We could pass selectedDate if we had one from context/timeline click
+                        />
+                    </TimelineRegistryProvider>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0 pb-8">
+
                     {/* My Priorities Column */}
                     <TaskColumn
                         title="My Priorities"

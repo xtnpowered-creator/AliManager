@@ -126,14 +126,14 @@ const TaskCard = ({
     let containerClass;
     if (variant === 'CAPSULE') {
         if (showDetails) {
-            // Expanded: Base styles only + Block layout
             containerClass = "rounded-[11.5px] border border-slate-900 w-full h-full block";
         } else {
-            // Collapsed: Standard capsule
             containerClass = CARD_VARIANTS.TIMELINE_CAPSULE.container.replace('rounded-full', 'rounded-[11.5px]');
         }
+    } else if (variant === 'DAYVIEW_DETAILED') {
+        containerClass = CARD_VARIANTS.DAYVIEW_DETAILED.container;
     } else {
-        containerClass = CARD_VARIANTS.MICRO.container;
+        containerClass = CARD_VARIANTS.TIMELINE_BUBBLE.container;
     }
 
     return (
@@ -142,17 +142,17 @@ const TaskCard = ({
                 ref={cardRef}
                 onContextMenu={(e) => {
                     if (onContextMenu) {
-                        e.stopPropagation(); // Stop it from bubbling to timeline row grid area
+                        e.stopPropagation();
                         onContextMenu(e, task);
                     }
                 }}
                 onClick={(e) => {
-                    e.stopPropagation(); // STOP Day Expansion!
-                    if (onTaskClick) onTaskClick(task, e); // Triggers Expand/Collapse or Multi-Select
+                    e.stopPropagation();
+                    if (onTaskClick) onTaskClick(task, e);
                 }}
                 onDoubleClick={(e) => {
                     e.stopPropagation();
-                    if (onTaskDoubleClick) onTaskDoubleClick(task); // Triggers Navigation
+                    if (onTaskDoubleClick) onTaskDoubleClick(task);
                 }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
@@ -160,55 +160,35 @@ const TaskCard = ({
                 animate={{
                     opacity: 1,
                     scale: 1,
-
-                    // Master Centering Logic:
-                    // Always position absolute left edge at 50% of parent.
-                    // Always translate -50% (half of self width) to center self on that midpoint.
-                    // This works for ANY parent width (25px, 50px, etc) and ANY card width (25px, 160px).
-                    // Static cards (Grid) use natural flow (0).
-                    left: (isStatic) ? "auto" : "50%",
-                    x: (isStatic) ? 0 : "-50%",
-
-                    // Top: 'auto' allows height to grow upwards from bottom
+                    left: (isStatic || variant === 'DAYVIEW_DETAILED') ? "auto" : "50%",
+                    x: (isStatic || variant === 'DAYVIEW_DETAILED') ? 0 : "-50%",
                     top: "auto",
+                    bottom: (isStatic || variant === 'DAYVIEW_DETAILED') ? "auto" : 0,
 
-                    // Bottom: Always 0 (Anchored to bottom of wrapper)
-                    bottom: (isStatic) ? "auto" : 0,
-
-                    // Y Offset:
-                    // Bubble Active/Hover: Stack offset (moves UP from bottom)
-                    // Others: 0
-                    y: (isStatic) ? 0 : (
+                    y: (isStatic || variant === 'DAYVIEW_DETAILED') ? 0 : (
                         (variant === 'BUBBLE' && isActiveState) ? hoverOffset : 0
                     ),
 
-                    marginTop: (isStatic) ? 0 : stackOffset,
+                    marginTop: (isStatic || variant === 'DAYVIEW_DETAILED') ? 0 : stackOffset,
 
-                    // Width:
-                    // Details Mode: 160
-                    // Bubble Rest: 25
-                    // Capsule Rest: "100%" (25px)
-                    width: showDetails ? cardWidth : (variant === 'BUBBLE' ? 25 : "100%"),
+                    // Width logic
+                    width: (variant === 'DAYVIEW_DETAILED') ? "100%" : (showDetails ? cardWidth : (variant === 'BUBBLE' ? 25 : "100%")),
 
-                    // Height:
-                    // Bubble Active (Hover OR Expand): 93 (Full Height)
-                    // Bubble Rest: 25
-                    // Capsule: Always 93
-                    height: (variant === 'BUBBLE') ? (isActiveState ? 93 : 25) : 93,
+                    // Height logic
+                    height: (variant === 'DAYVIEW_DETAILED') ? "100%" : ((variant === 'BUBBLE') ? (isActiveState ? 93 : 25) : 93),
 
-                    zIndex: isActiveState ? 3000 : 100 - index,
-                    originX: 0.5, // Center scaling
+                    zIndex: isActiveState ? 3000 : (variant === 'DAYVIEW_DETAILED' ? 0 : 100 - index),
+                    originX: 0.5,
                     borderRadius: (variant === 'BUBBLE' && !isActiveState) ? "12.5px" : "11.5px"
                 }}
                 whileHover={{
                     zIndex: 3000,
-                    // Hover only vertical expansion for Bubble. No width change unless expanded!
-                    height: 93,
+                    height: (variant === 'DAYVIEW_DETAILED') ? "100%" : 93, // Prevent height jump on detailed
                     y: (variant === 'BUBBLE') ? hoverOffset : 0,
                     borderRadius: "11.5px",
                     transition: { duration: 0.15, ease: "easeOut", type: "tween" }
                 }}
-                className={`${isStatic ? 'relative' : 'absolute'} pointer-events-auto task-card cursor-pointer p-0 group overflow-hidden ${containerClass} ${variant === 'CAPSULE' ? CARD_VARIANTS.TIMELINE_CAPSULE.interactive : CARD_VARIANTS.MICRO.interactive} ${getTaskCardColor(task)} ${(isStatic || isSelected) ? 'ring-2 ring-slate-900' : ''}`}
+                className={`${(isStatic || variant === 'DAYVIEW_DETAILED') ? 'relative' : 'absolute'} pointer-events-auto task-card cursor-pointer p-0 group overflow-hidden ${containerClass} ${variant === 'CAPSULE' ? CARD_VARIANTS.TIMELINE_CAPSULE.interactive : (variant === 'DAYVIEW_DETAILED' ? CARD_VARIANTS.DAYVIEW_DETAILED.interactive : CARD_VARIANTS.TIMELINE_BUBBLE.interactive)} ${getTaskCardColor(task)} ${(isSelected) ? 'ring-2 ring-slate-900' : ''}`}
                 data-task-id={task.id}
             >
                 {/* Condition: Render Icons ONLY if NOT showing details (Collapsed) */}
@@ -231,19 +211,17 @@ const TaskCard = ({
                         )}
                     </>
                 ) : (
-                    <div className="flex flex-col justify-center h-full w-full relative overflow-hidden pl-[5px] pr-8 py-2">
+                    <div className={`flex flex-col h-full w-full relative pl-[5px] pr-8 py-2 custom-scrollbar ${variant === 'DAYVIEW_DETAILED' ? 'justify-start overflow-y-auto' : 'justify-center overflow-hidden'}`}>
                         {icons}
 
-                        {/* REMOVED INVITE BUTTON HERE */}
-
                         {/* Title - Wrapped */}
-                        <h4 className="font-black text-slate-900 text-[12px] leading-[1.2] uppercase tracking-tight line-clamp-3 break-words mb-1">
+                        <h4 className={`font-black text-slate-900 leading-[1.2] uppercase tracking-tight break-words mb-1 ${variant === 'DAYVIEW_DETAILED' ? 'text-[13px] line-clamp-2' : 'text-[12px] line-clamp-3'}`}>
                             {task.title}
                         </h4>
 
                         {/* Description - Brief */}
                         {task.description && (
-                            <p className="text-[10px] text-slate-900 font-bold leading-tight line-clamp-2">
+                            <p className={`text-slate-900 font-bold leading-tight ${variant === 'DAYVIEW_DETAILED' ? 'text-[11px] line-clamp-3 opacity-80' : 'text-[10px] line-clamp-2'}`}>
                                 {task.description}
                             </p>
                         )}
