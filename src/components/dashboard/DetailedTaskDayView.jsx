@@ -109,8 +109,8 @@ const DetailedTaskDayView = forwardRef(({
                 const targetEl = children[targetIndex + 1];
 
                 if (targetEl) {
-                    // Align Left Edge with 33px buffer per user request.
-                    const scrollTarget = Math.max(0, targetEl.offsetLeft - 33);
+                    // Align Left Edge with 34px buffer per user request.
+                    const scrollTarget = Math.max(0, targetEl.offsetLeft - 34);
 
                     scrollContainerRef.current.scrollTo({
                         left: scrollTarget,
@@ -123,7 +123,42 @@ const DetailedTaskDayView = forwardRef(({
 
     // Checks for empty tasks moved inside render to preserve boundaries
 
+    const snapTimeoutRef = useRef(null);
+
+    // Hazard Snap Logic Helper
+    const scheduleSnapBack = () => {
+        if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
+
+        // If dragging, do NOT schedule a snap yet. 
+        // We will schedule it on PointerUp.
+        if (isDragging.current) return;
+
+        snapTimeoutRef.current = setTimeout(() => {
+            const container = scrollContainerRef.current;
+            if (!container) return;
+
+            const { scrollLeft, scrollWidth, clientWidth } = container;
+            const BOUNDARY_WIDTH = 48;
+            const maxScrollLeft = scrollWidth - clientWidth;
+
+            // 1. If content too small, abort
+            if (maxScrollLeft < BOUNDARY_WIDTH) return;
+
+            // 2. Check Start
+            if (scrollLeft < BOUNDARY_WIDTH) {
+                container.scrollTo({ left: BOUNDARY_WIDTH, behavior: 'smooth' });
+            }
+            // 3. Check End
+            else if (scrollLeft > maxScrollLeft - BOUNDARY_WIDTH) {
+                container.scrollTo({ left: maxScrollLeft - BOUNDARY_WIDTH, behavior: 'smooth' });
+            }
+        }, 1000);
+    };
+
     const handlePointerDown = (e) => {
+        // Cancel any pending snap immediately when user grabs
+        if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
+
         isDragging.current = true;
         startX.current = e.pageX - scrollContainerRef.current.offsetLeft;
         scrollLeft.current = scrollContainerRef.current.scrollLeft;
@@ -158,7 +193,26 @@ const DetailedTaskDayView = forwardRef(({
             scrollContainerRef.current.style.cursor = 'grab';
             scrollContainerRef.current.style.userSelect = 'auto';
         }
+        // User released: Schedule snap check (will wait 1s)
+        scheduleSnapBack();
     };
+
+    // Scroll Listener for Snap Back
+    React.useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            // Debounce snap check
+            scheduleSnapBack();
+        };
+
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+            if (snapTimeoutRef.current) clearTimeout(snapTimeoutRef.current);
+        };
+    }, [dayGroups]); // content change might affect scrollWidth
 
     // Non-passive wheel listener for headers to prevent page scroll
     React.useEffect(() => {
@@ -180,7 +234,7 @@ const DetailedTaskDayView = forwardRef(({
     return (
         <div
             ref={scrollContainerRef}
-            className="w-full h-auto min-h-0 overflow-x-auto overflow-y-hidden flex flex-row gap-0 bg-white rounded-2xl border border-slate-300 shadow-sm custom-scrollbar cursor-grab"
+            className="w-full h-auto min-h-0 overflow-x-auto overflow-y-hidden flex flex-row gap-0 bg-white rounded-2xl border border-slate-300 shadow-sm invisible-scrollbar cursor-grab"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -230,7 +284,8 @@ const DetailedTaskDayView = forwardRef(({
                             </div>
 
                             {/* Continuous Row of Tasks for this Day */}
-                            <div className={`flex flex-row items-stretch gap-1 h-auto border-y-2 border-slate-900 p-0.5 ${isToday ? 'bg-teal-100/40' : 'bg-white/50'}`}>
+                            {/* OVERLAP FIX: -mr-[1px] and w-[calc(100%+1px)] to cover the parent's border-r with our border-y */}
+                            <div className={`flex flex-row items-stretch gap-1 h-auto border-y-2 border-slate-900 py-0.5 px-1 relative z-10 -mr-[1px] w-[calc(100%+1px)] ${isToday ? 'bg-teal-100/40' : 'bg-white/50'}`}>
                                 {group.tasks.map((task, i) => (
                                     <div key={task.id} className="w-[240px] h-40 shrink-0">
                                         <TaskCard
