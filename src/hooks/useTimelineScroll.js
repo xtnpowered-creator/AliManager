@@ -1,41 +1,38 @@
 import { useCallback, useEffect } from 'react';
 import { TIMELINE_LAYOUT } from '../config/layoutConstants';
+import { getPixelOffsetFromStart } from '../utils/timelineMath';
 
 export const useTimelineScroll = ({
     scrollContainerRef,
-    days,
+    virtualStartDate,
+    scale,
     getColumnWidth,
     viewOffset = 0,
     setInteracted,
     controlsRef,
-    horiScrollAnchorX
+    horiScrollAnchorX,
+    sidebarWidth = 0
 }) => {
 
     const scrollToTarget = useCallback((date, colleagueId, smooth = true) => {
         if (!scrollContainerRef.current) return;
         if (setInteracted) setInteracted();
 
-        // 1. Calculate Left (Date)
+        // 1. Calculate Left (Date) via Math
         let finalLeft = undefined;
-        if (date) {
-            const targetTime = new Date(date).setHours(0, 0, 0, 0);
-            let offset = 0;
+        if (date && virtualStartDate) {
+            const offset = getPixelOffsetFromStart(date, virtualStartDate, scale || 96);
 
-            // Handle out of bounds
-            const startDay = days[0].getTime();
-            const endDay = days[days.length - 1].getTime();
-
-            if (targetTime < startDay) offset = 0;
-            else if (targetTime > endDay) offset = days.reduce((acc, d) => acc + getColumnWidth(d), 0);
-            else {
-                for (const day of days) {
-                    if (day.getTime() === targetTime) break;
-                    offset += getColumnWidth(day);
-                }
-            }
             // Use Dynamic Anchor or Fallback
             const anchor = horiScrollAnchorX || TIMELINE_LAYOUT.SCROLL_ANCHOR_X;
-            finalLeft = Math.max(0, offset + viewOffset - anchor);
+
+            // ALIGNMENT INTENT: Position so the LEFT EDGE of the target day column aligns with the Red Arrow
+            // Formula: scrollLeft = offset + sidebarWidth - anchor
+            // - offset: pixel position of the left edge of the day column (from virtualStartDate)
+            // - sidebarWidth: width of the colleague sidebar (200px on Timelines, 0px on Dashboard)
+            // - anchor: horizontal position of the Red Arrow from the left edge of the viewport
+            finalLeft = Math.max(0, offset + sidebarWidth - anchor);
+            console.log('Scrolling to:', { date, offset, sidebarWidth, anchor, finalLeft, scale });
         }
 
         // 2. Calculate Top (Colleague)
@@ -47,15 +44,15 @@ export const useTimelineScroll = ({
             }
         }
 
-        // 3. Execute Unified Scroll
+        // 3. Execute Instant Scroll (no animation - prevents jank on long distances)
         const scrollOptions = {
             ...(finalLeft !== undefined && { left: finalLeft }),
             ...(finalTop !== undefined && { top: finalTop }),
-            behavior: smooth ? 'smooth' : 'auto'
+            behavior: 'auto' // Always instant for programmatic scrolls
         };
 
         scrollContainerRef.current.scrollTo(scrollOptions);
-    }, [scrollContainerRef, days, getColumnWidth, viewOffset, setInteracted, horiScrollAnchorX]);
+    }, [scrollContainerRef, virtualStartDate, scale, viewOffset, setInteracted, horiScrollAnchorX, sidebarWidth]);
 
     const scrollToDate = useCallback((date, smooth = true) => scrollToTarget(date, null, smooth), [scrollToTarget]);
     const scrollToColleague = useCallback((colleagueId, smooth = true) => scrollToTarget(null, colleagueId, smooth), [scrollToTarget]);

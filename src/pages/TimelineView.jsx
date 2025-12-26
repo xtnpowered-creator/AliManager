@@ -35,7 +35,7 @@ const TimelineView = () => {
         showDoneTasks, setShowDoneTasks // New Exports
     } = useTimelineState(user);
 
-    const { scale, setScale } = useTimelineScale(); // Single Source of Truth
+    const { scale, setScale } = useTimelineScale(user); // User-specific scale
 
     // Date Logic (Shared)
     const days = useTimelineDateRange();

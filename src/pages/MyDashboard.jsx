@@ -32,7 +32,7 @@ const MyDashboard = () => {
     } = useFilterAndSortTool(tasks, colleagues, projects, user);
 
     // Timeline Controls State
-    const { scale, setScale } = useTimelineScale();
+    const { scale, setScale } = useTimelineScale(user); // User-specific scale
     const [showDoneTasks, setShowDoneTasks] = React.useState(true); // Default: Show Done Tasks
     const controlsRef = React.useRef({}); // Timeline Controls
     const dayViewControlsRef = React.useRef({}); // DayView Controls

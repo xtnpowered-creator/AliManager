@@ -9,13 +9,14 @@ import { Link, useLocation } from 'react-router-dom';
 const Navigation = () => {
     const location = useLocation();
     const currentPath = location.pathname;
-    const { data: colleagues } = useApiData('/colleagues'); // Cached or fetched
+    const { data: colleagues } = useApiData('/colleagues');
     const { user } = useAuth();
     const toasts = useToastState();
     const { removeToast } = useToast();
 
     const dbUser = colleagues.find(c => c.id === user?.uid);
-    const isAdmin = user?.role === 'god' || dbUser?.role === 'god' || dbUser?.role === 'admin';
+    const isAdmin = user?.role === 'god' || user?.role === 'admin' || dbUser?.role === 'god' || dbUser?.role === 'admin';
+
 
     const menuItems = [
         {

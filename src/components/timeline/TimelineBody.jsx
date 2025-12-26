@@ -18,8 +18,9 @@ const TimelineBody = ({
     showSidebar,
     delegationMap,
     handleRevokeDelegation,
-    onDelegateConfig,
-    user // Needed for permissions in row?
+    onDelegateConfig = () => { },
+    user, // Needed for permissions in row?
+    virtualStartDate // NEW: Required for absolute positioning of tasks
 }) => {
     return (
         <div className="flex flex-col min-w-max">
@@ -54,6 +55,7 @@ const TimelineBody = ({
                         expandedTaskId={expandedTaskId}
                         selectedTaskIds={selectedTaskIds}
                         showColleagueInfo={showSidebar}
+                        virtualStartDate={virtualStartDate}
                     />
                 </div>
             ))}

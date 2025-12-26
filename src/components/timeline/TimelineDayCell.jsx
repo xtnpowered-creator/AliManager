@@ -58,7 +58,7 @@ const TimelineDayCell = ({
 
     return (
         <div
-            style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}
+            style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth, boxSizing: 'border-box' }}
             className={`flex-none h-full border-r border-slate-300/70 flex items-center justify-center relative last:border-0 group/day ${isToday(day) ? 'bg-teal-100/40' : isWeekend(day) ? 'bg-slate-200/40' : ''}`}
             onContextMenu={(e) => onGridContextMenu && onGridContextMenu(day, colleagueId, e)}
         >
@@ -69,68 +69,7 @@ const TimelineDayCell = ({
             {/* Center Line visual */}
             <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[4px] h-8 z-0 rounded-full transition-all duration-300 ${isToday(day) ? 'bg-teal-600/70 h-10' : 'bg-slate-400/70'}`} />
 
-            {/* Task Layer */}
-            <div className="absolute inset-0 flex items-center pl-1 pointer-events-auto z-20">
-                {/* Done Bubbles */}
-                {doneTasks.length > 0 && (() => {
-                    const MAX_BUBBLES = 6;
-                    const chunks = [];
-                    for (let i = 0; i < doneTasks.length; i += MAX_BUBBLES) {
-                        chunks.push(doneTasks.slice(i, i + MAX_BUBBLES));
-                    }
-                    return (
-                        <div className="flex flex-row gap-0 mr-[2px] shrink-0 border-r border-slate-300/50 pr-[2px]">
-                            {chunks.map((chunk, colIndex) => {
-                                let negativeMarginSub = 0;
-                                if (chunk.length > 3) {
-                                    const availableH = 93;
-                                    const requiredOverlap = ((chunk.length * 25) - availableH) / (chunk.length - 1);
-                                    negativeMarginSub = Math.min(22, Math.max(0, requiredOverlap));
-                                }
-
-                                return (
-                                    <div key={colIndex} className="flex flex-col-reverse relative w-[25px] transition-all" style={{ marginRight: colIndex < chunks.length - 1 ? `-${squeeze}px` : '0' }}>
-                                        {chunk.map((task, i) => {
-                                            const isExpanded = expandedTaskId === task.id;
-                                            return (
-                                                <div key={task.id} className={`relative w-[25px] h-[25px] shrink-0 transition-all duration-300 ${isExpanded ? 'z-[2000]' : 'z-0 hover:z-[3000]'}`} style={{ marginBottom: i > 0 ? `-${negativeMarginSub}px` : '0px' }}>
-                                                    <TaskCard
-                                                        task={task} variant={'BUBBLE'} scale={scale} index={i}
-                                                        hoverOffset={i * (25 - negativeMarginSub)}
-                                                        onTaskClick={onTaskClick} onTaskDoubleClick={onTaskDoubleClick} onContextMenu={onTaskContextMenu}
-                                                        isExpanded={isExpanded} isSelected={selectedTaskIds.has(task.id)}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    );
-                })()}
-
-                {/* Active Capsules */}
-                <div className="flex items-center h-full relative pointer-events-none" style={{ marginLeft: containerShift > 0 ? `-${containerShift}px` : 0 }}>
-                    {activeTasks.map((task, i) => {
-                        const isExpanded = expandedTaskId === task.id;
-                        return (
-                            <div key={task.id} className={`transition-all ${isExpanded ? 'z-[2000]' : 'hover:z-[3000]'} relative`}
-                                style={{
-                                    marginLeft: i > 0 ? `-${squeeze}px` : 0,
-                                    zIndex: isExpanded ? 2000 : (activeTasks.length - i),
-                                    width: '25px', height: '93px'
-                                }}>
-                                <TaskCard
-                                    task={task} variant={'CAPSULE'} scale={scale}
-                                    onTaskClick={onTaskClick} onTaskDoubleClick={onTaskDoubleClick} onContextMenu={onTaskContextMenu}
-                                    isExpanded={isExpanded} isSelected={selectedTaskIds.has(task.id)}
-                                />
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+            {/* Task Layer REMOVED - Managed by TaskColumn via Virtualization */}
             <div className="absolute inset-0 hover:bg-black/5 rounded-none cursor-pointer -z-10" />
         </div>
     );

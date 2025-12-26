@@ -17,9 +17,29 @@ export const MOCK_USERS = [
     { id: '11111111-0000-0000-0000-000000000007', name: 'Julie Staff', role: 'user', label: 'Julie (Sales Dir)' },
 ];
 
+const USER_CACHE_KEY = 'cached_user_data';
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = React.useState(null);
+    // Initialize from cache if available
+    const [user, setUser] = React.useState(() => {
+        try {
+            const cached = localStorage.getItem(USER_CACHE_KEY);
+            return cached ? JSON.parse(cached) : null;
+        } catch {
+            return null;
+        }
+    });
     const [loading, setLoading] = React.useState(true);
+
+    // Helper to update user and cache
+    const updateUser = (userData) => {
+        setUser(userData);
+        if (userData) {
+            localStorage.setItem(USER_CACHE_KEY, JSON.stringify(userData));
+        } else {
+            localStorage.removeItem(USER_CACHE_KEY);
+        }
+    };
 
     // DEV: Handle Mock User Switching
     const switchUser = async (mockUserId) => {
@@ -34,14 +54,13 @@ export const AuthProvider = ({ children }) => {
 
         // Reload user data
         try {
-            // Wait a tick for localStorage to propagate if needed (usually sync)
             const res = await apiClient.get('/users/me');
-            setUser({ ...res, uid: res.id, displayName: res.name });
+            const userData = { ...res, uid: res.id, displayName: res.name };
+            updateUser(userData);
             console.log("Switched to User:", res.name);
         } catch (err) {
             console.error("Failed to switch user:", err);
-            // Fallback: If 'me' fails (e.g. no mock ID), maybe logout?
-            if (!mockUserId) setUser(null);
+            if (!mockUserId) updateUser(null);
         } finally {
             setLoading(false);
         }
@@ -65,12 +84,13 @@ export const AuthProvider = ({ children }) => {
             if (firebaseUser) {
                 try {
                     const res = await apiClient.get('/users/me');
-                    setUser({ ...firebaseUser, ...res, displayName: res.name || firebaseUser.displayName });
+                    const userData = { ...firebaseUser, ...res, displayName: res.name || firebaseUser.displayName };
+                    updateUser(userData);
                 } catch (err) {
-                    setUser(firebaseUser);
+                    updateUser(firebaseUser);
                 }
             } else {
-                setUser(null);
+                updateUser(null);
             }
             setLoading(false);
         });

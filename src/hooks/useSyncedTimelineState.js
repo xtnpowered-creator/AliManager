@@ -1,57 +1,64 @@
-import { useState, useEffect, useCallback, useRef, useContext } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTimelineViewContext } from '../context/TimelineViewContext';
+import { getPixelOffsetFromStart, getDateFromPixelOffset } from '../utils/timelineMath';
 
-export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset = 0, anchorOffset = 350) => {
+export const useSyncedTimelineState = (
+    scrollContainerRef,
+    virtualStartDate,
+    scale,
+    viewOffset = 0,
+    anchorOffset = 350,
+    sidebarWidth = 0
+) => {
     const [isRestored, setIsRestored] = useState(false);
     const [syncedScale, setSyncedScale] = useState(null);
     const initialRestoreDone = useRef(false);
-    const prevScale = useRef(scale); // Track scale for re-alignment reset
+    const prevScale = useRef(scale);
 
-    // Use Context instead of LocalStorage
-    // If context is unavailable (unlikely), silently fail or use local state? 
-    // We assume context exists.
     const context = useTimelineViewContext();
     const { viewState, updateViewState } = context || {};
 
     const userInteracted = useRef(false);
     const setInteracted = useCallback(() => { userInteracted.current = true; }, []);
 
-    // 1. Save State Logic (Debounced)
+    // 1. Save State Logic
     const handleScroll = useCallback(() => {
-        if (!scrollContainerRef.current || !updateViewState) return;
-
-        // Block save if user hasn't interacted (prevents load-time drift loop)
+        if (!scrollContainerRef.current || !updateViewState || !virtualStartDate) return;
         if (!userInteracted.current) return;
 
         const scrollLeft = scrollContainerRef.current.scrollLeft;
-        // Search strictly based on ScrollLeft - ViewOffset + Anchor.
-        // Add 10px buffer to handle sub-pixel rounding errors (prevents jumping to previous day).
-        const effectiveScrollLeft = Math.max(0, scrollLeft - viewOffset + anchorOffset + 10);
 
-        // Find date at this scroll position
-        let currentOffset = 0;
-        let leftDate = days[0];
+        // Calculate which date's LEFT EDGE is at the anchor point
+        // Grid position = scrollLeft + anchorOffset - sidebarWidth
+        // CRITICAL FIX: Round to nearest pixel to avoid off-by-one errors
+        const gridPixelAtAnchor = Math.round(scrollLeft + anchorOffset - sidebarWidth);
 
-        // Optimization: Rough estimate or strict loop? Strict loop is safest for variable widths.
-        for (const day of days) {
-            const width = getColumnWidth(day);
-            if (currentOffset + width > effectiveScrollLeft) {
-                leftDate = day;
-                break;
-            }
-            currentOffset += width;
-        }
+        // Get the date that contains this pixel
+        const currentDate = getDateFromPixelOffset(Math.max(0, gridPixelAtAnchor), virtualStartDate, scale);
 
-        const newState = {
-            date: leftDate.toISOString(),
-            scale: scale, // Save Scale
+        // Get the exact offset of that date's LEFT EDGE
+        const exactGridOffset = getPixelOffsetFromStart(currentDate, virtualStartDate, scale);
+
+        console.log("SAVE: Scroll state", {
+            scrollLeft,
+            anchorOffset,
+            sidebarWidth,
+            gridPixelAtAnchor,
+            detectedDate: currentDate.toDateString(),
+            detectedDateISO: currentDate.toISOString(),
+            exactGridOffset,
+            scale,
+            virtualStartDate: virtualStartDate.toDateString()
+        });
+
+        updateViewState({
+            date: currentDate.toISOString(),
+            gridOffset: exactGridOffset,
+            scale: scale,
             timestamp: Date.now()
-        };
+        });
 
-        updateViewState(newState);
-
-    }, [scrollContainerRef, days, getColumnWidth, scale, updateViewState, viewOffset, anchorOffset]);
-
+    }, [scrollContainerRef, virtualStartDate, scale, updateViewState, anchorOffset, sidebarWidth]);
 
     // 2. Attach Listener
     useEffect(() => {
@@ -63,13 +70,9 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
             clearTimeout(timeout);
             timeout = setTimeout(handleScroll, 100);
         };
-
-        const onInteract = () => {
-            userInteracted.current = true;
-        };
+        const onInteract = () => { userInteracted.current = true; };
 
         el.addEventListener('scroll', onScroll);
-        // Passive interaction listeners to unlock saving
         el.addEventListener('pointerdown', onInteract);
         el.addEventListener('wheel', onInteract);
         el.addEventListener('keydown', onInteract);
@@ -85,82 +88,79 @@ export const useSyncedTimelineState = (scrollContainerRef, days, getColumnWidth,
         };
     }, [handleScroll]);
 
-    // 3. Re-Align on Scale Change (Fix for Wonky Jumps)
+    // 3. Re-Align on Scale Change
     useEffect(() => {
-        const hasScaleChanged = prevScale.current !== scale;
+        const oldScale = prevScale.current;
+        const hasScaleChanged = oldScale !== scale;
 
-        // Always update ref
-        prevScale.current = scale;
+        if (hasScaleChanged && isRestored && scrollContainerRef.current && virtualStartDate && viewState?.date) {
+            // Use the saved date from viewState as the anchor (avoids race conditions with scroll animations)
+            const dateAtAnchor = new Date(viewState.date);
 
-        if (hasScaleChanged && isRestored && scrollContainerRef.current && viewState?.date) {
-            const targetDate = new Date(viewState.date);
-            const targetTime = targetDate.setHours(0, 0, 0, 0);
+            // Recalculate that date's position at the NEW scale and reposition it at the anchor
+            const newGridOffset = getPixelOffsetFromStart(dateAtAnchor, virtualStartDate, scale);
+            const newScrollLeft = Math.max(0, newGridOffset + sidebarWidth - anchorOffset);
 
-            let offset = 0;
-            for (const day of days) {
-                if (day.getTime() >= targetTime) break;
-                offset += getColumnWidth(day);
-            }
+            scrollContainerRef.current.scrollLeft = newScrollLeft;
 
-            // Snap to correct position (anchor)
-            scrollContainerRef.current.scrollLeft = Math.max(0, offset + viewOffset - anchorOffset);
+            console.log('Scale changed:', {
+                oldScale,
+                newScale: scale,
+                dateAtAnchor: dateAtAnchor.toDateString(),
+                newScrollLeft
+            });
         }
-    }, [scale, isRestored, days, getColumnWidth, viewState, viewOffset, anchorOffset]);
+
+        // Update ref AFTER calculations
+        prevScale.current = scale;
+    }, [scale, isRestored, virtualStartDate, viewState, anchorOffset, sidebarWidth]);
 
 
-    // 3. Restore State OR Scroll to Today (ONCE)
-    // We only restore if context has data.
-    // If context is empty, it means "Fresh Session" -> Default to Today.
+    // 4. Restore State
     useEffect(() => {
         const el = scrollContainerRef.current;
-        if (!el || days.length === 0 || initialRestoreDone.current) return;
+        if (!el || !virtualStartDate || initialRestoreDone.current) return;
 
-        initialRestoreDone.current = true; // Block future runs
-
-        let targetOffset = -1;
+        initialRestoreDone.current = true;
 
         if (viewState && viewState.date) {
-            // Context has state -> Restore
             const { date, scale: savedScale } = viewState;
             if (savedScale && setSyncedScale) setSyncedScale(savedScale);
 
             const targetDate = new Date(date);
-            const targetTime = targetDate.setHours(0, 0, 0, 0);
+            // Always recalculate at CURRENT scale, don't use savedGridOffset
+            // savedGridOffset was calculated at savedScale, which might be different
+            const gridOffset = getPixelOffsetFromStart(targetDate, virtualStartDate, scale);
 
-            let offset = 0;
-            for (const day of days) {
-                if (day.getTime() >= targetTime) {
-                    targetOffset = offset;
-                    break;
-                }
-                // Use SAVED scale to calculate where the date WOULD be if we rendered it with that scale.
-                // This prevents the mismatched 'current scale' from causing a jump.
-                offset += getColumnWidth(day, savedScale);
-            }
-        }
+            // ALIGNMENT INTENT: Position so the LEFT EDGE of the target day column aligns with the Red Arrow
+            const finalScroll = Math.max(0, gridOffset + sidebarWidth - anchorOffset);
 
-        if (targetOffset !== -1) {
-            // Found saved state
-            // ScrollLeft = DayOffset + ViewOffset - Anchor.
-            el.scrollLeft = Math.max(0, targetOffset + viewOffset - anchorOffset);
+            console.log("RESTORE: Restoring scroll", {
+                savedDate: new Date(date).toDateString(),
+                savedScale,
+                currentScale: scale,
+                gridOffset,
+                sidebarWidth,
+                anchorOffset,
+                finalScroll,
+                virtualStartDate: virtualStartDate.toDateString()
+            });
+
+            el.scrollLeft = finalScroll;
+
         } else {
-            // Fallback: Scroll to Today (Default)
-            // Use Saved Scale if available? Default to 10 effectively if not.
-            // But if we are here, we didn't find saved state.
-            const todayIndex = days.findIndex(d => isToday(d));
-            if (todayIndex !== -1) {
-                let offset = 0;
-                for (let i = 0; i < todayIndex; i++) {
-                    offset += getColumnWidth(days[i]); // Use current scale
-                }
-                // Align Today to Visual Anchor
-                el.scrollLeft = Math.max(0, offset + viewOffset - anchorOffset);
-            }
+            console.log("RESTORE: No saved state, using Today");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const gridOffset = getPixelOffsetFromStart(today, virtualStartDate, scale);
+            const finalScroll = Math.max(0, gridOffset + sidebarWidth - anchorOffset);
+
+            el.scrollLeft = finalScroll;
         }
 
         setIsRestored(true);
 
-    }, [days, getColumnWidth, isToday, viewState, viewOffset, anchorOffset]); // Run when days ready. relies on ref to run once.
+    }, [virtualStartDate, scale, viewState, anchorOffset, sidebarWidth]);
 
     return { isRestored, syncedScale, setInteracted };
 };

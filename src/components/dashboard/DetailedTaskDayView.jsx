@@ -14,21 +14,6 @@ const DetailedTaskDayView = forwardRef(({
     const SNAP_TIMEOUT_MS = 150;
     const hasScrolledRef = useRef(false);
 
-    // Initial Scroll Effect
-    React.useEffect(() => {
-        if (hasScrolledRef.current || tasks.length === 0) return;
-
-        // Wait for layout?
-        setTimeout(() => {
-            if (!scrollContainerRef.current) return;
-
-            const today = new Date();
-            // Try scrolling to Today
-            scrollToDate(today);
-            hasScrolledRef.current = true;
-        }, 100);
-    }, [tasks]); // Run when tasks load
-
     // 1. Group & Sort Tasks
     const dayGroups = useMemo(() => {
         const groups = {};
@@ -130,12 +115,26 @@ const DetailedTaskDayView = forwardRef(({
 
                     scrollContainerRef.current.scrollTo({
                         left: scrollTarget,
-                        behavior: 'smooth'
+                        behavior: 'auto' // Instant scroll (no animation)
                     });
                 }
             }
         }
     }));
+
+    // Initial Scroll Effect (after scrollToDate is defined via ref)
+    React.useEffect(() => {
+        if (hasScrolledRef.current || tasks.length === 0 || !ref?.current) return;
+
+        // Wait for layout
+        setTimeout(() => {
+            if (!ref.current) return;
+
+            const today = new Date();
+            ref.current.scrollToDate(today);
+            hasScrolledRef.current = true;
+        }, 100);
+    }, [tasks, ref]);
 
     // Checks for empty tasks moved inside render to preserve boundaries
 

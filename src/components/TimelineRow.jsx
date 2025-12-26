@@ -1,11 +1,12 @@
 import React from 'react';
 import TimelineColleagueCell from './timeline/TimelineColleagueCell';
 import TimelineDayCell from './timeline/TimelineDayCell';
+import TaskColumn from './timeline/TaskColumn';
 
 const TimelineRow = ({
     colleague,
     colleagueIndex,
-    colleagues, // Not used directly in rendering anymore? Wrapper might need?
+    colleagues,
     days,
     getColumnWidth,
     isToday,
@@ -20,7 +21,8 @@ const TimelineRow = ({
     safeDate,
     expandedTaskId,
     selectedTaskIds = new Set(),
-    showColleagueInfo = true
+    showColleagueInfo = true,
+    virtualStartDate
 }) => {
     return (
         <div className={`flex border-b border-slate-200 group hover:bg-slate-50/30 transition-colors last:border-0 h-[97px] relative bg-white`}>
@@ -29,11 +31,13 @@ const TimelineRow = ({
                 <TimelineColleagueCell colleague={colleague} />
             )}
 
-            {/* 2. Timeline Grid */}
+            {/* 2. Timeline Grid Container */}
             <div className="flex relative shrink-0">
-                {/* Horizontal Baseline */}
+
+                {/* A. Horizontal Baseline */}
                 <div className="absolute top-1/2 left-0 w-full h-[4px] bg-slate-400/50 -translate-y-1/2 z-0" />
 
+                {/* B. Day Cells */}
                 {days.map((day, dIdx) => (
                     <TimelineDayCell
                         key={dIdx}
@@ -53,6 +57,21 @@ const TimelineRow = ({
                         safeDate={safeDate}
                     />
                 ))}
+
+                {/* C. Task Overlays (Placed AFTER Grid Cells to ensure they sit ON TOP via Z-Index) */}
+                <div className="absolute inset-0 pointer-events-none z-[50]">
+                    <TaskColumn
+                        tasks={getTasksForColleague(colleague.id)}
+                        virtualStartDate={virtualStartDate}
+                        scale={scale}
+                        onUpdate={onUpdate}
+                        onTaskClick={onTaskClick}
+                        onTaskDoubleClick={onTaskDoubleClick}
+                        onContextMenu={onTaskContextMenu}
+                        expandedTaskId={expandedTaskId}
+                        selectedTaskIds={selectedTaskIds}
+                    />
+                </div>
             </div>
         </div>
     );

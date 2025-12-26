@@ -13,13 +13,14 @@ import TimelineHeader from './timeline/TimelineHeader';
 import TimelineBody from './timeline/TimelineBody';
 import { TIMELINE_LAYOUT } from '../config/layoutConstants';
 import HoriScrollTargetPoint from './timeline/HoriScrollTargetPoint';
+import { getPixelOffsetFromStart, getDateFromPixelOffset, getDayWidth } from '../utils/timelineMath';
 
 const UnifiedTimelineBoard = ({
     user,
     colleagues,
     tasks,
     getTasksForColleague,
-    days,
+    // days, // Deprecated: We now generate this internally for virtualization
     isToday,
     isWeekend,
     scale,
@@ -53,18 +54,127 @@ const UnifiedTimelineBoard = ({
     const [showLeftArrow, setShowLeftArrow] = React.useState(false);
     const [showRightArrow, setShowRightArrow] = React.useState(false);
 
-    // 1. Column Width
+    // 1. Column Width & Virtualization Math
     // Scale is "Pixels Per Day".
-    // Legacy logic (< 30) removed. We trust the input.
-    // Default fallback to 96 if 0/null/undefined passed.
+    // Weekends 50% width
     const getColumnWidth = React.useCallback((date, overrideScale) => {
-        if (!date) return 20;
-
         const s = overrideScale || scale || 96;
-
-        // Weekends 50% width
-        return ([0, 6].includes(date.getDay()) ? s * 0.5 : s);
+        return getDayWidth(date, s);
     }, [scale]);
+
+    // -- VIRTUALIZATION ENGINE --
+    // A. Define the Infinite Window (e.g., +/- 2 Years)
+    const { virtualStartDate, virtualEndDate, totalVirtualWidth } = React.useMemo(() => {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const start = new Date(now);
+        start.setFullYear(start.getFullYear() - 2); // T-2 Years
+
+        const end = new Date(now);
+        end.setFullYear(end.getFullYear() + 2); // T+2 Years
+
+        const width = getPixelOffsetFromStart(end, start, scale || 96);
+
+        return {
+            virtualStartDate: start,
+            virtualEndDate: end,
+            totalVirtualWidth: width
+        };
+    }, [scale]);
+
+    // B. Track Scroll Position
+    const [visibleRange, setVisibleRange] = React.useState({ startPixel: 0, endPixel: 1000 }); // Default
+    const [containerSize, setContainerSize] = React.useState({ width: 0, height: 0 });
+    const [scrollPos, setScrollPos] = React.useState(0);
+    const lastUpdateScrollPos = React.useRef(0);
+
+    // Resize Observer to know Viewport Width
+    React.useLayoutEffect(() => {
+        if (!scrollContainerRef.current) return;
+
+        const updateWidth = () => {
+            // Initial Set
+            const w = scrollContainerRef.current.clientWidth;
+            const h = scrollContainerRef.current.clientHeight;
+            setContainerSize({ width: w, height: h });
+            // The initial scroll position will be handled by the handleScroll function
+        };
+
+        const ro = new ResizeObserver(updateWidth);
+        ro.observe(scrollContainerRef.current);
+
+        // Initial call
+        updateWidth();
+
+        return () => ro.disconnect();
+    }, []);
+
+    // C. Calculate Visible Days (The Virtual Subset)
+    const visibleDays = React.useMemo(() => {
+        const bufferPixels = 1000; // Render +/- 1000px buffer
+        const renderStartPixel = Math.max(0, visibleRange.startPixel - bufferPixels);
+        const renderEndPixel = Math.min(totalVirtualWidth, visibleRange.endPixel + bufferPixels);
+
+        const startDate = getDateFromPixelOffset(renderStartPixel, virtualStartDate, scale || 96);
+        const endDate = getDateFromPixelOffset(renderEndPixel, virtualStartDate, scale || 96);
+
+        const days = [];
+        let current = new Date(startDate);
+        while (current <= endDate) {
+            days.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+        }
+        return days;
+    }, [visibleRange, totalVirtualWidth, virtualStartDate, scale]);
+
+    // D. Helper to get pixel offset for rendering content
+    // The "Start Date" of our rendered array is offset by X pixels from the Virtual Start.
+    const contentOffsetX = React.useMemo(() => {
+        if (visibleDays.length === 0) return 0;
+        return getPixelOffsetFromStart(visibleDays[0], virtualStartDate, scale || 96);
+    }, [visibleDays, virtualStartDate, scale]);
+
+    // Sync Scroll Handlers
+    const handleScroll = React.useCallback((e) => {
+        const s = e.target.scrollLeft;
+        const w = e.target.clientWidth;
+
+        // Update State (Throttle this in production, but for now direct)
+        // RequestAnimationFrame for smoothness?
+        requestAnimationFrame(() => {
+
+            // OPTIMIZATION: Only update React State (visibleRange) if we have scrolled
+            // significantly enough to need a new chunk of days rendered.
+            // We have a 1000px buffer. Let's update if we convert > 500px of that buffer.
+
+            // We need a ref to track the last "State Update" position to compare against 's'
+            // without needing 'visibleRange' in the dependency array (which would recreate the handler).
+            // Let's assume we add `lastUpdateScrollPos` ref.
+
+            const BUFFER_THRESHOLD = 500;
+            const diff = Math.abs(s - (lastUpdateScrollPos.current || 0));
+
+            if (diff > BUFFER_THRESHOLD) {
+                lastUpdateScrollPos.current = s;
+                setVisibleRange({ startPixel: s, endPixel: s + w });
+            }
+
+            // Propagate deprecated onDateScroll hooks if needed?
+            if (onDateScroll) {
+                // Use the Red Arrow (Anchor) as the reference point, not the center.
+                // This ensures that whatever is under the arrow is considered the "Focus Date".
+                const anchorPixel = s + horiScrollAnchorX;
+                const d = getDateFromPixelOffset(anchorPixel, virtualStartDate, scale || 96);
+                onDateScroll(d);
+            }
+        });
+
+        // Arrow Logic
+        setShowLeftArrow(s > 20);
+        setShowRightArrow(s < (scrollContainerRef.current.scrollWidth - w - 20));
+
+    }, [onDateScroll, virtualStartDate, scale]);
 
     // -- RED TRIANGLE LOGIC --
     const [horiScrollAnchorX, setHoriScrollAnchorX] = React.useState(() => {
@@ -83,7 +193,16 @@ const UnifiedTimelineBoard = ({
         handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel, handleLostPointerCapture,
     } = useTimelineSelection(scrollContainerRef, selectionBoxRef);
 
-    const { isRestored, syncedScale, setInteracted } = useSyncedTimelineState(scrollContainerRef, days, getColumnWidth, isToday, scale, viewOffset, horiScrollAnchorX);
+    const sidebarWidth = showSidebar ? TIMELINE_LAYOUT.SIDEBAR_WIDTH : 0;
+
+    const { isRestored, syncedScale, setInteracted } = useSyncedTimelineState(
+        scrollContainerRef,
+        virtualStartDate,
+        scale,
+        viewOffset,
+        horiScrollAnchorX,
+        sidebarWidth // Pass Sidebar Width
+    );
 
     // 3. UI State
     const [contextMenu, setContextMenu] = React.useState(null);
@@ -151,16 +270,14 @@ const UnifiedTimelineBoard = ({
     // Scroll Logic Hook
     const { scrollToDate, scrollToTarget } = useTimelineScroll({
         scrollContainerRef,
-        days,
+        virtualStartDate,
+        scale,
         getColumnWidth,
         viewOffset,
         setInteracted,
-        viewOffset,
-        setInteracted,
-        viewOffset,
-        setInteracted,
         controlsRef,
-        horiScrollAnchorX // Pass dynamic anchor
+        horiScrollAnchorX,
+        sidebarWidth // Pass Sidebar Width
     });
 
     // Expose Modal Controls
@@ -204,6 +321,7 @@ const UnifiedTimelineBoard = ({
 
                 <div
                     ref={scrollContainerRef}
+                    onScroll={handleScroll} // ATTACH VIRTUAL SCROLL HANDLER
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
@@ -215,47 +333,61 @@ const UnifiedTimelineBoard = ({
                     className={`flex-1 overflow-auto invisible-scrollbar relative cursor-grab active:cursor-grabbing ${isShiftKey ? '!cursor-crosshair' : ''}`}
                 >
                     {/* MOVED SELECTION BOX INSIDE SCROLL CONTAINER */}
-                    <div ref={selectionBoxRef} style={{
-                        display: isSelecting ? 'block' : 'none',
-                        position: 'absolute',
-                        left: 0, top: 0, width: 0, height: 0,
-                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
-                        border: '1px solid #14b8a6',
-                        zIndex: 99999, pointerEvents: 'none', borderRadius: '4px',
-                        willChange: 'left, top, width, height'
-                    }} />
+                    {/* VIRTUALIZATION SPACER */}
+                    <div style={{ width: totalVirtualWidth, height: '100%', position: 'relative' }}>
 
-                    <TimelineHeader
-                        days={days}
-                        getColumnWidth={getColumnWidth}
-                        isToday={isToday}
-                        isWeekend={isWeekend}
-                        onContextMenu={handleContextMenu}
-                        showSidebar={showSidebar}
-                        onWheel={handleHeaderWheel}
-                        scale={scale}
-                    />
+                        {/* VIRTUAL CONTENT WINDOW (Offset) */}
+                        <div style={{
+                            position: 'relative', // Changed from absolute to preserve height flow
+                            left: `${contentOffsetX}px`, // Changed from transform to avoid sticky context issues
+                            width: 'fit-content',
+                            // Removed top/bottom/willChange constraint to allow content to dictate height
+                        }}>
+                            <div ref={selectionBoxRef} style={{
+                                display: isSelecting ? 'block' : 'none',
+                                position: 'absolute',
+                                left: 0, top: 0, width: 0, height: 0,
+                                backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                                border: '1px solid #14b8a6',
+                                zIndex: 99999, pointerEvents: 'none', borderRadius: '4px',
+                                willChange: 'left, top, width, height'
+                            }} />
 
-                    <TimelineBody
-                        colleagues={colleagues}
-                        days={days}
-                        getColumnWidth={getColumnWidth}
-                        isToday={isToday}
-                        isWeekend={isWeekend}
-                        getTasksForColleague={getTasksForColleague}
-                        onUpdateTask={onUpdateTask}
-                        onTaskClick={onTaskClick}
-                        onTaskDoubleClick={onTaskDoubleClick}
-                        onContextMenu={handleContextMenu}
-                        scale={scale}
-                        expandedTaskId={expandedTaskId}
-                        selectedTaskIds={selectedTaskIds}
-                        showSidebar={showSidebar}
-                        delegationMap={delegationMap}
-                        handleRevokeDelegation={handleRevokeDelegation}
-                        onDelegateConfig={onDelegateConfig}
-                        user={user}
-                    />
+                            <TimelineHeader
+                                days={visibleDays}
+                                getColumnWidth={getColumnWidth}
+                                isToday={isToday}
+                                isWeekend={isWeekend}
+                                onContextMenu={handleContextMenu}
+                                showSidebar={showSidebar}
+                                onWheel={handleHeaderWheel}
+                                scale={scale}
+                            />
+
+                            <TimelineBody
+                                colleagues={colleagues}
+                                days={visibleDays}
+                                getColumnWidth={getColumnWidth}
+                                isToday={isToday}
+                                isWeekend={isWeekend}
+                                getTasksForColleague={getTasksForColleague}
+                                onUpdateTask={onUpdateTask}
+                                onTaskClick={onTaskClick}
+                                onTaskDoubleClick={onTaskDoubleClick}
+                                onContextMenu={handleContextMenu}
+                                scale={scale}
+                                expandedTaskId={expandedTaskId}
+                                selectedTaskIds={selectedTaskIds}
+                                showSidebar={showSidebar}
+                                delegationMap={delegationMap}
+                                handleRevokeDelegation={handleRevokeDelegation}
+                                onDelegateConfig={onDelegateConfig}
+                                user={user}
+                                // Pass visibleDays[0] as the start for Local Relative Positioning
+                                virtualStartDate={visibleDays.length > 0 ? visibleDays[0] : virtualStartDate}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 const DEFAULT_SCALE = 120; // 1.25 inches
 const MIN_SCALE = 32;      // 0.33 inches
 const MAX_SCALE = 480;     // 5.00 inches
-const STORAGE_KEY = 'timeline_scale_pref';
 
-export const useTimelineScale = () => {
+export const useTimelineScale = (user) => {
+    const STORAGE_KEY = `timeline_scale_pref_${user?.uid || 'default'}`;
+
     // 1. Initialize State from LocalStorage or Default
     const [scale, setScaleState] = useState(() => {
         try {
@@ -25,7 +26,25 @@ export const useTimelineScale = () => {
         return DEFAULT_SCALE;
     });
 
-    // 2. Safe Setter (Clamps value and persists)
+    // 2. Reload scale when user changes
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const parsed = parseInt(saved, 10);
+                if (!isNaN(parsed) && parsed >= MIN_SCALE && parsed <= MAX_SCALE) {
+                    setScaleState(parsed);
+                    return;
+                }
+            }
+            setScaleState(DEFAULT_SCALE);
+        } catch (e) {
+            console.warn("Failed to reload timeline scale pref:", e);
+            setScaleState(DEFAULT_SCALE);
+        }
+    }, [user?.uid, STORAGE_KEY]);
+
+    // 3. Safe Setter (Clamps value and persists)
     const setScale = useCallback((newValue) => {
         // Handle functional updates if passed (e.g. prev => prev + 10)
         setScaleState(prev => {
@@ -47,7 +66,7 @@ export const useTimelineScale = () => {
 
             return clamped;
         });
-    }, []);
+    }, [STORAGE_KEY]);
 
     // 3. Helper: Get Current Inch Value (for UI display)
     const scaleInInches = (scale / 96).toFixed(2);

@@ -58,7 +58,21 @@ export const GoToDateModal = ({ isOpen, onClose, onGo }) => {
                     />
                 </div>
                 <button
-                    onClick={() => { onGo(new Date(date)); onClose(); }}
+                    onClick={() => {
+                        // Parse date string as local time, not UTC
+                        // date is "YYYY-MM-DD" format
+                        const [year, month, day] = date.split('-').map(Number);
+                        const targetDate = new Date(year, month - 1, day); // month is 0-indexed
+                        targetDate.setHours(0, 0, 0, 0); // Ensure midnight local time
+
+                        console.log('GoToDate modal:', {
+                            dateString: date,
+                            targetDate: targetDate.toISOString(),
+                            targetDateString: targetDate.toDateString()
+                        });
+                        onGo(targetDate);
+                        onClose();
+                    }}
                     className="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95"
                 >
                     Jump to Date
