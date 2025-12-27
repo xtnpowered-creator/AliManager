@@ -13,22 +13,22 @@ import { CARD_VARIANTS } from '../styles/designSystem';
  * Used across timeline, dashboard, and day view contexts with different visual presentations.
  * 
  * Visual Variants:
- * 1. **MICRO** (Timeline Capsule):
- *    - Full width capsule in    timeline grid cells
+ * 1. **DETAILED** (Expanded Timeline Card):
+ *    - Full width card showing complete task information
  *    - Stacks vertically (negative margin overlap)
  *    - Alternating horizontal offsets for visual interest
- *    - 93px height (collapsed), 160px width (expanded)
+ *    - 93px height (collapsed), 160px width (when expanded to DETAILED mode)
  * 
- * 2. **BUBBLE** (Done Tasks):
+ * 2. **BUBBLE** (Done Tasks - Collapsed):
  *    - Small dots (25×25px) when collapsed
- *    - Expand to full card (93px height) on hover
+ *    - Expand to DETAILED card (93px height) on hover
  *    - Shows only checkmark icon when collapsed
  *    - Animated y-offset for hover alignment (hoverOffset)
  * 
- * 3. **CAPSULE** (Active Tasks):
- *    - Similar to MICRO but with different interaction
- *    - Used for non-stack timeline rendering
- *    - Fixed 160px width, 93px height
+ * 3. **CAPSULE** (Active Tasks - Collapsed):
+ *    - Collapsed icon-only view
+ *    - Expands to DETAILED mode on interaction
+ *    - Fixed 160px width, 93px height when expanded
  * 
  * 4. **DAYVIEW_DETAILED** (Dashboard Day View):
  *    - Static relative positioning (no absolute/transforms)
@@ -50,7 +50,7 @@ import { CARD_VARIANTS } from '../styles/designSystem';
  * Animation States:
  * - **Collapsed**: Minimal size (BUBBLE: 25px dot, CAPSULE: icons only)
  * - **Hovered**: Expands to full card, raises z-index (3000)
- * - **Expanded**: Persistently expanded (clicked), shows details
+ * - **DETAILED**: Persistently expanded showing full information (clicked state)
  * - **Selected**: Ring outline for bulk operations
  * 
  * Expansion Modes:
@@ -61,14 +61,14 @@ import { CARD_VARIANTS } from '../styles/designSystem';
  * Layout Positioning:
  * - **Absolute**: Timeline/Bubble modes (centered in date column)
  * - **Relative**: DAYVIEW_DETAILED mode (grid item)
- * - **Stacking**: Negative marginTop for MICRO variant
+ * - **Stacking**: Negative marginTop for DETAILED variant stacks
  * - **Hover Offset**: Precise pixel y-offset to prevent overlap (hoverOffset)
  * 
- * Details Mode:
+ * Details Mode (DETAILED):
  * - Triggered by: isExpanded OR isStatic
  * - Shows: Title (3 lines) + Description (2 lines)
  * - Hides: Collapsed icon indicators
- * - 160px fixed width (CAPSULE/MICRO), 100% width (DAYVIEW)
+ * - 160px fixed width (CAPSULE/DETAILED expanded), 100% width (DAYVIEW)
  * 
  * Registry Integration:
  * - Registers card DOM ref with TimelineRegistryContext on mount
@@ -106,7 +106,7 @@ import { CARD_VARIANTS } from '../styles/designSystem';
  * @param {Function} props.onTaskClick - Click handler for selection
  * @param {Function} props.onContextMenu - Right-click handler
  * @param {Function} props.onTaskDoubleClick - Double-click navigation handler
- * @param {string} [props.variant='MICRO'] - Visual mode: MICRO|BUBBLE|CAPSULE|DAYVIEW_DETAILED
+ * @param {string} [props.variant='DETAILED'] - Visual mode: DETAILED|BUBBLE|CAPSULE|DAYVIEW_DETAILED
  * @param {boolean} [props.isStatic=false] - Force static positioning + details
  * @param {string} props.scale - Timeline scale (passed but unused)
  * @param {number} props.stackIndex - DEPRECATED (use hoverOffset instead)
@@ -124,7 +124,7 @@ const TaskCard = ({
     onTaskClick,
     onContextMenu,
     onTaskDoubleClick, // New Prop for Navigation
-    variant = 'MICRO',
+    variant = 'DETAILED',
     isStatic = false, // Prop to force static positioning (Result of Expansion)
     scale, // '1w', '3w', etc
     stackIndex, // DEPRECATED: Removed in favor of hoverOffset
@@ -148,10 +148,10 @@ const TaskCard = ({
     }, [task.id, registerTask, unregisterTask]);
 
     // Alternating horizontal offset (Visual interest for stacks)
-    // Only applies to MICRO stacks usually, but kept for legacy/safety.
+    // Only applies to DETAILED stacks usually, but kept for legacy/safety.
     const xStackOffset = index === 0 ? 0 : (index % 2 === 0 ? -3 : 3);
 
-    // Stack Offset (Vertical): Only for MICRO cards (negative margin stack).
+    // Stack Offset (Vertical): Only for DETAILED cards (negative margin stack).
     // BUBBLE variant layout is handled by TimelineRow flex container.
     const stackOffset = variant === 'BUBBLE' ? 0 : (index * -6);
 
