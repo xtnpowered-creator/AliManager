@@ -4,6 +4,53 @@ import { X, Calendar, ArrowRight } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 
+/**
+ * RescheduleModal Component
+ * 
+ * Date picker dialog for changing task due dates (single or bulk).
+ * Handles timezone-safe date conversion and supports optimistic updates.
+ * 
+ * Features:
+ * - **Single/Bulk mode**: taskId can be single ID or array
+ * - **Pre-fill current date**: Shows existing dueDate in picker
+ * - **Local timezone fix**: Prevents UTC shift on date roundtrip
+ * - **Optimistic updates**: Uses onConfirm if provided, else direct API
+ * 
+ * Date Handling:
+ * ```javascript
+ * const [y, m, d] = date.split('-').map(Number);
+ * const localDate = new Date(y, m - 1, d); // Midnight local time
+ * ```
+ * Why: input[type="date"] gives YYYY-MM-DD string, but new Date(str)
+ * interprets as UTC, causing day-shift bugs. Manual construction fixes this.
+ * 
+ * Dual API Pattern:
+ * - **New**: onConfirm(taskIds, { dueDate }) - Optimistic bulk update
+ * - **Legacy**: Direct PATCH /tasks/:id - Individual API calls
+ * - Transition allows gradual migration to optimistic pattern
+ * 
+ * Bulk vs Single:
+ * - isBulk: taskIds.length > 1
+ * - Title: "Reschedule N Tasks" vs "Change Date"
+ * - Description: "N items will be moved" vs task title
+ * - Pre-fill: Only for single tasks (bulk starts empty)
+ * 
+ * Visual Design:
+ * - Teal Calendar icon badge
+ * - Date input with focus ring
+ * - Slate-900 confirm button
+ * - Disabled state during loading
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Modal visibility
+ * @param {Function} props.onClose - Close handler
+ * @param {Function} [props.onSuccess] - Success callback (refetch)
+ * @param {string|string[]} props.taskId - Single ID or array of IDs
+ * @param {string} [props.taskTitle] - Task title for single mode
+ * @param {Date|string} [props.currentDate] - Current due date (pre-fill)
+ * @param {Function} [props.onConfirm] - Optimistic update handler
+ * @component
+ */
 const RescheduleModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentDate, onConfirm }) => {
     const { showToast } = useToast();
     const [date, setDate] = useState('');

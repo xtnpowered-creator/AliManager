@@ -4,6 +4,83 @@ import { X, Send, UserPlus, Mail } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 
+/**
+ * External Collaborator Invitation Modal
+ * 
+ * PURPOSE:
+ * Invites external partners to collaborate on specific tasks without full org access.
+ * Creates scoped, task-specific access for clients, contractors, or guest reviewers.
+ * 
+ * SECURITY MODEL:
+ * - Invited user sees ONLY the shared tasks (not entire org)
+ * - No access to org-wide data, colleagues, or other projects
+ * - Invitation links expire after configurable period (e.g., 7 days)
+ * - Guest accounts can be revoked at any time
+ * 
+ * USE CASES:
+ * 
+ * 1. **Client Collaboration**: Share project tasks with external client
+ *    - Example: "Show client their website redesign milestones"
+ *    - Scope: Only tasks related to client's project
+ * 
+ * 2. **Contractor Access**: Grant limited access to freelancer
+ *    - Example: "Let contractor update progress on their assigned work"
+ *    - Scope: Only tasks contractor is working on
+ * 
+ * 3. **Guest Review**: Allow stakeholder to review/comment
+ *    - Example: "Share deliverable with external reviewer for approval"
+ *    - Scope: Read-only or comment-only access
+ * 
+ * 4. **Bulk Sharing**: Invite one person to multiple related tasks
+ *    - Example: "Share all Q1 deliverables with project manager"
+ *    - Workflow: Select multiple tasks → Invite → One invitation for all
+ * 
+ * WORKFLOW:
+ * 1. User selects task(s) and clicks "Invite Collaborator"
+ * 2. Modal opens, pre-filled with taskId(s) and title(s)
+ * 3. User enters external collaborator's email
+ * 4. System sends invitation email with unique access link
+ * 5. Recipient clicks link, creates guest account (or logs in)
+ * 6. Guest sees shared tasks in their scoped view
+ * 
+ * BULK OPERATION:
+ * - Accepts single taskId string OR array of taskIds
+ * - Single API call per task: POST /tasks/:id/invite
+ * - Promise.all for parallel invitations
+ * - Single success toast with count: "Invitation sent to user@example.com for 5 tasks"
+ * 
+ * API CONTRACT:
+ * POST /tasks/:taskId/invite
+ * Body: { email: string }
+ * 
+ * Server creates:
+ * - Guest user account (if email doesn't exist)
+ * - Task access grant (task_collaborators table)
+ * - Invitation email with magic link
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Closes modal and resets form
+ * @param {string|Array<string>} taskId - Single task ID or array of IDs for bulk invite
+ * @param {string} taskTitle - Task title shown in description (ignored for bulk)
+ * 
+ * @example
+ * // Single task invite
+ * <InviteModal
+ *   isOpen={showInvite}
+ *   onClose={() => setShowInvite(false)}
+ *   taskId="task-uuid-123"
+ *   taskTitle="Website Redesign Phase 1"
+ * />
+ * 
+ * @example
+ * // Bulk invite (multi-select)
+ * <InviteModal
+ *   isOpen={showBulkInvite}
+ *   onClose={() => setShowBulkInvite(false)}
+ *   taskId={['task-1', 'task-2', 'task-3']}
+ *   taskTitle="" // Ignored for bulk
+ * />
+ */
 const InviteModal = ({ isOpen, onClose, taskId, taskTitle }) => {
     const { showToast } = useToast();
     const [email, setEmail] = useState('');

@@ -5,6 +5,61 @@ import { X, Shield, Clock, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 
+/**
+ * Temporary Admin Delegation Modal
+ * 
+ * PURPOSE:
+ * Allows admins to temporarily grant full admin privileges to another colleague.
+ * Used for coverage during vacation, training new admins, or handling specific tasks.
+ * 
+ * SECURITY MODEL:
+ * - Time-limited access (1-365 days)
+ * - Explicit warning about full admin privileges
+ * - Delegation is logged and auditable
+ * - Auto-revokes after expiration (server-side enforcement)
+ * 
+ * USE CASES:
+ * 1. **Vacation Coverage**: Admin going on leave, delegate to trusted colleague
+ * 2. **Admin Training**: Temporary access to learn admin workflows
+ * 3. **Project-Specific**: Grant access for specific high-priority tasks
+ * 4. **Emergency Access**: Quick delegation during urgent situations
+ * 
+ * WORKFLOW:
+ * 1. Admin clicks "Delegate Access" in Directory/Admin view
+ * 2. Modal opens with selected colleague pre-filled
+ * 3. Admin sets duration (default: 7 days)
+ * 4. Warning message confirms colleague's full access scope
+ * 5. On submit, POST to /delegations with colleagueId + duration
+ * 6. Server creates delegation record with expiration date
+ * 7. Colleague immediately gains admin privileges
+ * 
+ * API CONTRACT:
+ * POST /delegations
+ * Body: { delegateId: string, days: number }
+ * - Creates delegation record in database
+ * - Sets expiration_date = NOW() + days
+ * - Grants admin role to delegate
+ * 
+ * DESIGN RATIONALE:
+ * - Amber color scheme signals caution/warning (not destructive, but important)
+ * - Number input allows precise duration control
+ * - Alert box with colleague name prevents accidental delegation
+ * - Portal render ensures z-index above all content
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Closes modal without changes
+ * @param {Object} colleague - Colleague to delegate to (requires: id, name)
+ * @param {Function} onSuccess - Callback after successful delegation (refreshes UI)
+ * 
+ * @example
+ * // From Directory or Admin Dashboard
+ * <DelegationModal
+ *   isOpen={showDelegationModal}
+ *   onClose={() => setShowDelegationModal(false)}
+ *   colleague={{ id: "uuid-123", name: "Alice Johnson" }}
+ *   onSuccess={() => refetchDelegations()}
+ * />
+ */
 const DelegationModal = ({ isOpen, onClose, colleague, onSuccess }) => {
     const { showToast } = useToast();
     const [days, setDays] = useState(7);

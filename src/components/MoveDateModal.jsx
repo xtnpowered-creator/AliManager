@@ -4,6 +4,82 @@ import { X, CalendarRange, ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 
+/**
+ * Bulk Date Shift Modal
+ * 
+ * PURPOSE:
+ * Shifts task due dates forward or backward by a specified number of days.
+ * Supports both single and multi-task operations with optimistic UI updates.
+ * 
+ * USE CASES:
+ * 1. **Project Delay**: Shift all project tasks forward when timeline slips
+ *    - Example: Client delays approval, push all tasks back 5 days
+ * 
+ * 2. **Accelerate Schedule**: Move tasks earlier when resources become available
+ *    - Example: Team finishes early, pull all tasks forward 3 days
+ * 
+ * 3. **Vacation Planning**: Shift personal tasks around leave dates
+ *    - Example: Moving tasks before/after a 2-week vacation
+ * 
+ * 4. **Sprint Adjustments**: Realign sprint tasks based on velocity
+ *    - Example: Sprint running behind, push remaining tasks to next week
+ * 
+ * ARCHITECTURE:
+ * Two execution paths:
+ * 
+ * 1. **Optimistic Path** (Preferred):
+ *    - Uses `onConfirm` callback from parent component
+ *    - Parent handles optimistic UI update + API call
+ *    - Faster perceived response, better UX
+ *    - Example: UnifiedTimelineBoard uses this for instant visual feedback
+ * 
+ * 2. **Legacy Path** (Fallback):
+ *    - Modal directly calls API for each task
+ *    - Calculates new dates locally: dueDate ± (days × direction)
+ *    - Sequential Promise.all for all task updates
+ *    - Used when parent doesn't provide onConfirm
+ * 
+ * DATE CALCULATION:
+ * - Earlier: currentDate - days
+ * - Later: currentDate + days
+ * - Preserves time component (only shifts date, not hours/minutes)
+ * - Skips tasks without dueDate (no-op)
+ * 
+ * FORM VALIDATION:
+ * - Minimum 1 day shift enforced
+ * - +/- buttons with bounds checking
+ * - Direction toggle (Earlier/Later) with visual state
+ * - Submit disabled during loading
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Closes modal without changes
+ * @param {Function} onSuccess - Callback after successful shift (refreshes parent data)
+ * @param {Array<Object>} tasks - Full task list (legacy path only, for finding tasks by ID)
+ * @param {Array<string>|Set<string>} selectedTaskIds - IDs of tasks to shift
+ * @param {Function} onConfirm - Optional optimistic update handler (taskIds, days, direction)
+ * 
+ * @example
+ * // Optimistic update (preferred)
+ * <MoveDateModal
+ *   isOpen={showModal}
+ *   onClose={() => setShowModal(false)}
+ *   selectedTaskIds={selectedRows}
+ *   onConfirm={async (ids, days, dir) => {
+ *     optimisticallyUpdateUI(ids, days, dir);
+ *     await apiClient.post('/tasks/bulk-shift', { ids, days, direction: dir });
+ *   }}
+ * />
+ * 
+ * @example
+ * // Legacy fallback
+ * <MoveDateModal
+ *   isOpen={showModal}
+ *   onClose={() => setShowModal(false)}
+ *   tasks={allTasks}
+ *   selectedTaskIds={['task-1', 'task-2']}
+ *   onSuccess={() => refetchTasks()}
+ * />
+ */
 const MoveDateModal = ({ isOpen, onClose, onSuccess, tasks, selectedTaskIds, onConfirm }) => {
     const { showToast } = useToast();
     const [days, setDays] = useState(1);

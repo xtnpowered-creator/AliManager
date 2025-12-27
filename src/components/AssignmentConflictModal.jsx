@@ -2,6 +2,49 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, UserMinus, UserPlus, X } from 'lucide-react';
 
+/**
+ * Assignment Conflict Resolution Modal
+ * 
+ * PURPOSE:
+ * Resolves assignment conflicts when a task is dragged to a different colleague's timeline.
+ * Prevents accidental data loss by requiring explicit user choice between two assignment strategies.
+ * 
+ * WORKFLOW TRIGGER:
+ * 1. User drags a task from one colleague's timeline to another colleague's timeline
+ * 2. System detects the task is already assigned to someone else
+ * 3. This modal opens to resolve the conflict
+ * 
+ * ASSIGNMENT STRATEGIES:
+ * - **Reassign**: Remove existing assignee(s), assign only to new colleague
+ *   - Use case: Task ownership is being transferred
+ *   - Example: "Alice is going on vacation, move her tasks to Bob"
+ * 
+ * - **Add as Co-assignee**: Keep existing assignees, add new colleague
+ *   - Use case: Collaborative work, pairing, knowledge transfer
+ *   - Example: "Add Bob to help Alice with this complex task"
+ * 
+ * DESIGN RATIONALE:
+ * - High z-index (9999/10000) ensures visibility above all timeline elements
+ * - Visual hierarchy: Primary action (REASSIGN) is emphasized with dark background
+ * - Backdrop blur creates focus and prevents accidental clicks
+ * - Colleague name is bold to confirm user's intended action
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Closes modal without changes
+ * @param {Function} onReassign - Removes old assignee, assigns to new colleague only
+ * @param {Function} onAdd - Keeps old assignee, adds new colleague as co-assignee
+ * @param {string} colleagueName - Full name of the colleague the task was dragged to
+ * 
+ * @example
+ * // Triggered after timeline drag-and-drop
+ * <AssignmentConflictModal
+ *   isOpen={showConflictModal}
+ *   onClose={() => setShowConflictModal(false)}
+ *   onReassign={() => handleReassign(newColleagueId)}
+ *   onAdd={() => handleAddCoAssignee(newColleagueId)}
+ *   colleagueName="Bob Smith"
+ * />
+ */
 const AssignmentConflictModal = ({ isOpen, onClose, onReassign, onAdd, colleagueName }) => {
     return (
         <AnimatePresence>

@@ -3,6 +3,99 @@ import { useApiData } from '../hooks/useApiData';
 import { apiClient } from '../api/client';
 import { Plus, Trash2, Calendar, User, Check, X } from 'lucide-react';
 
+/**
+ * Task Steps List - "Plan of Attack" Checklist
+ * 
+ * PURPOSE:
+ * Breaks down complex tasks into manageable, trackable subtasks (steps).
+ * Provides a lightweight checklist interface with progress tracking and inline editing.
+ * 
+ * ARCHITECTURE - TWO COMPONENTS:
+ * 
+ * 1. **TaskStepsList** (Container):
+ *    - Fetches steps for specific task
+ *    - Manages "Add Step" form state
+ *    - Handles API operations (create, update, delete, toggle)
+ *    - Shows progress header with completion percentage
+ * 
+ * 2. **StepRow** (Child Component):
+ *    - Individual step display with toggle checkbox
+ *    - Inline title editing (click title to edit)
+ *    - Shows assignee + due date (inherited from parent task)
+ *    - Delete button (with confirmation)
+ * 
+ * AUTOMATIC INHERITANCE:
+ * New steps automatically inherit from parent task:
+ * - assignedTo: Parent task's assigneeId
+ * - dueDate: Parent task's due date
+ * 
+ * Rationale: Steps are usually done by same person as parent task.
+ * User can override after creation if needed (buttons shown but not wired yet).
+ * 
+ * PROGRESS TRACKING:
+ * Header shows real-time completion metrics:
+ * - Total steps count: "5 Steps"
+ * - Completed count: "3 Completed"
+ * - Visual progress bar: Filled percentage based on completion ratio
+ * - Color: Teal (consistent with app's success state)
+ * 
+ * INLINE EDITING UX:
+ * 
+ * **Add Step**:
+ * - Default: Collapsed "+ Add a step..." button
+ * - On click: Expands to input + submit button
+ * - Auto-focus input for immediate typing
+ * - Blur cancels if empty (no-op, returns to collapsed state)
+ * - Submit creates step + refetches + resets form
+ * 
+ * **Edit Step Title**:
+ * - Click step title to enter edit mode
+ * - Input auto-focuses + selects text
+ * - Enter to save, Blur to save
+ * - Only PATCH if changed (avoids unnecessary API calls)
+ * 
+ * **Toggle Completion**:
+ * - Checkbox icon on left
+ * - Unchecked: White bg, gray border
+ * - Checked: Teal bg, teal border, white checkmark
+ * - Completed steps: Gray text, strikethrough, lighter bg
+ * 
+ * **Delete Step**:
+ * - Trash icon on right (hidden until row hover)
+ * - Browser confirm() before deletion
+ * - Immediate removal on confirm
+ * 
+ * METADATA DISPLAY (Assignee + Due Date):
+ * - Shows assignee avatar + name (first name only on mobile)
+ * - Shows due date in "MMM DD" format
+ * - Buttons are placeholders (not yet wired to modals)
+ * - Future: Click to open AssignModal or RescheduleModal
+ * 
+ * API CONTRACT:
+ * GET /steps?taskId={taskId} - Fetch all steps for task
+ * POST /steps - Create step: { taskId, title, assignedTo, dueDate }
+ * PATCH /steps/:id - Update step: { isCompleted?, title? }
+ * DELETE /steps/:id - Delete step
+ * 
+ * DESIGN RATIONALE:
+ * - "Plan of Attack" branding makes steps feel action-oriented
+ * - Progress bar provides at-a-glance momentum feedback
+ * - Inline editing reduces modal fatigue
+ * - Hover reveals actions (clean default state)
+ * - Strikethrough + lighter bg = visual satisfaction on completion
+ * 
+ * @param {string} taskId - Parent task ID (for fetching/creating steps)
+ * @param {string} taskAssigneeId - Parent task's assignee (inherited by new steps)
+ * @param {string} taskDueDate - Parent task's due date (inherited by new steps)
+ * 
+ * @example
+ * // In TaskDetailView or TaskDetailModal
+ * <TaskStepsList
+ *   taskId={task.id}
+ *   taskAssigneeId={task.assignedTo}
+ *   taskDueDate={task.dueDate}
+ * />
+ */
 const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
     const { data: steps = [], refetch } = useApiData(`/steps?taskId=${taskId}`);
     const { data: colleagues } = useApiData('/colleagues');

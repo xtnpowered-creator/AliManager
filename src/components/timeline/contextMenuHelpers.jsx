@@ -1,6 +1,112 @@
 import React from 'react';
 import { Eye, EyeOff, CalendarDays, Clock, User, UserPlus, Zap, Play, Pause, CheckCircle2, Square, Trash2, Ban, Maximize2, RotateCcw, Flag, Plus, Shield, Calendar } from 'lucide-react';
 
+/**
+ * Context Menu Options Factory
+ * 
+ * PURPOSE:
+ * Generates context menu options dynamically based on what user right-clicked.
+ * Supports four menu types: Task, Header, Colleague, Empty Slot.
+ * 
+ * ARCHITECTURE - CONTEXT MENU TYPES:
+ * 
+ * 1. **TASK MENU** (right-click on task card):
+ *    - View Details: Navigate to task detail page
+ *    - Change Due Date: Open RescheduleModal
+ *    - Move Due Date X days: Open MoveDateModal (bulk shift)
+ *    - Reassign: Open ReassignModal
+ *    - Add Collab Assignment: Open InviteModal
+ *    - Set Priority: Submenu with 1-4 + None (owner/admin only)
+ *    - Mark Doing/Paused/Done/Pending: Bulk status update
+ *    - Delete Task: Opens DeleteTaskModal
+ * 
+ * 2. **HEADER MENU** (right-click on timeline header):
+ *    - Go to date: Open GoToDateModal (jump to specific date)
+ *    - Set Custom Scale: Open CustomScaleModal (adjust zoom)
+ *    - Return to default scale: Reset to scale=10 (if changed)
+ *    - Set Custom Flag: Opens FlagModal to mark important date
+ * 
+ * 3. **COLLEAGUE MENU** (right-click on colleague name):
+ *    - Delegate Admin Access: Opens DelegationModal (admin only)
+ *    - Revoke Admin Access: Removes delegation (admin only, if delegated)
+ *    - View Profile: Opens profile view (pending implementation)
+ *    - Self-user: Returns empty menu (can't delegate to yourself)
+ * 
+ * 4. **EMPTY SLOT MENU** (right-click on empty timeline cell):
+ *    - Create Task Here: Opens NewTaskModal with pre-filled date + assignee
+ *    - Show/Hide DONE Tasks: Toggles visibility filter
+ * 
+ * PERMISSION MODEL:
+ * - **Priority Menu**: Only visible to task owner OR admin/god role
+ * - **Delegation Menu**: Only visible to admin/god role
+ * - **User Protection**: Cannot delegate to yourself
+ * - **Bulk Operations**: Clear selection after bulk update to prevent accidental repeat
+ * 
+ * BULK OPERATIONS:
+ * Menu supports multi-select operations via `selectedTaskIds` Set:
+ * - Set Priority: Apply to all selected tasks
+ * - Mark Status: Apply to all selected tasks
+ * - After bulk update: Clear selection (setSelectedTaskIds(new Set()))
+ * 
+ * CALLBACK ARCHITECTURE:
+ * Parent component provides all action handlers via `callbacks` object.
+ * This keeps menu logic pure and testable - no direct API calls or state mutations.
+ * 
+ * Common callbacks:
+ * - navigate: React Router navigation
+ * - setXxxModal: Modal visibility toggles
+ * - onBulkUpdate: Batch task updates
+ * - handleScaleChange: Timeline zoom control
+ * - handleRevokeDelegation: Admin access removal
+ * - onDelegateConfig: Admin delegation workflow
+ * 
+ * MENU RENDERING:
+ * Menu items structure:
+ * - label: Display text
+ * - icon: Lucide icon component or custom render function
+ * - onClick: Action callback (wrapped in withClose to auto-dismiss menu)
+ * - danger: Red styling for destructive actions
+ * - submenu: Nested menu items (e.g., priority levels)
+ * - type: 'separator' for visual dividers
+ * 
+ * AUTO-CLOSE PATTERN:
+ * `withClose(action)` wrapper ensures menu closes after any action.
+ * Prevents menu staying open after user makes selection.
+ * 
+ * @param {Object} params - Menu configuration
+ * @param {string} params.type - Menu type: 'task'|'header'|'colleague'|'empty-slot'
+ * @param {Object} params.data - Context data (task, colleague, or date info)
+ * @param {Object} params.user - Current user object (for permission checks)
+ * @param {Map} params.delegationMap - Map of colleague IDs to delegation records
+ * @param {Object} params.callbacks - All action handlers and modal setters
+ * 
+ * @returns {Array<MenuItem>} Array of menu item objects
+ * 
+ * MenuItem shape:
+ * {
+ *   label: string,
+ *   icon: LucideIcon | Function,
+ *   onClick: Function,
+ *   danger?: boolean,
+ *   submenu?: Array<MenuItem>,
+ *   type?: 'separator'
+ * }
+ * 
+ * @example
+ * // Task context menu
+ * const taskMenuOptions = getMenuOptions({
+ *   type: 'task',
+ *   data: { id: 'task-123', title: 'Fix bug', isOwner: true },
+ *   user: { id: 'user-1', role: 'admin' },
+ *   delegationMap: new Map(),
+ *   callbacks: {
+ *     navigate: (path) => router.push(path),
+ *     setRescheduleTask: (task) => setModalTask(task),
+ *     onBulkUpdate: (ids, updates) => api.patch('/tasks/bulk', { ids, updates }),
+ *     // ...other callbacks
+ *   }
+ * });
+ */
 export const getMenuOptions = ({
     type,
     data,

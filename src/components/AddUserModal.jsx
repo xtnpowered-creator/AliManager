@@ -3,6 +3,57 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, UserPlus, Mail, User } from 'lucide-react';
 import { apiClient } from '../api/client';
 
+/**
+ * AddUserModal Component
+ * 
+ * Simple user creation form for adding colleagues to the directory.
+ * Used by admins from Directory page "+ New Entry" button.
+ * 
+ * Features:
+ * - **Two-field form**: Name (required) + Email (required)
+ * - **Instant availability**: New users immediately available for assignment
+ * - **Error display**: Shows API error messages inline
+ * - **Loading state**: "Adding..." button text, disabled during submit
+ * 
+ * Form Fields:
+ * - **Name**: Full name (autofocus, text input with User icon)
+ * - **Email**: Valid email (Mail icon, HTML5 validation)
+ * - Both fields required for submission
+ * 
+ * Visual Design:
+ * - Teal UserPlus icon badge (centered)
+ * - Slate-50 input backgrounds with icons
+ * - Focus rings: Teal-500/20 with border transition
+ * - Two-button layout: Cancel + Add Person
+ * 
+ * API Flow:
+ * 1. User fills name + email
+ * 2. Submit → POST /users { email, name }
+ * 3. Success → onSuccess callback (refetch directory)
+ * 4. Close → Reset form fields
+ * 5. Error → Display inline (red-50 background)
+ * 
+ * Error Handling:
+ * - Try/catch displays error.message
+ * - Finally block ensures loading state clears
+ * - Form fields reset only on success
+ * 
+ * Integration Points:
+ * - **Directory page**: Admin-only button
+ * - **NewTaskModal**: Inline creation (different implementation)
+ * - **ReassignModal**: Inline creation (different implementation)
+ * 
+ * Why Separate Modal:
+ * - Directory uses full modal for explicit add action
+ * - Task modals use inline creation for workflow continuity
+ * - Same API endpoint, different UX contexts
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Modal visibility
+ * @param {Function} props.onClose - Close handler
+ * @param {Function} [props.onSuccess] - Success callback (refetch directory)
+ * @component
+ */
 const AddUserModal = ({ isOpen, onClose, onSuccess }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');

@@ -1,6 +1,102 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Search, ChevronRight } from 'lucide-react';
 
+/**
+ * Filter Command Dropdown Button
+ * 
+ * PURPOSE:
+ * Smart dropdown for adding filters with two interaction modes:
+ * 1. Browse Mode: Category/Option split view (no search input)
+ * 2. Search Mode: Unified search across all categories + dynamic parsing
+ * 
+ * ARCHITECTURE - DUAL MODE UI:
+ * 
+ * **BROWSE MODE** (default, when input is empty):
+ * - Left panel: Filter categories (assignee, status, priority, etc.)
+ * - Right panel: Options for selected category
+ * - Hover-to-preview pattern (activeCategory tracks hover)
+ * - Example: Hover "Status" → Right panel shows ["Open", "In Progress", "Done"]
+ * 
+ * **SEARCH MODE** (when user types):
+ * - Single-column flat list of matches
+ * - Multi-word AND search: "status done" matches Status: Done
+ * - Falls through to dynamic parser if no static matches
+ * - Example: Type "overdue" → Parser converts to Date: < Today
+ * 
+ * DYNAMIC PARSER EXTENSION:
+ * The `parser` prop allows custom filter logic beyond static suggestions.
+ * 
+ * Example use cases:
+ * - "overdue" → { type: 'date', value: '<today' }
+ * - "urgent" → { type: 'priority', value: 'urgent' }
+ * - "assigned to me" → { type: 'assignee', value: currentUserId }
+ * - "last week" → { type: 'date', value: 'last 7 days' }
+ * 
+ * Parser signature:
+ * parser(inputValue: string): Array<{ type: string, value: any }> | null
+ * 
+ * DATA FLOW:
+ * 1. Parent provides suggestions (static options) and parser (dynamic)
+ * 2. User clicks button → Dropdown opens, input auto-focuses
+ * 3. User types → Search across static suggestions + parser
+ * 4. User clicks option → onSelect({ type, value, label })
+ * 5. Parent adds filter chip to active filters
+ * 6. Dropdown closes, input resets
+ * 
+ * SEARCH ALGORITHM:
+ * 1. Tokenize input: "status done" → ["status", "done"]
+ * 2. For each suggestion, create searchable string: type + value
+ * 3. Check if ALL tokens are present (AND filter)
+ * 4. If static suggestions match, show them
+ * 5. If no matches, try parser for custom logic
+ * 6. Show "No matches found" if both fail
+ * 
+ * KEYBOARD NAVIGATION:
+ * - Escape: Close dropdown
+ * - Click outside: Close dropdown
+ * - Auto-focus on open
+ * 
+ * VISUAL DESIGN:
+ * - Color prop allows category branding (blue for filters, green for sorts, etc.)
+ * - Plus icon indicates "add" action
+ * - Split-panel inspired by command palettes (VS Code, Raycast)
+ * - High z-index (1000) ensures dropdown stays above content
+ * 
+ * @param {string} label - Button label (e.g., "Add Filter", "Add Sort")
+ * @param {string} placeholder - Search input placeholder (default: "Search...")
+ * @param {Object<string, Array<string>>} suggestions - Static options grouped by type
+ *   Example: { assignee: ["Alice", "Bob"], status: ["Open", "Done"] }
+ * @param {Function} onSelect - Callback when option selected: ({ type, value, label }) => void
+ * @param {Function} parser - Optional dynamic parser for custom filter logic
+ * @param {string} color - Icon color variant: 'neutral'|'blue'|'green'|'purple' (default: 'neutral')
+ * 
+ * @example
+ * // Basic usage with static suggestions
+ * <FilterCommandButton
+ *   label="Add Filter"
+ *   suggestions={{
+ *     assignee: colleagues.map(c => c.name),
+ *     status: ["Open", "In Progress", "Done"],
+ *     priority: ["Low", "Medium", "High"]
+ *   }}
+ *   onSelect={({ type, value }) => addFilter(type, value)}
+ *   color="blue"
+ * />
+ * 
+ * @example
+ * // Advanced: Static + Dynamic Parser
+ * <FilterCommandButton
+ *   label="Add Filter"
+ *   placeholder="Search or type 'overdue', 'urgent'..."
+ *   suggestions={{ status: ["Open", "Done"], priority: ["High"] }}
+ *   parser={(input) => {
+ *     if (input === 'overdue') return [{ type: 'date', value: '<today' }];
+ *     if (input === 'urgent') return [{ type: 'priority', value: 'high' }];
+ *     return null;
+ *   }}
+ *   onSelect={addFilter}
+ * />
+ */
 const FilterCommandButton = ({ label, placeholder = "Search...", suggestions = {}, onSelect, parser, color = 'neutral' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');

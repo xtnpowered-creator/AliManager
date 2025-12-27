@@ -5,6 +5,52 @@ import { apiClient } from '../api/client';
 import { useApiData } from '../hooks/useApiData';
 import { useToast } from '../context/ToastContext';
 
+/**
+ * ReassignModal Component
+ * 
+ * Task reassignment modal with smart assignee search and inline user creation.
+ * Supports single and bulk task reassignment with visual before/after display.
+ * 
+ * Features:
+ * - **Smart search**: Type-ahead filtering through colleague directory
+ * - **Inline creation**: "Add to Directory" prompt when no matches
+ * - **Bulk support**: Handles single or multiple task reassignment
+ * - **Visual transition**: Shows current → new assignee with arrow
+ * - **Optimistic updates**: Dual API pattern (new vs legacy)
+ * \n * Search UX Pattern (same as NewTaskModal):
+ * 1. User types name
+ * 2. Dropdown shows filtered matches
+ * 3. If no matches: "Add [name] to Directory" prompt
+ * 4. Click prompt → Email input dialog
+ * 5. Create user → Auto-select → Continue with reassignment
+ * \n * Single vs Bulk Mode:
+ * - **Single**: Shows "Current → New" transition with avatars
+ * - **Bulk**: Shows "Set to: [name]" (no current state)
+ * - Title: "Reassign Task" vs "Reassign N Tasks"
+ * - Description: Task title vs "N items will be moved"
+ * \n * Visual States:
+ * - **Before selection**: Search input with User icon
+ * - **After selection**: Teal pill with avatar + X button
+ * - **Transition display**: Gray strike-through → Teal new name
+ * - **Loading**: "Updating..." button text
+ * \n * Dual API Pattern:
+ * - **New**: onConfirm(taskIds, { assignedTo }) - Optimistic
+ * - **Legacy**: PATCH /tasks/:id individually
+ * - Allows gradual migration to optimistic pattern
+ * \n * Form Validation:
+ * - Submit disabled until assignee selected
+ * - Required: selectedAssignee
+ * - API expects: assignedTo as array [colleagueId]
+ * \n * @param {Object} props
+ * @param {boolean} props.isOpen - Modal visibility
+ * @param {Function} props.onClose - Close handler
+ * @param {Function} [props.onSuccess] - Success callback (refetch)
+ * @param {string|string[]} props.taskId - Single ID or array of IDs
+ * @param {string} [props.taskTitle] - Task title for single mode
+ * @param {string} [props.currentAssigneeId] - Current assignee ID (for display)
+ * @param {Function} [props.onConfirm] - Optimistic update handler
+ * @component
+ */
 const ReassignModal = ({ isOpen, onClose, onSuccess, taskId, taskTitle, currentAssigneeId, onConfirm }) => {
     const { showToast } = useToast();
     const { data: colleagues, refetch: refetchColleagues } = useApiData('/colleagues');

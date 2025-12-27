@@ -2,6 +2,44 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 
+/**
+ * DeleteTaskModal Component
+ * 
+ * Confirmation dialog for deleting one or multiple tasks.
+ * Shows warning message with count and requires explicit confirmation.
+ * 
+ * Features:
+ * - **Bulk support**: Handles single or multiple task deletion
+ * - **Loading state**: Shows "Deleting..." during API call
+ * - **Destructive styling**: Red color scheme for danger action
+ * - **Irreversible warning**: "This action cannot be undone"
+ * 
+ * Visual Design:
+ * - Red Trash2 icon in circular background
+ * - Dynamic title: "Delete Task" vs "Delete Tasks"
+ * - Count display:  "1 item" vs "N items"
+ * - Two-button layout: Cancel (gray) + Delete (red)
+ * 
+ * Flow:
+ * 1. User clicks delete (from context menu, selection)
+ * 2. Modal opens with task count
+ * 3. User confirms → handleConfirm
+ * 4. Loading state (disabled button)
+ * 5. onConfirm callback → API deletion
+ * 6. Modal closes (finally block)
+ * 
+ * Error Handling:
+ * - Try/finally ensures modal closes even on error
+ * - Parent (onConfirm) handles error toasts
+ * - Loading state prevents double-submission
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Modal visibility
+ * @param {Function} props.onClose - Close handler
+ * @param {Function} props.onConfirm - Async delete handler
+ * @param {number} [props.taskCount=1] - Number of tasks being deleted
+ * @component
+ */
 const DeleteTaskModal = ({ isOpen, onClose, onConfirm, taskCount = 1 }) => {
     const [loading, setLoading] = useState(false);
 
