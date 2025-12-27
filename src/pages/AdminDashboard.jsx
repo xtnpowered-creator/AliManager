@@ -14,6 +14,7 @@ const AdminDashboard = () => {
 
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
+    // Calculate KPI metrics for dashboard cards
     const stats = {
         totalTasks: tasks.length,
         activeProjects: projects.filter(p => p.status === 'active').length,
@@ -71,6 +72,7 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="flex gap-4 overflow-x-auto pb-4 invisible-scrollbar">
+                            {/* Generate 7-day velocity chart: filter tasks by due date matching each day */}
                             {Array.from({ length: 7 }, (_, i) => {
                                 const date = new Date();
                                 date.setDate(date.getDate() + i);
