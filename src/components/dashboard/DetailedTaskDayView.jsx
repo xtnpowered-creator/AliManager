@@ -2,6 +2,92 @@ import React, { useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { sortTasksForDisplay } from '../../utils/taskUtils';
 import TaskCard from '../TaskCard';
 
+/**
+ * DetailedTaskDayView Component
+ * 
+ * Horizontal scrolling day-by-day task viewer for dashboard with intelligent hazard boundaries.
+ * Groups tasks by date into vertical columns with custom drag scrolling and snap-back behavior.
+ * \n * Key Features:
+ * 1. **Day Grouping**:
+ *    - Tasks grouped by completedAt (done) → dueDate → createdAt (fallback)
+ *    - Sorted chronologically (earliest→latest dates left→right)
+ *    - Within each day: sorted by sortTasksForDisplay (done, priority, creation)
+ * 
+ * 2. **Hazard Boundaries** (Orange Striped):
+ *    - 48px wide danger zones on left/right edges
+ *    - Vertical text: "NO MORE TASKS THIS DIRECTION"
+ *    - Snap-back: If user scrolls into hazard (+waits 2s), auto-scroll out
+ *    - Prevents users resting in "no content" zone
+ * 
+ * 3. **Custom Drag Scrolling**:
+ *    - Pointer events (not native scroll drag)
+ *    - 1.5x accelerated pan speed
+ *    - Cursor grab → grabbing visual feedback
+ *    - requestAnimationFrame for smooth 60fps
+ * 
+ * 4. **Snap-Back Algorithm**:
+ *    - Triggers if scrollLeft < 48px OR > (maxScroll - 48px)
+ *    - 2-second timeout after scroll stop (not during active drag)
+ *    - Custom 1-second ease-in-out animation (slowScrollTo)
+ *    - Cancels on new user interaction
+ * 
+ * 5. **Exposed Methods** (via forwardRef):
+ *    - scrollToDate(date): Scroll specific date into view (34px buffer)
+ *    - Used by dashboard "Today" button, timeline sync
+ *    - Auto-scrolls to today on initial mount
+ * 
+ * 6. **Visual Design**:
+ *    - Day headers: Weekday, Date, Month (Year if not current)
+ *    - Today highlight: teal-100/70 background
+ *    - Task row: Horizontal TaskCard array (240px × 160px each)
+ *    - Border overlap fix: -mr-[1px] w-[calc(100%+1px)]
+ * 
+ * 7. **Wheel Scroll Hijack**:
+ *    - Date headers intercept vertical wheel (e.preventDefault)
+ *    - Converts deltaY → horizontal scroll (scrollLeft += deltaY)
+ *    - Allows wheel to scroll timeline instead of page
+ * 
+ * 8. **Empty State**:
+ *    - Spacer column (240px) when no tasks
+ *    - "NO TASKS DISPLAYED" message
+ *   - Still shows hazard boundaries (maintains layout)
+ * 
+ * Data Flow:
+ * - tasks prop: Filtered task array from parent
+ * - Groups via useMemo (recalc only when tasks change)
+ * - sortTasksForDisplay: Centralized sort logic (done→priority→date)
+ * \n * Scroll Lifecycle:
+ * ```
+ * Mount → Wait 100ms → scrollToDate(today) → hasScrolledRef=true
+ * User drags → handlePointerDown → isDragging=true → handlePointerMove
+ * User releases → handlePointerUp → isDragging=false → scheduleSnapBack
+ * 2s later → check if in hazard → slowScrollTo(boundary + 48px)
+ * ```
+ * 
+ * Snap-Back Logic:
+ * ```javascript
+ * if (scrollLeft < 48px) slowScrollTo(48);
+ * if (scrollLeft > maxScroll - 48px) slowScrollTo(maxScroll - 48);
+ * ```
+ * 
+ * Why This Design:
+ * - Prevents "lost in space" feeling at scroll edges
+ * - Guides users back to content naturally
+ * - Hazard zones visually warn against over-scrolling
+ * - Today auto-scroll reduces manual navigation
+ * 
+ * Performance:
+ * - useMemo prevents re-grouping on every render
+ * - requestAnimationFrame for smooth drag
+ * - Passive scroll listener (except wheel hijack on headers)
+ * - Cleanup all listeners/timeouts on unmount
+ * 
+ * @param {Object} props
+ * @param {Array} props.tasks - Filtered task array
+ * @param {Date} [props.selectedDate] - Optional date for auto-scroll
+ * @param {React.Ref} ref - Forwarded ref exposing scrollToDate method
+ * @component
+ */
 const DetailedTaskDayView = forwardRef(({
     tasks = [],
     selectedDate, // Optional: if we want to auto-scroll to a date

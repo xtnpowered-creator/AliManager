@@ -6,6 +6,52 @@ import { ListTodo, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import NewTaskModal from './NewTaskModal';
 import Card from './common/Card';
 
+/**
+ * LoneTasks Component
+ * 
+ * View for tasks not assigned to any project (standalone/one-off tasks).
+ * Separates project-based work from individual events.
+ * 
+ * Filter Logic:
+ * ```javascript
+ * const loneTasks = tasks.filter(task => !task.projectId);
+ * ```
+ * \n * Card Features:
+ * - **Priority badge**: Color-coded icon (amber=high, blue=medium, teal=low)
+ * - **Status pill**: Green for completed, slate for active
+ * - **Title**: Bold uppercase with hover color change (slate → teal)
+ * - **Description**: 2-line clamp with fallback text
+ * - **Due date**: Clock icon + formatted date or \"No Date\"
+ * - **Assignee avatars**: Stacked circles with initials (negative space overlap)
+ * \n * Empty State:
+ * - Ghost variant Card with centered content
+ * - ListTodo icon in white rounded square
+ * - Message: \"Every single event task is either completed or attached to a project\"
+ * - Encourages organizing tasks into projects
+ * \n * Interactions:
+ * - Card click: Navigate to `/task/:id` (full detail view)
+ * - \"+ New Task\" button: Opens NewTaskModal
+ * - NewTaskModal onSuccess: Calls refetch to update list
+ * \n * Layout:
+ * - Grid: 1 column mobile, 2 tablet, 3 desktop
+ * - Card variant: MACRO (large cards)
+ * - Scrollable: overflow-y-auto with custom-scrollbar
+ * \n * Loading State:
+ * - Full-screen spinner (centered)
+ * - Slate-900 border-b-2 spinning circle
+ * - Prevents layout shift (spinner takes full height)
+ * \n * Visual Design:
+ * - Priority colors: Amber (high) → Blue (medium) → Teal (low)
+ * - Status colors: Green (completed) → Slate (active)
+ * - Hover: Title color transition
+ * - Footer: Border-top divider
+ * \n * Why This View Exists:
+ * - Projects have timelines, dependencies, deliverables
+ * - Lone tasks are quick wins, reminders, one-time events
+ * - Separating helps prioritize multi-task campaigns
+ * - Prevents clutter in project views
+ * \n * @component
+ */
 const LoneTasks = () => {
     const navigate = useNavigate();
     const { data: tasks, loading, refetch } = useApiData('/tasks');
