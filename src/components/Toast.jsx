@@ -1,7 +1,30 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
+/**
+ * Toast Component
+ * 
+ * Animated notification component with type-based styling (success/error/info).
+ * Used by ToastContext to display temporary messages in the bottom of the Navigation sidebar.
+ * 
+ * Features:
+ * - Framer Motion animations (fade + scale on enter/exit)
+ * - Auto-dismissable after timeout (managed by ToastContext)
+ * - Manual dismiss via close button
+ * - Color-coded by message type
+ * 
+ * Types:
+ * - success: Green (emerald) - Task completed, save successful
+ * - error: Red (rose) - Failed operations, validation errors
+ * - info: Blue - Informational messages, tips
+ * 
+ * @param {Object} props
+ * @param {string} props.message - Toast message text
+ * @param {string} [props.type='success'] - Message type: 'success', 'error', or 'info'
+ * @param {Function} props.onClose - Callback when close button clicked
+ * @param {string} [props.className=''] - Additional CSS classes
+ */
 const Toast = ({ message, type = 'success', onClose, className = '' }) => {
     const icons = {
         success: <CheckCircle2 className="text-emerald-500" size={20} />,

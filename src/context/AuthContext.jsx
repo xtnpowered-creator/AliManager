@@ -3,10 +3,53 @@ import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from '../firebase';
 import { apiClient } from '../api/client';
 
+/**
+ * AuthContext Module
+ * 
+ * Manages authentication state with environment-specific behavior.
+ * 
+ * Development Mode:
+ * - Uses mock user system for easy testing
+ * - No Firebase auth required (bypassed via headers)
+ * - Stored mockUserId in localStorage determines active user
+ * - switchUser() allows switching between preset mock users
+ * - Defaults to Christian (god role) on first load
+ * 
+ * Production Mode:
+ * - Uses Firebase authentication
+ * - Listens for auth state changes via onAuthStateChanged
+ * - Merges Firebase user data with backend user profile
+ * - Real login/logout via Firebase Auth
+ * 
+ * User Caching:
+ * - Stores user object in localStorage (USER_CACHE_KEY)
+ * - Instant load on page refresh (prevents flash of logged-out state)
+ * - Updates cache on every user change
+ * 
+ * User Object Structure:
+ * ```js
+ * {
+ *   id: "uuid",           // From backend
+ *   uid: "uuid",          // Firebase UID (or id in dev)
+ *   name: "Full Name",
+ *   displayName: "Full Name",
+ *   role: "god|admin|user",
+ *   email: "user@example.com",
+ *   // ... other backend profile fields
+ * }
+ * ```
+ * 
+ * @module AuthContext
+ */
+
 const AuthContext = React.createContext();
 
 export const useAuth = () => React.useContext(AuthContext);
 
+/**
+ * Mock Users for Development
+ * Pre-defined test users with different roles and permissions
+ */
 export const MOCK_USERS = [
     { id: '9f449545-700a-4ce5-8dd5-4d221041e15e', name: 'Christian Plyler', role: 'god', label: 'Christian (Owner)' },
     { id: '11111111-0000-0000-0000-000000000002', name: 'Alisara Plyler', role: 'admin', label: 'Alisara (Purchasing Dir)' },
@@ -20,7 +63,7 @@ export const MOCK_USERS = [
 const USER_CACHE_KEY = 'cached_user_data';
 
 export const AuthProvider = ({ children }) => {
-    // Initialize from cache if available
+    // Initialize from cache (prevents flash of logged-out state on refresh)
     const [user, setUser] = React.useState(() => {
         try {
             const cached = localStorage.getItem(USER_CACHE_KEY);
@@ -31,7 +74,9 @@ export const AuthProvider = ({ children }) => {
     });
     const [loading, setLoading] = React.useState(true);
 
-    // Helper to update user and cache
+    /**
+     * Update user state and sync to localStorage cache
+     */
     const updateUser = (userData) => {
         setUser(userData);
         if (userData) {
@@ -41,7 +86,12 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // DEV: Handle Mock User Switching
+    /**
+     * Development Only: Switch between mock users
+     * Updates localStorage mockUserId and fetches new user data
+     * 
+     * @param {string} mockUserId - UUID of mock user to switch to
+     */
     const switchUser = async (mockUserId) => {
         if (!import.meta.env.DEV) return;
 
@@ -52,7 +102,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('mockUserId');
         }
 
-        // Reload user data
+        // Fetch user profile from backend (will use mockUserId header)
         try {
             const res = await apiClient.get('/users/me');
             const userData = { ...res, uid: res.id, displayName: res.name };
@@ -68,25 +118,27 @@ export const AuthProvider = ({ children }) => {
 
     React.useEffect(() => {
         if (import.meta.env.DEV) {
-            // Initial Load for Dev Mode
+            // Development: Auto-login with mock user
             const storedMockId = localStorage.getItem('mockUserId');
-            // Default to God if nothing stored
+            // Default to Christian (god) if no mock user stored
             if (!storedMockId) {
                 switchUser(MOCK_USERS[0].id);
             } else {
                 switchUser(storedMockId);
             }
-            return () => { }; // No cleanup needed
+            return () => { };
         }
 
-        // Production: Firebase Listener
+        // Production: Firebase Auth Listener
         const unsubscribe = onAuthStateChanged(auth || {}, async (firebaseUser) => {
             if (firebaseUser) {
+                // Merge Firebase auth data with backend user profile
                 try {
                     const res = await apiClient.get('/users/me');
                     const userData = { ...firebaseUser, ...res, displayName: res.name || firebaseUser.displayName };
                     updateUser(userData);
                 } catch (err) {
+                    // Fallback: Use Firebase user if backend fetch fails
                     updateUser(firebaseUser);
                 }
             } else {
