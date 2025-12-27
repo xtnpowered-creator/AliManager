@@ -1,5 +1,83 @@
 import { useMemo } from 'react';
 
+/**
+ * useFilterLogic Hook
+ * 
+ * Multi-dimensional filtering engine for timeline views.
+ * Filters both tasks (WHAT to show) and colleagues (WHO to show).
+ * 
+ * Architecture:
+ * - Filters applied sequentially (AND logic): All filters must match
+ * - Memoized for performance (prevents re-filtering on unrelated renders)
+ * - Supports structured filters + fuzzy search
+ * 
+ * Filter Types:
+ * 1. **Task Filters** (Structured):
+ *    - Status: 'todo', 'doing', 'done'
+ *    - Priority: '1', '2', '3', 'high', 'medium', 'low'
+ *    - Due Date: 'today', 'tomorrow', 'overdue', specific date (YYYY-MM-DD)
+ *    - Content: 'Has Steps', 'Has Deliverables', 'Has Files'
+ *    - Created: 'today', 'yesterday'
+ *    - Title: Fuzzy match (case-insensitive substring)
+ * 
+ * 2. **Project Filters** (Structured):
+ *    - Client: Exact match (case-insensitive)
+ *    - Status: Exact match ('active', 'completed', etc.)
+ *    - Title: Exact match
+ *    → Tasks without projectId excluded when project filters active
+ * 
+ * 3. **Colleague Filters** (Structured):
+ *    - Department: Exact match
+ *    - Position: Exact match
+ *    - Team: Exact match
+ * 
+ * 4. **Search Text** (Fuzzy):
+ *    - Tasks: Searches title + status
+ *    - Colleagues: Searches name
+ *    - Case-insensitive substring match
+ * 
+ * Colleague Visibility Logic:
+ * - Current user always first in list (labeled "Me")
+ * - Other colleagues sorted alphabetically by name
+ * - Filters applied to all colleagues including current user
+ * - Fallback: If user not in colleagues array, create synthetic entry
+ * 
+ * Date Normalization:
+ * - All dates normalized to midnight (setHours(0,0,0,0))
+ * - Ensures "today" comparison works correctly
+ * - Handles timezone-safe comparisons
+ * 
+ * Priority Normalization:
+ * - Handles both numeric ('1', '2', '3') and text ('high', 'medium', 'low')
+ * - Filter "Priority 1" matches task.priority '1'
+ * - Case-insensitive matching
+ * 
+ * Performance:
+ * - useMemo prevents re-filtering unless dependencies change
+ * - Map for O(1) project lookups
+ * - Set for O(1) visibility  checks
+ * - Early returns for empty filter cases
+ * 
+ * Usage:
+ * ```jsx
+ * const { filteredTasks, visibleColleagues } = useFilterLogic({
+ *   tasks, colleagues, projectsData, user,
+ *   filters: { searchText, taskFilters, projectFilters, colleagueFilters }
+ * });
+ * ```
+ * 
+ * @param {Object} params
+ * @param {Array} params.tasks - All tasks
+ * @param {Array} params.colleagues - All colleagues
+ * @param {Array} params.projectsData - All projects
+ * @param {Object} params.user - Current user
+ * @param {Object} params.filters - Filter configuration
+ * @param {string} params.filters.searchText - Fuzzy search query
+ * @param {Array} params.filters.taskFilters - Task filter chips
+ * @param {Array} params.filters.projectFilters - Project filter chips
+ * @param {Array} params.filters.colleagueFilters - Colleague filter chips
+ * @returns {Object} { filteredTasks, visibleColleagues }
+ */
 export const useFilterLogic = ({
     tasks,
     colleagues,

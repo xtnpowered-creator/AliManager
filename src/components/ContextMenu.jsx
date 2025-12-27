@@ -2,11 +2,95 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronRight } from 'lucide-react';
 
+/**
+ * ContextMenu Component
+ * 
+ * Right-click context menu with intelligent positioning, submenus, and portal rendering.
+ * Used throughout app for task operations, bulk actions, and quick commands.
+ * 
+ * Key Features:
+ * 1. **Smart Positioning**:
+ *    - Initial render at (x, y) with visibility: hidden
+ *    - useLayoutEffect measures actual menu size
+ *    - Flips position if near viewport edges (prevents overflow)
+ *    - Final position set with visibility: visible (no flash)
+ * 
+ * 2. **Submenu Support**:
+ *    - Hover-triggered nested menus
+ *    - ChevronRight indicator for parent items
+ *    - Positioned to right of parent (left-full ml-1)
+ *    - activeSubmenu state tracks which submenu is open
+ * 
+ * 3. **Portal Rendering**:
+ *    - Menu rendered outside React tree (direct to body)
+ *    - Avoids z-index conflicts with parent containers
+ *    - Backdrop overlay catches outside clicks
+ *    - z-index: 9999 (above all content)
+ * 
+ * 4. **Accessibility**:
+ *    - Escape key closes menu
+ *    - Disabled items: opacity-40, cursor-not-allowed
+ *    - Danger actions: red text/background
+ *    - Keyboard-accessible (tab navigation works)
+ * 
+ * 5. **Item Types**:
+ *    - Standard: onClick callback, optional icon
+ *    - Separator: type: 'separator' (1px divider)
+ *    - Submenu: items[] array (nested structure)
+ *    - Danger: danger: true (red styling)
+ * 
+ * Item Schema:
+ * {
+ *   label: string,
+ *   icon: LucideIcon | Component,
+ *   onClick: async () => void,
+ *   disabled?: boolean,
+ *   danger?: boolean,
+ *   submenu?: [{ label, icon, onClick }]
+ * }
+ * 
+ * Usage Example:
+ * ```jsx
+ * <ContextMenu
+ *   x={clickX}
+ *   y={clickY}
+ *   onClose={() => setMenu(null)}
+ *   items={[
+ *     { label: 'Edit', icon: Edit, onClick: () => {...} },
+ *     { type: 'separator' },
+ *     { label: 'Delete', icon: Trash, onClick: () => {...}, danger: true }
+ *   ]}
+ * />
+ * ```
+ * 
+ * Position Calculation:
+ * - If x + width > viewport: flip to x - width
+ * - If y + height > viewport: flip to y - height
+ * - Prevents menu from being cut off by screen edges
+ * 
+ * Event Handling:
+ * - Backdrop click: Close menu
+ * - Item click: Execute action → close menu
+ * - Right-click anywhere: Close menu (prevents nested menus)
+ * - Escape key: Close menu
+ * 
+ * Animation:
+ * - fade-in zoom-in-95: Smooth entrance
+ * - duration-100: Quick but not jarring
+ * - Tailwind animate-in utilities
+ * 
+ * @param {Object} props
+ * @param {number} props.x - Click X coordinate (screen pixels)
+ * @param {number} props.y - Click Y coordinate (screen pixels)
+ * @param {Array} props.items - Menu item configuration array
+ * @param {Function} props.onClose - Callback to close menu
+ * @component
+ */
 const ContextMenu = ({ x, y, items, onClose }) => {
     const menuRef = useRef(null);
     const [activeSubmenu, setActiveSubmenu] = useState(null);
 
-    // Close on escape key
+    // Close menu on Escape key press
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') onClose();
@@ -15,7 +99,20 @@ const ContextMenu = ({ x, y, items, onClose }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
 
-    // Smart Positioning (Logic remains the same, omitted for brevity if unchanged, but I must replace the whole component to be safe or target specific lines. I'll replace the main return logic.)
+    /**
+     * Smart Positioning Algorithm
+     * 
+     * Problem: Menu position (x, y) might cause overflow if near viewport edge
+     * Solution: Measure after render, flip position if needed
+     * 
+     * Steps:
+     * 1. Render menu at (x, y) with visibility: hidden
+     * 2. useLayoutEffect runs before paint (no visual flash)
+     * 3. getBoundingClientRect() gets actual menu dimensions
+     * 4. Compare rect vs viewport boundaries
+     * 5. Flip top/left if overflow detected
+     * 6. Set visibility: visible (menu appears in correct position)
+     */
     React.useLayoutEffect(() => {
         if (menuRef.current) {
             const rect = menuRef.current.getBoundingClientRect();

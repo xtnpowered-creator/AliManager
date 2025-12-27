@@ -1,5 +1,50 @@
 import { useState, useEffect, useCallback } from 'react';
 
+/**
+ * useTimelineScale Hook
+ * 
+ * Manages user-specific timeline zoom level (density) with localStorage persistence.
+ * Each user has independent scale preferences.
+ * 
+ * Scale Definition:
+ * - Measured in pixels per weekday column
+ * - weekend columns render at 50% width (WEEKEND_RATIO in timelineMath.js)
+ * - Display converted to "inches per day" (scale / 96) for UI
+ * - Example: 120px = 1.25 inches/day, 192px = 2.00 inches/day
+ * 
+ * Range Limits:
+ * - MIN: 32px (0.33 inches) - Very dense, shows many weeks
+ * - MAX: 480px (5.00 inches) - Very spacious, shows few days
+ * - DEFAULT: 120px (1.25 inches) - Balanced view
+ * 
+ * Persistence Strategy:
+ * - Key: `timeline_scale_pref_${userId}` (user-specific)
+ * - Multi-user support: Each account remembers own zoom
+ * - Migration: Old "days visible" format auto-discarded if < MIN_SCALE
+ * - Robust validation: Clamping, NaN checks, try/catch
+ * 
+ * State Lifecycle:
+ * 1. **Initialization**: Read from localStorage, fallback to DEFAULT
+ * 2. **User Change**: Reload scale when user.uid changes
+ * 3. **Update**: setScale clamps, rounds, and persists
+ * 
+ * Why User-Specific?
+ * - Admin may want dense view (see many days)
+ * - Regular user may prefer spacious view (focus on fewer tasks)
+ * - Shared computers don't affect each other's preferences
+ * 
+ * Usage:
+ * ```jsx
+ * const { scale, setScale, scaleInInches } = useTimelineScale(user);
+ * // scale: 120 (pixels per weekday)
+ * // scaleInInches: "1.25" (formatted for display)
+ * // setScale(200) → saves and applies new zoom
+ * ```
+ * 
+ * @param {Object} user - Current user object (needs uid property)
+ * @returns {Object} { scale, setScale, scaleInInches, MIN_SCALE, MAX_SCALE, DEFAULT_SCALE }
+ */
+
 // Constants (based on 96px = 1 inch CSS standard)
 const DEFAULT_SCALE = 120; // 1.25 inches
 const MIN_SCALE = 32;      // 0.33 inches

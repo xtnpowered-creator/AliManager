@@ -1,5 +1,35 @@
 import React from 'react';
 
+/**
+ * TimelineSkeleton Component
+ * 
+ * Loading placeholder for timeline views (Suspense fallback).
+ * Mimics UnifiedTimelineBoard structure to prevent layout shift.
+ * 
+ * Structure:
+ * - Header: Title + subtitle + controls placeholders
+ * - Timeline Grid:
+ *   - Date header row (10 columns with day/date/weekday)
+ *   - 6 colleague rows (avatar + name + task placeholders)
+ * 
+ * Visual Design:
+ * - Pulsing animation (animate-pulse)
+ * - Slate-colored boxes (varying opacity for depth)
+ * - Rounded corners match real components
+ * - Maintains exact dimensions (prevents height jank)
+ * 
+ * Used By:
+ * - App.jsx: Suspense fallback for lazy-loaded pages
+ * - TimelinesPage: Initial load state
+ * - MyDashboard: Timeline section loading
+ * 
+ * Why This Approach?
+ * - Better UX than spinner (shows expected layout)
+ * - Prevents cumulative layout shift (CLS)
+ * - Familiar pattern (users recognize as loading)
+ * 
+ * @component
+ */
 const TimelineSkeleton = () => {
     return (
         <div className="p-8 h-full flex flex-col space-y-6 overflow-hidden animate-pulse">

@@ -1,5 +1,47 @@
 import React from 'react';
 
+/**
+ * Logo Component
+ * 
+ * Custom SVG logo for AliManager brand identity.
+ * Combines letter 'A' with growth/productivity symbolism.
+ * 
+ * Visual Elements:
+ * 1. **'A' Letter Form**:
+ *    - Left leg: Solid dark blue (#0f172a) - stability
+ *    - Right leg: Tapered slate (#334155) - movement
+ * 
+ * 2. **Gear Detail** (Animated):
+ *    - Represents productivity/automation
+ *    - Circle with 8 radial teeth
+ *    - Slow rotation animation (animate-spin-slow)
+ *    - Positioned within left leg of 'A'
+ * 
+ * 3. **Growth Arrow** (Animated):
+ *    - Teal curved path (#0d9488) - progress
+ *    - Arrowhead pointing up-right
+ *    - Pulse animation emphasizes upward trajectory
+ *    - Universal growth metaphor
+ * 
+ * 4. **Circuit Nodes**:
+ *    - Connected dots suggest network/collaboration
+ *    - Dashed line between nodes (tech aesthetic)
+ *    - Subtle slate colors for visual balance
+ * 
+ * Color Palette:
+ * - Primary: Slate (#0f172a, #334155, #475569) - Professional
+ * - Accent: Teal (#0d9488) - Growth/innovation
+ * - Neutral: Light slate (#94a3b8) - Supporting details
+ * 
+ * Usage:
+ * - Navigation header (default: w-8 h-8)
+ * - Loading screens (larger size via className prop)
+ * - Brand watermarks/footers
+ * 
+ * @param {Object} props
+ * @param {string} [props.className='w-8 h-8'] - Tailwind classes for sizing
+ * @component
+ */
 const Logo = ({ className = "w-8 h-8" }) => {
     return (
         <svg

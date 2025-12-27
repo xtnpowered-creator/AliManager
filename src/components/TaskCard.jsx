@@ -3,9 +3,118 @@ import { motion } from 'framer-motion';
 import { Crown, Zap, Play, Layers, User, Square, Pause, Check } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
 import { useAuth } from '../context/AuthContext';
-import { useTimelineRegistry } from '../context/TimelineRegistryContext'; // Import Registry
+import { useTimelineRegistry } from '../context/TimelineRegistryContext';
 import { CARD_VARIANTS } from '../styles/designSystem';
 
+/**
+ * TaskCard Component
+ * 
+ * Multi-mode visual task card with animations, stacking, expansion, and state indicators.
+ * Used across timeline, dashboard, and day view contexts with different visual presentations.
+ * 
+ * Visual Variants:
+ * 1. **MICRO** (Timeline Capsule):
+ *    - Full width capsule in    timeline grid cells
+ *    - Stacks vertically (negative margin overlap)
+ *    - Alternating horizontal offsets for visual interest
+ *    - 93px height (collapsed), 160px width (expanded)
+ * 
+ * 2. **BUBBLE** (Done Tasks):
+ *    - Small dots (25×25px) when collapsed
+ *    - Expand to full card (93px height) on hover
+ *    - Shows only checkmark icon when collapsed
+ *    - Animated y-offset for hover alignment (hoverOffset)
+ * 
+ * 3. **CAPSULE** (Active Tasks):
+ *    - Similar to MICRO but with different interaction
+ *    - Used for non-stack timeline rendering
+ *    - Fixed 160px width, 93px height
+ * 
+ * 4. **DAYVIEW_DETAILED** (Dashboard Day View):
+ *    - Static relative positioning (no absolute/transforms)
+ *    - 100% width/height (fills parent container)
+ *    - Always shows details (title + description)
+ *    - Scrollable content area
+ * 
+ * State Indicators (Icon Column):
+ * - **Crown**: Owner/Creator indicator (isOwner)
+ * - **User**: Assigned to current user (assignedTo includes user.uid)
+ * - **Priority Number**: 1-4 (1 is red = highest)
+ * - **Status Icon**:
+ *   - Square: Todo/Pending
+ *   - Play: Doing
+ *   - Pause: Paused
+ *   - Check: Done
+ * - **Layers**: Has attachments or deliverables
+ * 
+ * Animation States:
+ * - **Collapsed**: Minimal size (BUBBLE: 25px dot, CAPSULE: icons only)
+ * - **Hovered**: Expands to full card, raises z-index (3000)
+ * - **Expanded**: Persistently expanded (clicked), shows details
+ * - **Selected**: Ring outline for bulk operations
+ * 
+ * Expansion Modes:
+ * 1. **Hover**: Temporary expansion (isHovered state)
+ * 2. **Click**: Persistent expansion (isExpanded prop from parent)
+ * 3. **Static**: Always expanded (isStatic prop, used in grids)
+ * 
+ * Layout Positioning:
+ * - **Absolute**: Timeline/Bubble modes (centered in date column)
+ * - **Relative**: DAYVIEW_DETAILED mode (grid item)
+ * - **Stacking**: Negative marginTop for MICRO variant
+ * - **Hover Offset**: Precise pixel y-offset to prevent overlap (hoverOffset)
+ * 
+ * Details Mode:
+ * - Triggered by: isExpanded OR isStatic
+ * - Shows: Title (3 lines) + Description (2 lines)
+ * - Hides: Collapsed icon indicators
+ * - 160px fixed width (CAPSULE/MICRO), 100% width (DAYVIEW)
+ * 
+ * Registry Integration:
+ * - Registers card DOM ref with TimelineRegistryContext on mount
+ * - Enables parent to scroll to/highlight specific tasks
+ * - Unregisters on unmount (cleanup)
+ * 
+ * Color System:
+ * - Background from getTaskCardColor (task properties)
+ * - Priority-based palettes (red for priority 1)
+ * - Done tasks: Desaturated colors
+ * - Status-specific hues
+ * 
+ * Event Handling:
+ * - onClick: Selection/expansion toggle
+ * - onDoubleClick: Navigate to task detail view
+ * - onContextMenu: Right-click actions menu
+ * - All events stop propagation (prevents column clicks)
+ * 
+ * Accessibility:
+ * - data-task-id: Enables automated testing/selection
+ * - Keyboard-accessible (parent handles focus)
+ * - Screen reader: Title and description always in DOM
+ * 
+ * Performance:
+ * - React.memo: Prevents re-render unless props change
+ * - Framer Motion: GPU-accelerated transforms
+ * - Absolute positioning: Avoids layout thrashing
+ * 
+ * @param {Object} props
+ * @param {Object} props.task - Task data object
+ * @param {number} [props.index=0] - Stack position (0 = top)
+ * @param {number} props.left - Pixel offset from timeline start (unused in DAYVIEW)
+ * @param {Date} props.currentDate - Date for this column (unused but passed)
+ * @param {Function} props.getColumnWidth - Column width calculator (unused but passed)
+ * @param {Function} props.onTaskClick - Click handler for selection
+ * @param {Function} props.onContextMenu - Right-click handler
+ * @param {Function} props.onTaskDoubleClick - Double-click navigation handler
+ * @param {string} [props.variant='MICRO'] - Visual mode: MICRO|BUBBLE|CAPSULE|DAYVIEW_DETAILED
+ * @param {boolean} [props.isStatic=false] - Force static positioning + details
+ * @param {string} props.scale - Timeline scale (passed but unused)
+ * @param {number} props.stackIndex - DEPRECATED (use hoverOffset instead)
+ * @param {number} [props.hoverOffset=0] - Pixel y-offset for hover alignment
+ * @param {boolean} [props.isExpanded=false] - Persistent expansion state
+ * @param {boolean} [props.isSelected=false] - Bulk selection indicator
+ * @component
+ */
 const TaskCard = ({
     task,
     index = 0, // Default to 0 to prevent NaN crashes if undefined

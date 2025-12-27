@@ -12,13 +12,78 @@ import UnifiedTimelineBoard from '../components/UnifiedTimelineBoard';
 import { TimelineRegistryProvider } from '../context/TimelineRegistryContext';
 import PageLayout from '../components/layout/PageLayout';
 
+/**
+ * TimelinesPage Component
+ * 
+ * Full-team timeline view showing all colleagues and their task assignments in a
+ * horizontal scrolling grid. Main administrative interface for task management.
+ * 
+ * Architecture:
+ * - UnifiedTimelineBoard: Core timeline grid (colleague rows × date columns)
+ * - FilterAndSortToolbar: Multi-dimensional filtering (colleagues, tasks, projects)
+ * - TimelineControls: Navigation (today, first match, zoom controls)
+ * - PageLayout: Standard page wrapper with header/filters
+ * 
+ * State Management Strategy:
+ * - useTimelineState: Centralized state for tasks, colleagues, filters, delegations
+ * - useTimelineScale: User-specific zoom level (persisted per-user)
+ * - useTimelineDateRange: Date range calculation for timeline columns
+ * - controlsRef: Allows header controls to trigger UnifiedBoard scroll methods
+ * 
+ * Key Features:
+ * 1. **Multi-Level Filtering**:
+ *    - Colleague filters (show/hide team members)
+ *    - Task filters (status, priority, keywords)
+ *    - Project filters (filter by project assignment)
+ *    - Empty row hiding (collapse colleagues with no visible tasks)
+ * 
+ * 2. **Timeline Navigation**:
+ *    - TODAY button: Scroll to current date
+ *    - FIRST MATCH button: Jump to earliest filtered task
+ *    - Custom scale: Adjust density (inches per day)
+ *    - URL-based highlighting (highlightTaskId query param)
+ * 
+ * 3. **Task Management**:
+ *    - Drag-and-drop reassignment (between colleagues)
+ *    - Drag-and-drop rescheduling (across dates)
+ *    - Bulk operations (multi-select + context menu)
+ *    - Inline editing (right-click context menu)
+ * 
+ * 4. **Delegation System**:
+ *    - Temporary admin grants (delegationMap)
+ *    - Expiration tracking (visual badge if user.isDelegated)
+ *    - Revocation controls (handleRevokeDelegation)
+ * 
+ * 5. **Scroll Synchronization**:
+ *    - controlsRef exposes scrollToDate from UnifiedBoard
+ *    - Header controls call scrollToDate via ref
+ *    - Preserves scroll position on filter changes (TimelineViewContext)
+ * 
+ * Date Normalization:
+ * - All dates normalized to midnight (setHours(0,0,0,0))
+ * - Done tasks scroll to completedAt, others to dueDate
+ * - isToday helper checks equality at midnight precision
+ * 
+ * URL Integration:
+ * - highlightTaskId: Auto-scroll and highlight task from URL
+ * - Enables deep linking from notifications/dashboards
+ * 
+ * Performance Optimizations:
+ * - Virtualized scrolling in UnifiedBoard (only renders visible columns)
+ * - Memoized task lookups (getTasksForColleague)
+ * - Filtered colleague list prevents unnecessary renders
+ * 
+ * @param {Object} props
+ * @component
+ */
 const TimelinesPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    // Extract URL parameter for auto-highlighting a specific task
     const highlightTaskId = searchParams.get('highlightTaskId');
     const { user } = useAuth();
 
-    // -- State Hooks --
+    // -- State Hooks: Centralized timeline state management --
     const {
         tasks, refetchTasks, colleagues, projectsData,
         colleagueFilters, setColleagueFilters,
@@ -32,28 +97,47 @@ const TimelinesPage = () => {
         handleUpdateTask, handleBulkUpdate, handleMoveDate, handleDeleteTasks,
         getTasksForColleague, setDelegations,
         loading,
-        showDoneTasks, setShowDoneTasks // New Exports
+        showDoneTasks, setShowDoneTasks
     } = useTimelineState(user);
 
-    const { scale, setScale } = useTimelineScale(user); // User-specific scale
+    const { scale, setScale } = useTimelineScale(user); // User-specific zoom (persisted)
 
-    // Date Logic (Shared)
+    // Generate date range for timeline columns (e.g., 90 days centered on today)
     const days = useTimelineDateRange();
 
+    /**
+     * Check if a date is today (midnight-normalized comparison)
+     */
     const isToday = (d) => {
         const t = new Date(); t.setHours(0, 0, 0, 0);
         return d.getTime() === t.getTime();
     };
 
-    // Ref for accessing UnifiedBoard's scrollToDate function from header controls
+    // Ref for accessing UnifiedBoard's scrollToDate from header controls
     const controlsRef = React.useRef({});
 
+    /**
+     * Scroll to today's date in the timeline
+     * Triggered by TODAY button in TimelineControls
+     */
     const handleTodayClick = () => {
         if (controlsRef.current.scrollToDate) {
             controlsRef.current.scrollToDate(new Date(new Date().setHours(0, 0, 0, 0)));
         }
     };
 
+    /**
+     * Scroll to the earliest filtered task
+     * Triggered by FIRST MATCH button (only enabled when filters active)
+     * 
+     * Logic:
+     * 1. Determine effective date for each task:
+     *    - Done tasks: Use completedAt (when task was finished)
+     *    - Other tasks: Use dueDate (when task is scheduled)
+     * 2. Filter to tasks visible in current colleague filter
+     * 3. Sort by effective date (earliest first)
+     * 4. Scroll to earliest task's date
+     */
     const handleGoToFirst = () => {
         if (!filteredTasks || filteredTasks.length === 0) return;
 
@@ -71,12 +155,12 @@ const TimelinesPage = () => {
             const hasAssignee = t.assignedTo && t.assignedTo.length > 0;
             const isVisible = hasAssignee
                 ? t.assignedTo.some(id => visibleIds.has(id))
-                : visibleIds.has(t.createdBy);
+                : visibleIds.has(t.createdBy); // Unassigned tasks shown in creator's row
 
             if (!isVisible) return false;
 
             const d = getEffectiveDate(t);
-            return d && !isNaN(d.getTime());
+            return d && !isNaN(d.getTime()); // Only tasks with valid dates
         });
 
         if (validTasks.length > 0) {
@@ -86,7 +170,7 @@ const TimelinesPage = () => {
             const minDate = getEffectiveDate(firstTask);
 
             if (minDate && controlsRef.current.scrollToDate) {
-                minDate.setHours(0, 0, 0, 0);
+                minDate.setHours(0, 0, 0, 0); // Normalize to midnight
                 controlsRef.current.scrollToDate(minDate);
             }
         }

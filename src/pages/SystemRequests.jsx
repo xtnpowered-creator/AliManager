@@ -4,10 +4,61 @@ import { useApiData } from '../hooks/useApiData';
 import { apiClient } from '../api/client';
 import { ShieldAlert, Check, X, Clock, Trash2, UserCog, RefreshCw } from 'lucide-react';
 
-const SystemRequests = () => { // RENAMED
+/**
+ * SystemRequests Component
+ * 
+ * Admin dashboard for reviewing and approving/rejecting privileged system requests.
+ * Embedded in AdminDashboard as a sub-component for administrative oversight.
+ * 
+ * Request Types:
+ * - DELETE_USER: User deletion requests requiring admin approval
+ * - REASSIGN_TASK: Task reassignment requests (permission escalation)
+ * - (Extensible for future request types)
+ * 
+ * Workflow:
+ * 1. Users submit requests via API (e.g., DeleteUserModal, ReassignModal)
+ * 2. Requests stored with PENDING status in database
+ * 3. Admin reviews request details (requester, timestamp, payload)
+ * 4. Admin approves (APPROVED) or denies (REJECTED)
+ * 5. Backend processes resolution (executes or cancels action)
+ * 
+ * Features:
+ * - Real-time polling via useApiData (filters status=PENDING)
+ * - Animated request cards with Framer Motion
+ * - Processing state prevents duplicate submissions
+ * - Manual refresh button for immediate updates
+ * - Icon-coded request types for visual scanning
+ * - Requester attribution with avatar
+ * 
+ * Security:
+ * - Only admins can access this component (route-level protection)
+ * - All approvals logged with admin_notes in audit trail
+ * - Backend validates admin privileges before processing
+ * 
+ * UI Patterns:
+ * - Scrollable request list (custom-scrollbar styling)
+ * - Empty state with checkmark icon
+ * - Disabled buttons during processing (prevents race conditions)
+ * - Payload shown as JSON for transparency
+ * 
+ * @component
+ */
+const SystemRequests = () => {
     const { data: requests, loading, refetch } = useApiData('/requests?status=PENDING');
     const [processing, setProcessing] = useState(null); // id of request being processed
 
+    /**
+     * Handles admin approval/rejection of a system request
+     * @param {string} id - Request ID to resolve
+     * @param {string} status - 'APPROVED' or 'REJECTED'
+     * 
+     * Flow:
+     * 1. Lock UI (setProcessing prevents duplicate clicks)
+     * 2. Send PATCH to backend with resolution status
+     * 3. Backend executes action if APPROVED, logs if REJECTED
+     * 4. Refresh request list (removes resolved item)
+     * 5. Unlock UI (setProcessing(null) in finally block)
+     */
     const handleResolve = async (id, status) => {
         setProcessing(id);
         try {
@@ -15,28 +66,36 @@ const SystemRequests = () => { // RENAMED
                 status,
                 admin_notes: status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin'
             });
-            refetch();
+            refetch(); // Refresh list to remove processed request
         } catch (error) {
             console.error(`Failed to ${status} request:`, error);
             alert(`Failed to ${status} request.`);
         } finally {
-            setProcessing(null);
+            setProcessing(null); // Re-enable buttons
         }
     };
 
+    /**
+     * Maps request type to visual icon
+     * Helps admins quickly identify request categories at a glance
+     */
     const getRequestIcon = (type) => {
         switch (type) {
             case 'DELETE_USER': return <Trash2 size={20} />;
             case 'REASSIGN_TASK': return <UserCog size={20} />;
-            default: return <ShieldAlert size={20} />;
+            default: return <ShieldAlert size={20} />; // Fallback for unknown types
         }
     };
 
+    /**
+     * Generates human-readable title from request type
+     * Displayed in request card header for clarity
+     */
     const getRequestTitle = (req) => {
         switch (req.type) {
             case 'DELETE_USER': return 'Delete User Request';
             case 'REASSIGN_TASK': return 'Task Reassignment';
-            default: return 'System Request';
+            default: return 'System Request'; // Generic fallback
         }
     };
 
