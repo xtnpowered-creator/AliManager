@@ -4,6 +4,66 @@ import { motion } from 'framer-motion';
 import { useCollection } from '../hooks/useCollection';
 import { BarChart3, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
+/**
+ * GanttChart Component
+ * 
+ * Project timeline view showing task durations and dependencies across calendar.
+ * Displays tasks grouped by project with horizontal bars indicating task span.
+ * 
+ * Timeline Features:
+ * - **30-day window**: Shows 5 days past → 25 days future
+ * - **Day columns**: Date headers with weekday/day number
+ * - **Today indicator**: Teal highlight on current date
+ * - **Project grouping**: Tasks nested under parent projects
+ * 
+ * Task Bar Visualization:
+ * - **Assumed duration**: 3 days (task.dueDate - 3 → dueDate)
+ * - **Color by status**:
+ *   - done: Teal (teal-100 border-teal-200)
+ *   - doing: Blue (blue-100 border-blue-200)
+ *   - todo: Slate (slate-100 border-slate-200)
+ * - **Position**: Calculated by finding start date in days array
+ * - **Width**: Fixed 120px (3 days × 40px)
+ * - **Animation**: Framer Motion width + opacity on mount
+ * 
+ * View Controls:
+ * - **Month/Quarter toggle**: Currently Month is active (Quarter not implemented)
+ * - **Navigation arrows**: Left/right chevrons (not yet functional)
+ * - **Time period**: Hardcoded to 30 days (no actual scroll/nav)
+ * 
+ * Data Structure:
+ * - useCollection('tasks'): Fetches all tasks, ordered by dueDate
+ * - useCollection('projects'): Fetches projects for grouping
+ * - getTaskSpan(task): Calculates assumed start/end dates
+ * 
+ * Limitations:
+ * - **No dependencies**: Doesn't show task relationships
+ * - **No critical path**: Doesn't calculate/highlight critical tasks
+ * - **Fixed duration**: All tasks assumed 3 days
+ * - **No dragging**: Bars not interactive
+ * - **No zoom**: Can't change time scale
+ * - **Hardcoded window**: Always shows same 30-day range
+ * 
+ * Layout:
+ * - **Left column**: 256px (w-64) for project/task names
+ * - **Timeline area**: Scrollable horizontally (overflow-x-auto)
+ * - **Row height**: Varies by content (project rows vs task rows)
+ * - **Day columns**: 40px width (min-w-[40px])
+ * 
+ * Visual Design:
+ * - Project rows: bg-slate-50/80 (lighter background for hierarchy)
+ * - Project indicator: Teal dot next to title
+ * - Task rows: Indented 40px (pl-10) to show nesting
+ * - Hover state: bg-slate-50/30 on task rows
+ * - Grid lines: border-slate-200 between rows, border-slate-300 for columns
+ * 
+ * Why This Approach:
+ * - Simple implementation without complex dependency libraries
+ * - Visual MVP for stakeholder communication
+ * - Foundation for future enhancements (real duration, dependencies)
+ * 
+ * @component
+ */
 const GanttChart = () => {
     const { data: tasks, loading: tasksLoading } = useCollection('tasks', 'dueDate');
     const { data: projects } = useCollection('projects');

@@ -6,6 +6,101 @@ import { MoreHorizontal, Plus, Clock, Users } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
 import NewTaskModal from './NewTaskModal';
 
+/**
+ * KanbanBoard Component
+ * 
+ * Three-column Kanban view for task progression (To Do → In Progress → Completed).
+ * Provides visual overview of task status distribution and bottlenecks.
+ * 
+ * Column Structure:
+ * 1. **To Do** (todo):
+ *    - Color: slate (neutral)
+ *    - Tasks awaiting start
+ *    - Badge shows count
+ * 
+ * 2. **In Progress** (doing):
+ *    - Color: blue (active work)
+ *    - Currently being worked on
+ *    - Badge shows count
+ * 
+ * 3. **Completed** (done):
+ *    - Color: teal (success)
+ *    - Finished tasks
+ *    - Badge shows count
+ * 
+ * Card Features:
+ * - **Color-coded backgrounds**: getTaskCardColor (red=overdue, orange/amber/yellow/green=proximity)
+ * - **Type label**: PROJ (project) | PTASK (project task) | LTASK (lone task)
+ * - **Priority badge**: HIGH | MED | LOW (from task.priority)
+ * - **Due date**: Month/Day format (e.g., "Dec 27") or "No Date"
+ * - **Assignee avatars**: Stacked circles with initials (-space-x-2 overlap)
+ * - **Hover animation**: Lift (-2px y) + shadow increase
+ * - **Grab cursor**: cursor-grab (indicates draggable, though drag not yet implemented)
+ * 
+ * Interaction:
+ * - **Column header "+" button**: Opens NewTaskModal
+ * - **Column dashed divider**: Opens NewTaskModal (alternative entry point)
+ * - **Top "+ New Task" button**: Opens NewTaskModal
+ * - **Filters button**: Placeholder (not yet functional)
+ * - **MoreHorizontal icon**: Placeholder for column options
+ * 
+ * Layout:
+ * - **PageLayout wrapper**: Provides consistent header/title/actions
+ * - **Horizontal flex**: Three equal-width columns (min-w-[350px])
+ * - **Scrollable viewport**: overflow-x-auto for narrow screens
+ * - **Column scroll**: overflow-y-auto with custom-scrollbar
+ * 
+ * Data Flow:
+ * - useApiData('/tasks'): Fetches all tasks
+ * - useApiData('/colleagues'): Fetches team for avatars
+ * - getTasksByStatus(status): Filters tasks by column
+ * - refetchTasks: Passed to NewTaskModal onSuccess callback
+ * 
+ * Loading State:
+ * - Skeleton cards: Two pulsing white rectangles per column
+ * - Height: h-32 (matches typical card height)
+ * - Prevents layout shift on load
+ * 
+ * Helper Functions:
+ * - **getTypeLabel(task)**: Returns PROJ | PTASK | LTASK
+ * - **getPriorityLabel(priority)**: Normalizes priority display (HIGH, MED, LOW, TASK)
+ * - **KanbanCard**: Sub-component rendering individual task cards
+ * 
+ * KanbanCard Component:
+ * - Framer Motion: layout animation on status change
+ * - Initial animation: fade + slide from bottom
+ * - Hover: Lift + shadow (whileHover)
+ * - Type/Priority: Top-left corner (stacked labels)
+ * - Title: font-bold text-sm (4 lines max)
+ * - Footer: Due date (left) + Avatars (right)
+ * 
+ * Visual Design:
+ * - Column background: slate-50/50 (subtle tint)
+ * - Column border: slate-300/70 (soft outline)
+ * - Rounded: rounded-3xl for columns, rounded-2xl for cards
+ * - Badge: Colored pill with count (column headers)
+ * - Dashed divider: Add Task button at column bottom
+ * 
+ * Future Enhancements (Not Yet Implemented):
+ * - Drag-and-drop between columns (cursor-grab suggests this)
+ * - Filter functionality
+ * - Column options menu
+ * - Task detail view on card click
+ * 
+ * Missing Features:
+ * - No drag-and-drop (cards have grab cursor but no handler)
+ * - No filtering
+ * - No column customization
+ * - No card click navigation
+ * 
+ * Why Kanban vs. Timeline:
+ * - Kanban: Status-focused view (what's blocked, what's done)
+ * - Timeline: Date-focused view (when tasks are due, who's working on what)
+ * - Kanban better for: Sprint planning, bottleneck identification
+ * - Timeline better for: Resource allocation, deadline tracking
+ * 
+ * @component
+ */
 const KanbanBoard = () => {
     const { data: tasks, loading: tasksLoading, refetch: refetchTasks } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');

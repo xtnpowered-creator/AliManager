@@ -8,6 +8,99 @@ import { Users, Mail, Phone, MoreHorizontal, ShieldCheck, Trash2 } from 'lucide-
 import RequestModal from './RequestModal';
 import AddUserModal from './AddUserModal';
 
+/**
+ * Directory Component
+ * 
+ * Team directory with role-based permissions for viewing, adding, and removing members.
+ * Displays colleague cards with contact info, task counts, and admin controls.
+ * 
+ * Key Features:
+ * 1. **Role-Based Access**:
+ *    - Admins: Can add/delete users immediately
+ *    - Regular users: Can view directory, request admin actions
+ *    - Self-protection: Cannot delete own account
+ * 
+ * 2. **Card Information**:
+ *    - Avatar: Initials in slate-900 circle
+ *    - Name + Role: Bold name, teal uppercase role badge
+ *    - Active Tasks: Count of assigned non-done tasks
+ *    - Reliability Index: Placeholder (always 98%)
+ *    - Contact buttons: Mail, Phone, ShieldCheck (grant delegation)
+ * 
+ * 3. **Delete Workflow**:
+ *    - Admin path:
+ *      1. Click trash icon → Confirm dialog
+ *      2. DELETE /users/:id
+ *      3. Refetch directory
+ *    - User path:
+ *      1. Click trash icon → RequestModal
+ *      2. Submit privileged request
+ *      3. Admin reviews in SystemRequests page
+ *    - Self-protection: Trash icon hidden for current user
+ * 
+ * 4. **Add User Workflow** (Admin Only):
+ *    - "+ New Entry" button (only visible to admins)
+ *    - Opens AddUserModal
+ *    - Collects: Name, Email, Role
+ *    - POST /users
+ *    - Refetches directory
+ * 
+ * 5. **Card Layout**:
+ *    - Grid: 1 column mobile, 2 tablet, 4 desktop
+ *    - Hover: Lift -4px (whileHover from Framer Motion)
+ *    - Shadow: sm → xl on hover
+ *    - Delete button: Opacity 0 → 100 on hover
+ * 
+ * 6. **Statistics**:
+ *    - Active Tasks: Real calculation from tasks array
+ *    - Reliability Index: Hardcoded placeholder (future: completion rate)
+ *    - Grid layout: 2 columns for metrics
+ * 
+ * 7. **Loading State**:
+ *    - Skeleton cards: 4 pulsing white rectangles
+ *    - Height: h-80 (matches typical card height)
+ *    - Maintains grid layout during load
+ * 
+ * 8. **Contact Actions**:
+ *    - Mail icon: Opens email client (placeholder)
+ *    - Phone icon: Initiates call (placeholder)
+ *    - ShieldCheck icon: Grant temporary admin (delegation, placeholder)
+ *    - All buttons styled with slate-50 bg, hover to slate-100
+ * 
+ * Permission Check Logic:
+ * ```javascript
+ * const currentUserProfile = colleagues.find(c => c.id === user?.uid);
+ * const isAdmin = currentUserProfile?.role === 'god' || 
+ *                 currentUserProfile?.role === 'admin';
+ * ```
+ * 
+ * Why check colleague.role AND user.role?
+ * - user.role: Firebase Auth custom claims
+ * - colleague.role: Database record
+ * - Checks both for robustness (handles sync delays)
+ * 
+ * Delete Button Visibility:
+ * - Shown to all users (not just admins)
+ * - Hidden only for self (isSelf check)
+ * - Permission handled on click (admin = delete, user = request)
+ * - Title attribute changes: \"Delete User\" vs \"Request Delete\"
+ * \n * RequestModal Integration:
+ * - type: 'DELETE_USER'
+ * - payload: { targetUserId }
+ * - title: \"Delete User: [name]\"
+ * - description: Explains privileged action requirement
+ * \n * Export CSV:
+ * - Button visible to all users
+ * - Not yet implemented (placeholder)
+ * - Future: Download colleague data as CSV
+ * 
+ * Data Flow:
+ * - useApiData('/colleagues'): Fetches directory
+ * - useApiData('/tasks'): For active task counts
+ * - refetch(): Called after add/delete to refresh directory
+ * 
+ * @component
+ */
 const Directory = () => {
     const { data: colleagues, loading, refetch } = useApiData('/colleagues');
     const { data: tasks } = useApiData('/tasks');

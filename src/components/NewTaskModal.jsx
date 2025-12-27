@@ -5,6 +5,129 @@ import { apiClient } from '../api/client';
 import { useApiData } from '../hooks/useApiData';
 import { useToast } from '../context/ToastContext';
 
+/**
+ * NewTaskModal Component
+ * 
+ * Task creation modal with intelligent assignee search, inline user creation,
+ * and flexible initialization from multiple contexts (timeline, kanban, dashboard).
+ * 
+ * Key Features:
+ * 1. **Smart Assignee UX**:
+ *    - Type-ahead search through colleague directory
+ *    - Real-time filtering as user types
+ *    - "Add to Directory" prompt when no matches found
+ *    - Inline user creation (creates colleague + assigns in one flow)
+ *    - Selected assignee shown with pill UI (removable with X button)
+ * 
+ * 2. **Flexible Initialization**:
+ *    - initialDate prop: Pre-fill due date (from timeline right-click)
+ *    - initialAssignee prop: Pre-select assignee (from colleague row)
+ *    - initialData object: Combined params (from context menu)
+ *    - All props optional (manual entry mode)
+ * 
+ * 3. **Date Handling**:
+ *    - Defensive parsing: Handles ISO strings, Date objects, timestamps
+ *    - Converts to YYYY-MM-DD for input[type="date"] compatibility
+ *    - Validates before submission (rejects invalid dates)
+ *    - Submits as ISO string to API
+ * 
+ * 4. **Form Fields**:
+ *    - Title (required): "What needs to be done?"
+ *    - Due Date (required): Calendar picker
+ *    - Assignee (optional): Searchable dropdown with create option
+ *    - Priority (optional): "A.S.A.P.", "Sooner is better", "Whenever"
+ * 
+ * 5. **Inline User Creation Flow**:
+ *    - User types name not in directory
+ *    - "Add [name] to Directory" option appears (teal prompt)
+ *    - Click prompt → Email input dialog
+ *    - Creates user via POST /users
+ *    - Refetches colleagues
+ *    - Auto-selects new user as assignee
+ *    - Continues with task creation
+ * 
+ * 6. **Visual Design**:
+ *    - Modal overlay: slate-900/40 with backdrop blur
+ *    - Card: white rounded-3xl with shadow-2xl
+ *    - Animations: Framer Motion scale + fade
+ *    - Icon badge: Teal CheckSquare in rounded background
+ *    - Large title input: text-xl font-bold
+ *    - Fields: bg-slate-50 rounded-xl with icons
+ * 
+ * 7. **Submission Flow**:
+ *    - e.preventDefault() stops form default
+ *    - Validates date is parseable
+ *    - Converts date to ISO string
+ *    - Wraps assignee in array (API expects array)
+ *    - POST /tasks with {title, dueDate, priority, assignedTo}
+ *    - Success: Toast + onSuccess callback + onClose
+ *    - Error: Toast with error message
+ *    - Always: Reset form fields to initial state
+ * 
+ * 8. **Loading States**:
+ *    - Assignee dropdown loading handled by useApiData
+ *    - Form submit: "Creating..." button text
+ *    - User creation: isAddingUser prevents double-submit
+ *    - All buttons disabled during submission
+ * 
+ * 9. **Smart Prompts**:
+ *    - showAddPrompt logic:
+ *      - assigneeSearch has text AND
+ *      - filteredColleagues is empty AND
+ *      - No assignee selected yet
+ *    - Prevents prompt when user is backspacing or already selected someone
+ * 
+ * 10. **Modal Behavior**:
+ *     - Click outside to close (onClick on backdrop)
+ *     - X button in top-right
+ *     - Escape key closes (handled by AnimatePresence)
+ *     - Click on modal card stops propagation (prevents close)
+ * 
+ * Integration Points:
+ * - **Timeline right-click**: Pass date from clicked column
+ * - **Kanban "+ Add Task"**: Opens modal for specific column status
+ * - **Dashboard quick-create**: Opens blank modal
+ * - **Colleague row**: Pre-selects that colleague as assignee
+ * 
+ * Form Validation:
+ * - Title: required attribute enforces presence
+ * - Due Date: required attribute enforces selection
+ * - Assignee: Optional (empty array if none selected)
+ * - Priority: Defaults to "whenever", always has value
+ * 
+ * API Contract:
+ * ```
+ * POST /tasks
+ * {
+ *   title: string (required),
+ *   dueDate: ISO string | null,
+ *   priority: 'asap' | 'sooner' | 'whenever',
+ *   assignedTo: string[] (array of colleague IDs)
+ * }
+ * ```
+ * 
+ * User Creation Contract:
+ * ```
+ * POST /users
+ * {
+ *   email: string (required),
+ *   name: string (from search input)
+ * }
+ * Returns: { id, display_name, ... }
+ * ```
+ * 
+ * Props:
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Modal visibility state
+ * @param {Function} props.onClose - Close handler (clears modal, resets form)
+ * @param {Function} [props.onSuccess] - Callback after task created (refetch tasks)
+ * @param {Date|string} [props.initialDate] - Pre-fill due date (legacy single prop)
+ * @param {string} [props.initialAssignee] - Pre-select assignee ID (legacy single prop)
+ * @param {Object} [props.initialData] - Combined initial values object
+ * @param {Date|string} [props.initialData.dueDate] - Pre-fill due date
+ * @param {string} [props.initialData.assigneeId] - Pre-select assignee ID
+ * @component
+ */
 const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee, initialData }) => {
     const { showToast } = useToast();
     const { data: colleagues, refetch: refetchColleagues } = useApiData('/colleagues');
