@@ -45,16 +45,9 @@ const TimelinesPage = () => {
         return d.getTime() === t.getTime();
     };
 
-    // Listen for Today Event (Hack for button in header accessing ref in child)
-    // Alternatively, pass a ref to UnifiedBoard? No, board has internal ref.
-    // Pass a "triggerScrollToDate" prop?
-    // UnifiedBoard exposes 'scrollToDate'. Ideally via Ref.
-    // Let's skip the Button Logic for a second and just rely on the UnifiedBoard's internal overlay if prop is missing?
-    // No, design requirement: Header has button.
-    // Let's use a MutableRefObject passed DOWN.
+    // Ref for accessing UnifiedBoard's scrollToDate function from header controls
     const controlsRef = React.useRef({});
 
-    // Button above:
     const handleTodayClick = () => {
         if (controlsRef.current.scrollToDate) {
             controlsRef.current.scrollToDate(new Date(new Date().setHours(0, 0, 0, 0)));
@@ -64,28 +57,21 @@ const TimelinesPage = () => {
     const handleGoToFirst = () => {
         if (!filteredTasks || filteredTasks.length === 0) return;
 
-        // Helper to get effective date
+        // Get relevant date for scrolling: completion date for done tasks, due date otherwise
         const getEffectiveDate = (t) => {
             if (t.status === 'done' && t.completedAt) return new Date(t.completedAt);
             if (t.dueDate) return new Date(t.dueDate);
             return null;
         };
 
-        // Find task with earliest valid date
-        // AND ensure it is visible (assigned to a visible colleague)
+        // Find earliest task that's visible in filtered colleague list
         const visibleIds = new Set(visibleColleagues.map(c => c.id));
 
         const validTasks = filteredTasks.filter(t => {
-            // Check visibility (Matches getTasksForColleague logic)
             const hasAssignee = t.assignedTo && t.assignedTo.length > 0;
-            let isVisible = false;
-
-            if (hasAssignee) {
-                isVisible = t.assignedTo.some(id => visibleIds.has(id));
-            } else {
-                // Unassigned -> Check if Creator corresponds to a visible row
-                isVisible = visibleIds.has(t.createdBy);
-            }
+            const isVisible = hasAssignee
+                ? t.assignedTo.some(id => visibleIds.has(id))
+                : visibleIds.has(t.createdBy);
 
             if (!isVisible) return false;
 
@@ -94,49 +80,14 @@ const TimelinesPage = () => {
         });
 
         if (validTasks.length > 0) {
-            // Sort by Date ASC
             validTasks.sort((a, b) => getEffectiveDate(a) - getEffectiveDate(b));
 
-            // Scroll Pattern
-            if (controlsRef.current) {
-                // Find Assignment (Visual Row)
-                // Use the assignment logic: 
-                // If user filtered -> use that logic? 
-                // The task card finds the "Row" by `assignedTo`.
-                // We need to find which "Row" this task sits in.
-                // If "Me" view -> My Row.
-                // If "Colleagues" view -> Colleague Row.
+            const firstTask = validTasks[0];
+            const minDate = getEffectiveDate(firstTask);
 
-                // NOTE: Task can be in multiple rows if multiple assignees?
-                // "Go To First Match" usually implies primary assignee or first one found.
-                // Let's assume the Row logic relies on the first assignee.
-
-                // Check if Assigned to Me (Priority)
-                const myId = user?.id; // user ID from context? No, prop.
-                // But here we don't have user prop easily? Wait, this is TimelineView.
-                // We have `user` from `useTimelineState`? No.
-                // useFilterAndSortTool returns `colleagues`.
-
-                // Standard Logic: Find first visible assignee.
-                // We have `visibleColleagues` passed to Board.
-                // Here `handleGoToFirst` only has `filteredTasks`.
-                // We need `visibleColleagues` here? 
-                // Actually `TimelineView` has `colleagues` from `useTimelineState`.
-
-                // User Request: "I don't want any up/down scrolling... only necessary left/right"
-                // So we skip the vertical alignment.
-
-                const firstTask = validTasks[0];
-                const minDate = getEffectiveDate(firstTask);
-
-                // Align logic with handleTodayClick
-                if (minDate) {
-                    minDate.setHours(0, 0, 0, 0);
-                    // Use scrollToDate exactly like Today button
-                    if (controlsRef.current.scrollToDate) {
-                        controlsRef.current.scrollToDate(minDate);
-                    }
-                }
+            if (minDate && controlsRef.current.scrollToDate) {
+                minDate.setHours(0, 0, 0, 0);
+                controlsRef.current.scrollToDate(minDate);
             }
         }
     };
@@ -185,7 +136,7 @@ const TimelinesPage = () => {
                     <p className="text-slate-500 text-lg">Manage assignments and schedules.</p>
                 </div>
             </div>
-            <div className="flex items-end gap-4 shrink-0 translate-y-[42px] z-50"> {/* Changed items-center to items-end */}
+            <div className="flex items-end gap-4 shrink-0 translate-y-[42px] z-50">
                 <TimelineControls
                     onTodayClick={handleTodayClick}
                     onGoToFirst={handleGoToFirst}
@@ -197,8 +148,7 @@ const TimelinesPage = () => {
         </header>
     );
 
-    // Initial Load Only - Show Skeleton if we have no data yet
-    // if (loading && (!tasks || tasks.length === 0)) return <TimelineSkeleton />;
+
 
     return (
         <PageLayout
@@ -212,7 +162,7 @@ const TimelinesPage = () => {
                             <span>Acting as Temp Admin (Expires {new Date(user.delegationExpiresAt).toLocaleDateString()})</span>
                         </div>
                     )}
-                    {/* TimelineControls moved to filters area for vertical alignment */}
+
                 </div>
             }
             filters={
@@ -242,7 +192,7 @@ const TimelinesPage = () => {
                             showProjectControls={true}
                         />
                     </div>
-                    {/* Controls aligned with bottom of filters */}
+
                     <div className="shrink-0">
                         <TimelineControls
                             onTodayClick={handleTodayClick}
@@ -276,7 +226,7 @@ const TimelinesPage = () => {
 
                     showSidebar={true}
                     viewOffset={200}
-                    // Header Content removed (Now handled by PageLayout)
+
 
                     // Expose controls
                     controlsRef={controlsRef}
