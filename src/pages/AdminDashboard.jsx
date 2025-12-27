@@ -7,7 +7,7 @@ import Card from '../components/common/Card';
 import NewTaskModal from '../components/NewTaskModal';
 import SystemRequests from './SystemRequests';
 
-const AdminDashboard = () => { // RENAMED
+const AdminDashboard = () => {
     const { data: tasks, loading: tasksLoading, refetch: refetchTasks } = useApiData('/tasks');
     const { data: projects, loading: projectsLoading } = useApiData('/projects');
     const { data: colleagues } = useApiData('/colleagues');
@@ -39,16 +39,14 @@ const AdminDashboard = () => { // RENAMED
                 </div>
             }
         >
-            <div className="h-full overflow-y-auto invisible-scrollbar space-y-8 pb-8"> {/* Scrollable Content Area */}
+            <div className="h-full overflow-y-auto invisible-scrollbar space-y-8 pb-8">
 
-                {/* Modal */}
                 <NewTaskModal
                     isOpen={showNewTaskModal}
                     onClose={() => setShowNewTaskModal(false)}
                     onSuccess={refetchTasks}
                 />
 
-                {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <KPICard title="Total Tasks" value={stats.totalTasks} change="+2 new" trend="up" icon={<Activity size={20} />} />
                     <KPICard title="Active Projects" value={stats.activeProjects} change="Current" trend="up" icon={<Zap size={20} />} />
@@ -56,7 +54,6 @@ const AdminDashboard = () => { // RENAMED
                     <KPICard title="Colleagues" value={stats.teamSize} change="Active" trend="up" icon={<Users size={20} />} />
                 </div>
 
-                {/* Timeline Summary */}
                 <section className="bg-slate-900 rounded-2xl p-8 text-white overflow-hidden relative">
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-8">
@@ -105,12 +102,10 @@ const AdminDashboard = () => { // RENAMED
                 </section>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* System Requests (Merged) - Taking up 1 column */}
                     <div className="lg:col-span-1 h-[600px]">
                         <SystemRequests />
                     </div>
 
-                    {/* Task List Section - Taking up 2 columns */}
                     <Card variant="MACRO" className="lg:col-span-2 p-8 h-[600px] overflow-hidden flex flex-col">
                         <div className="flex items-center justify-between mb-8 shrink-0">
                             <h3 className="font-bold text-xl text-slate-800">Upcoming Deliverables</h3>

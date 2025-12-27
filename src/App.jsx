@@ -11,7 +11,7 @@ import TimelineSkeleton from './components/TimelineSkeleton';
 // Lazy Load Pages
 const MyDashboard = React.lazy(() => import('./pages/MyDashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-const TimelineView = React.lazy(() => import('./pages/TimelineView'));
+const TimelinesPage = React.lazy(() => import('./pages/TimelinesPage'));
 const KanbanBoard = React.lazy(() => import('./components/KanbanBoard'));
 const GanttChart = React.lazy(() => import('./components/GanttChart'));
 const ProjectList = React.lazy(() => import('./components/ProjectList'));
@@ -28,7 +28,7 @@ const AppShell = () => {
                     <Route path="/" element={<Navigate to="/my-dashboard" replace />} />
                     <Route path="/my-dashboard" element={<MyDashboard />} />
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                    <Route path="/timelines" element={<TimelineView />} />
+                    <Route path="/timelines" element={<TimelinesPage />} />
                     <Route path="/kanban" element={<KanbanBoard />} />
                     <Route path="/gantt" element={<GanttChart />} />
                     <Route path="/projects" element={<ProjectList />} />

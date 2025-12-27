@@ -4,11 +4,9 @@ import { apiClient } from '../api/client';
 import { Plus, Trash2, Calendar, User, Check, X } from 'lucide-react';
 
 const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
-    // Fetch Steps
     const { data: steps = [], refetch } = useApiData(`/steps?taskId=${taskId}`);
     const { data: colleagues } = useApiData('/colleagues');
 
-    // Local state for "Adding New Step" Input
     const [newItemTitle, setNewItemTitle] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
@@ -23,8 +21,8 @@ const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
             await apiClient.post('/steps', {
                 taskId,
                 title: newItemTitle,
-                assignedTo: taskAssigneeId, // Inherit by default
-                dueDate: taskDueDate // Inherit by default
+                assignedTo: taskAssigneeId,
+                dueDate: taskDueDate
             });
             setNewItemTitle('');
             setIsAdding(false);
@@ -35,7 +33,6 @@ const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
     };
 
     const handleToggleStep = async (step) => {
-        // Optimistic update could go here, but for now allow SWR to refetch
         try {
             await apiClient.patch(`/steps/${step.id}`, { isCompleted: !step.isCompleted });
             refetch();
@@ -70,7 +67,6 @@ const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Plan of Attack</h3>
                     <p className="text-xs text-slate-500 mt-1">{steps.length} Steps • {steps.filter(s => s.isCompleted).length} Completed</p>
                 </div>
-                {/* Progress Bar */}
                 <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
                     <div
                         className="h-full bg-teal-500 transition-all duration-500"
@@ -91,7 +87,6 @@ const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
                     />
                 ))}
 
-                {/* Add New Row */}
                 <div className="px-6 py-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                     {isAdding ? (
                         <form onSubmit={handleAddStep} className="flex items-center gap-3">
@@ -133,18 +128,16 @@ const StepRow = ({ step, colleagues, onToggle, onDelete, onUpdateTitle }) => {
 
     return (
         <div className={`px-6 py-3 flex items-center gap-4 group transition-colors ${step.isCompleted ? 'bg-slate-50/50' : 'hover:bg-slate-50'}`}>
-            {/* Checkbox */}
             <button
                 onClick={onToggle}
                 className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${step.isCompleted
-                        ? 'bg-teal-500 border-teal-500 text-white'
-                        : 'bg-white border-slate-300 text-transparent hover:border-teal-400'
+                    ? 'bg-teal-500 border-teal-500 text-white'
+                    : 'bg-white border-slate-300 text-transparent hover:border-teal-400'
                     }`}
             >
                 <Check size={12} strokeWidth={3} />
             </button>
 
-            {/* Title */}
             <div className="flex-1 min-w-0">
                 {isEditing ? (
                     <input
@@ -165,9 +158,7 @@ const StepRow = ({ step, colleagues, onToggle, onDelete, onUpdateTitle }) => {
                 )}
             </div>
 
-            {/* Meta Actions (Assignee, Date) */}
             <div className="flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                {/* Assignee Badge */}
                 <button className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-slate-200 text-xs text-slate-500 font-medium transition-colors" title="Change Assignee">
                     {assignee ? (
                         <>
@@ -179,7 +170,6 @@ const StepRow = ({ step, colleagues, onToggle, onDelete, onUpdateTitle }) => {
                     )}
                 </button>
 
-                {/* Date Badge */}
                 <button className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-slate-200 text-xs text-slate-500 font-medium transition-colors" title="Change Date">
                     <Calendar size={14} />
                     {step.dueDate ? (
@@ -187,7 +177,6 @@ const StepRow = ({ step, colleagues, onToggle, onDelete, onUpdateTitle }) => {
                     ) : null}
                 </button>
 
-                {/* Delete */}
                 <button onClick={onDelete} className="p-1.5 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded transition-colors" title="Delete Step">
                     <Trash2 size={14} />
                 </button>

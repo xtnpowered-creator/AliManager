@@ -26,18 +26,14 @@ const TimelineRow = ({
 }) => {
     return (
         <div className={`flex border-b border-slate-200 group hover:bg-slate-50/30 transition-colors last:border-0 h-[97px] relative bg-white`}>
-            {/* 1. Sticky Colleague Sidebar */}
             {showColleagueInfo && (
                 <TimelineColleagueCell colleague={colleague} />
             )}
 
-            {/* 2. Timeline Grid Container */}
             <div className="flex relative shrink-0">
 
-                {/* A. Horizontal Baseline */}
                 <div className="absolute top-1/2 left-0 w-full h-[4px] bg-slate-400/50 -translate-y-1/2 z-0" />
 
-                {/* B. Day Cells */}
                 {days.map((day, dIdx) => (
                     <TimelineDayCell
                         key={dIdx}
@@ -58,7 +54,6 @@ const TimelineRow = ({
                     />
                 ))}
 
-                {/* C. Task Overlays (Placed AFTER Grid Cells to ensure they sit ON TOP via Z-Index) */}
                 <div className="absolute inset-0 pointer-events-none z-[50]">
                     <TaskColumn
                         tasks={getTasksForColleague(colleague.id)}

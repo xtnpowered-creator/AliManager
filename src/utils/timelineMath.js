@@ -1,43 +1,47 @@
 /**
  * TIMELINE MATH UTILITIES
- * Single Source of Truth for all Date <-> Pixel calculations.
- * Supports variable column widths (Weekends = 50% width).
+ * Single source of truth for all Date <-> Pixel calculations.
+ * Supports variable column widths (weekends render at 50% width).
  */
 
 const ONE_DAY_MS = 86400000;
-const WEEKEND_RATIO = 0.5; // Configurable Ratio (0.5 = 50% width)
+const WEEKEND_RATIO = 0.5;
 
 /**
- * Returns the width of a single day in pixels based on the current scale.
- * @param {Date} date - The date to check (for weekend logic).
- * @param {number} scale - Pixels per standard day.
+ * Returns the width of a single day in pixels based on scale.
+ * Weekends render at 50% of weekday width.
+ * 
+ * @param {Date} date - The date to check (for weekend logic)
+ * @param {number} scale - Pixels per standard weekday
+ * @returns {number} Width in pixels
  */
 export const getDayWidth = (date, scale) => {
     const day = date.getDay();
-    // 0 = Sunday, 6 = Saturday
     const isWeekend = day === 0 || day === 6;
     return isWeekend ? scale * WEEKEND_RATIO : scale;
 };
 
 /**
  * Returns the total width of a 7-day week in pixels.
- * (5 Weekdays + 2 Weekends)
- * @param {number} scale 
+ * Accounts for compressed weekend rendering (5 weekdays + 2 half-width weekends).
+ * 
+ * @param {number} scale - Pixels per standard weekday
+ * @returns {number} Total week width in pixels
  */
 export const getWeekWidth = (scale) => {
     return (5 * scale) + (2 * scale * WEEKEND_RATIO);
 };
 
 /**
- * Calculates the precise pixel offset of a Target Date relative to a Start Date.
- * Handles extensive ranges by using "Full Weeks" math + "Remainder Days" math.
+ * Calculates the pixel offset of a target date relative to a start date.
+ * Handles extensive ranges efficiently using week-based math + remainder days.
  * 
- * @param {Date} targetDate 
- * @param {Date} startDate 
- * @param {number} scale 
+ * @param {Date} targetDate - Destination date
+ * @param {Date} startDate - Reference/origin date
+ * @param {number} scale - Pixels per weekday
+ * @returns {number} Pixel offset (negative if target is before start)
  */
 export const getPixelOffsetFromStart = (targetDate, startDate, scale) => {
-    // Normalize to Midnight
     const start = new Date(startDate); start.setHours(0, 0, 0, 0);
     const target = new Date(targetDate); target.setHours(0, 0, 0, 0);
 
@@ -48,16 +52,15 @@ export const getPixelOffsetFromStart = (targetDate, startDate, scale) => {
     const direction = diffDays < 0 ? -1 : 1;
     const absDays = Math.abs(diffDays);
 
-    // 1. Calculate Full Weeks
+    // Calculate full weeks
     const fullWeeks = Math.floor(absDays / 7);
     const weekPixelWidth = getWeekWidth(scale);
     let totalPixels = fullWeeks * weekPixelWidth;
 
-    // 2. Calculate Remainder Days
+    // Add remainder days
     const remainderDays = absDays % 7;
 
     if (direction === 1 && remainderDays > 0) {
-        // Going FORWARD: walk from end of full weeks to target
         let walker = new Date(start);
         walker.setDate(walker.getDate() + (fullWeeks * 7));
 
@@ -66,7 +69,6 @@ export const getPixelOffsetFromStart = (targetDate, startDate, scale) => {
             walker.setDate(walker.getDate() + 1);
         }
     } else if (direction === -1 && remainderDays > 0) {
-        // Going BACKWARD: use recursion for safety
         return -1 * getPixelOffsetFromStart(startDate, targetDate, scale);
     }
 
@@ -74,12 +76,13 @@ export const getPixelOffsetFromStart = (targetDate, startDate, scale) => {
 };
 
 /**
- * Calculates which Date corresponds to a specific pixel offset.
- * Used for determining which days to render based on Scroll Left.
+ * Calculates which date corresponds to a specific pixel offset.
+ * Used for determining which days to render based on scroll position.
  * 
- * @param {number} pixelOffset 
- * @param {Date} startDate 
- * @param {number} scale 
+ * @param {number} pixelOffset - Pixel distance from start
+ * @param {Date} startDate - Reference/origin date
+ * @param {number} scale - Pixels per weekday
+ * @returns {Date} Date at the specified pixel offset
  */
 export const getDateFromPixelOffset = (pixelOffset, startDate, scale) => {
     if (pixelOffset === 0) return new Date(startDate);
@@ -94,12 +97,11 @@ export const getDateFromPixelOffset = (pixelOffset, startDate, scale) => {
     // Walk forward through remainder pixels
     let currentPixel = 0;
     while (currentPixel < remainderPixels) {
-        // Tolerance: If we are within 1px, we are "there"
         if ((remainderPixels - currentPixel) < 1) break;
 
         const w = getDayWidth(result, scale);
-        // Important: If this day pushes us OVER the target, we stop HERE.
-        // i.e., The target pixel is INSIDE this day.
+
+        // Stop if this day would push us past the target
         if (currentPixel + w > remainderPixels) {
             break;
         }

@@ -12,7 +12,7 @@ import UnifiedTimelineBoard from '../components/UnifiedTimelineBoard';
 import { TimelineRegistryProvider } from '../context/TimelineRegistryContext';
 import PageLayout from '../components/layout/PageLayout';
 
-const TimelineView = () => {
+const TimelinesPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const highlightTaskId = searchParams.get('highlightTaskId');
@@ -293,4 +293,4 @@ const TimelineView = () => {
     );
 };
 
-export default TimelineView;
+export default TimelinesPage;

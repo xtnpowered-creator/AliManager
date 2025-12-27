@@ -32,20 +32,18 @@ const MyDashboard = () => {
     } = useFilterAndSortTool(tasks, colleagues, projects, user);
 
     // Timeline Controls State
-    const { scale, setScale } = useTimelineScale(user); // User-specific scale
-    const [showDoneTasks, setShowDoneTasks] = React.useState(true); // Default: Show Done Tasks
-    const controlsRef = React.useRef({}); // Timeline Controls
-    const dayViewControlsRef = React.useRef({}); // DayView Controls
+    const { scale, setScale } = useTimelineScale(user);
+    const [showDoneTasks, setShowDoneTasks] = React.useState(true);
+    const controlsRef = React.useRef({});
+    const dayViewControlsRef = React.useRef({});
 
     const handleTodayClick = () => {
         const today = new Date(new Date().setHours(0, 0, 0, 0));
 
-        // Scroll Timeline
         if (controlsRef.current.scrollToDate) {
             controlsRef.current.scrollToDate(today);
         }
 
-        // Scroll DayView
         if (dayViewControlsRef.current.scrollToDate) {
             dayViewControlsRef.current.scrollToDate(today);
         }
@@ -58,8 +56,8 @@ const MyDashboard = () => {
         const userId = user.uid || user.id;
         const overdue = [];
         const upcoming = [];
-        const delegated = [];  // <--- Restored
-        const completed = [];  // <--- Restored
+        const delegated = [];
+        const completed = [];
 
         // Helper: Is Overdue?
         const now = new Date();
@@ -82,7 +80,7 @@ const MyDashboard = () => {
             }
 
             if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
-                // Check Overdue (Internal split for potential logic, but we merge for display)
+                // Check Overdue
                 if (task.status !== 'done' && task.dueDate) {
                     const d = new Date(task.dueDate);
                     d.setHours(0, 0, 0, 0);
@@ -108,10 +106,7 @@ const MyDashboard = () => {
             return dateA - dateB;
         };
 
-        // Merge Overdue + Upcoming for a single "My Priorities" list, sorted by date/priority
-        // Since sortFn handles dates, a simple merge + sort is enough. 
-        // Or specific: Overdue (sorted) + Upcoming (sorted).
-        // Let's just merge and sort to be safe and simple.
+        // Merge Overdue + Upcoming into single "My Priorities" list
         const allMyTasks = [...overdue, ...upcoming].sort(sortFn);
 
         return {
@@ -124,7 +119,6 @@ const MyDashboard = () => {
     const handleGoToFirst = () => {
         if (!myTasks || myTasks.length === 0) return;
 
-        // Helper to get effective date
         const getEffectiveDate = (t) => {
             if (t.status === 'done' && t.completedAt) return new Date(t.completedAt);
             if (t.dueDate) return new Date(t.dueDate);
@@ -137,7 +131,6 @@ const MyDashboard = () => {
         });
 
         if (validTasks.length > 0) {
-            // Sort by Date ASC to find the earliest occurrence
             validTasks.sort((a, b) => getEffectiveDate(a) - getEffectiveDate(b));
 
             const firstTask = validTasks[0];
@@ -146,12 +139,10 @@ const MyDashboard = () => {
             if (minDate) {
                 minDate.setHours(0, 0, 0, 0);
 
-                // Scroll Timeline
                 if (controlsRef.current.scrollToDate) {
                     controlsRef.current.scrollToDate(minDate);
                 }
 
-                // Scroll DayView
                 if (dayViewControlsRef.current.scrollToDate) {
                     dayViewControlsRef.current.scrollToDate(minDate);
                 }
@@ -159,7 +150,7 @@ const MyDashboard = () => {
         }
     };
 
-    // Guard: Redirect if no user (should be handled by ProtectedRoute but this is a fail-safe)
+    // Guard: Redirect if no user
     if (!user) return <div className="p-8 text-center text-slate-400">Not Authenticated. Please refresh or login.</div>;
 
     return (
@@ -171,11 +162,7 @@ const MyDashboard = () => {
                     <div className="flex-1 min-w-0">
                         <FilterAndSortToolbar
                             tasks={tasks}
-                            colleagues={visibleColleagues} // Use visible to filter suggestions if needed, or raw? Usually raw for suggestions.
-                            // But hook returns visibleColleagues. Toolbar expects `colleagues` for suggestions.
-                            // Toolbar uses `colleagues` prop to generate "Department" lists.
-                            // If we pass `visibleColleagues`, the dropdowns shrink as we filter.
-                            // This defines "Faceted Search" behavior. It's generally good.
+                            colleagues={visibleColleagues}
                             projectsData={projects}
 
                             colleagueFilters={colleagueFilters}
@@ -195,7 +182,7 @@ const MyDashboard = () => {
                             resetAll={resetAll}
 
                             showProjectControls={true}
-                            showPeopleControls={true} // Enable people filtering for delegations
+                            showPeopleControls={true}
                         />
                     </div>
                     <div className="shrink-0">
@@ -212,7 +199,6 @@ const MyDashboard = () => {
         >
             <div className="flex flex-col h-full gap-8">
 
-                {/* Timeline View - Duplicated User Row */}
                 <div className="shrink-0">
                     <DashboardTimeline
                         initialTasks={myTasks}
@@ -233,20 +219,17 @@ const MyDashboard = () => {
                 </div>
 
 
-                {/* NEW: Detailed Day View */}
                 <div className="shrink-0">
                     <TimelineRegistryProvider>
                         <DetailedTaskDayView
                             ref={dayViewControlsRef}
                             tasks={myTasks}
-                        // We could pass selectedDate if we had one from context/timeline click
                         />
                     </TimelineRegistryProvider>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0 pb-8">
 
-                    {/* My Priorities Column */}
                     <TaskColumn
                         title="My Priorities"
                         count={myTasks.length}
@@ -256,7 +239,6 @@ const MyDashboard = () => {
                         headerColorClass="bg-teal-100 text-teal-700"
                     />
 
-                    {/* Delegated Tasks Column */}
                     <TaskColumn
                         title="Delegated Tasks"
                         count={delegatedTasks.length}
