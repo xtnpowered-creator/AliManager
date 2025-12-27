@@ -3,6 +3,108 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, User, Clock, CheckCircle2, AlertCircle, Type, Text, MoreHorizontal } from 'lucide-react';
 import { apiClient } from '../api/client';
 
+/**
+ * Task Detail Modal - Quick Edit
+ * 
+ * PURPOSE:
+ * Lightweight modal for editing task properties without leaving current page.
+ * Used for quick updates (status, priority, description) from timeline, kanban, or lists.
+ * 
+ * WORKFLOW:
+ * 1. User clicks task card or "Edit" action
+ * 2. Modal opens with pre-filled task data
+ * 3. User edits title, status, priority, or description
+ * 4. On "Save Changes": Optimistic update + API call
+ * 5. Modal closes, parent refreshes data
+ * 
+ * OPTIMISTIC UPDATE PATTERN:
+ * - Calls onUpdate(taskId, null, updates) BEFORE API call
+ * - Parent immediately updates local state (instant UI feedback)
+ * - API call happens in background
+ * - If API fails: Shows alert, but local state already changed (edge case)
+ * 
+ * Rationale: Users perceive faster response, reduced waiting
+ * Trade-off: Rare failure case leaves stale data (acceptable for this use case)
+ * 
+ * FORM FIELDS:
+ * 
+ * **1. Title** (Header):
+ *    - Large inline input (2xl text, bold)
+ *    - Placeholder: "Task Title"
+ *    - No label (title speaks for itself)
+ * 
+ * **2. Status** (Dropdown):
+ *    - Options: To Do, In Progress, Completed
+ *    - Icon: CheckCircle2
+ *    - Maps to backend: todo, doing, done
+ * 
+ * **3. Priority** (Three Buttons):
+ *    - A.S.A.P. (high): Black bg when active
+ *    - Sooner (medium): Amber bg when active
+ *    - Whenever (low): Gray bg when active
+ * 
+ *    Visual Feedback:
+ *    - Active: Bold border, filled background
+ *    - Inactive: Transparent bg, light border, gray text
+ *    - Hover: Slight border color change
+ * 
+ *    Legacy Mapping:
+ *    - Maps old priority values (high/medium/low) to new system
+ *    - Ensures backward compatibility with existing tasks
+ * 
+ * **4. Description** (Textarea):
+ *    - Min height: 150px, auto-resize
+ *    - Placeholder: "Add more details about this task..."
+ *    - Rounded, slate background
+ * 
+ * STATE SYNC:
+ * useEffect hook syncs local form state when task prop changes or modal opens.
+ * Ensures modal always shows latest task data, even if opened multiple times.
+ * 
+ * PLACEHOLDER SECTION:
+ * "Collaboration Features (Comments & Files) Coming Soon"
+ * - Dashed border box
+ * - Shows future roadmap
+ * - Prevents user confusion about missing features
+ * 
+ * DESIGN:
+ * - Modal size: 80% viewport height, max-width 672px
+ * - Rounded corners: 2rem (very round, modern feel)
+ * - Backdrop: Dark overlay (slate-900/60) + blur
+ * - Animation: Fade + scale + slight upward movement
+ * - Footer: Right-aligned buttons (Cancel + Save Changes)
+ * 
+ * COMPARISON: Modal vs Full Page
+ * - **Modal** (this component): Quick edits, stays in context
+ * - **Full Page** (TaskDetailView): Deep dive, tabs, steps, activity log
+ * 
+ * Use Modal when:
+ * - User is in timeline/kanban view
+ * - Only need to change status/priority/description
+ * - Want to stay in current workflow
+ * 
+ * Use Full Page when:
+ * - Need to edit steps, files, or detailed planning
+ * - Want to see full audit log
+ * - Direct link sharing (/task/:id)
+ * 
+ * @param {boolean} isOpen - Controls modal visibility
+ * @param {Function} onClose - Closes modal (resets form state)
+ * @param {Object} task - Task object to edit (id, title, description, status, priority)
+ * @param {Function} onUpdate - Optimistic update callback: (taskId, newDate, updates) => void
+ * 
+ * @example
+ * // From Timeline or Kanban
+ * <TaskDetailModal
+ *   isOpen={showEditModal}
+ *   onClose={() => setShowEditModal(false)}
+ *   task={selectedTask}
+ *   onUpdate={(id, date, updates) => {
+ *     // Optimistic: Update local state immediately
+ *     setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
+ *   }}
+ * />
+ */
 const TaskDetailModal = ({ isOpen, onClose, task, onUpdate }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

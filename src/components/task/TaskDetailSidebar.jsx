@@ -1,6 +1,74 @@
 import React from 'react';
 import { Plus, Calendar } from 'lucide-react';
 
+/**
+ * Task Detail Metadata Sidebar
+ * 
+ * PURPOSE:
+ * Right sidebar displaying task metadata: assignees, dates, priority, and references.
+ * Provides quick access to key task properties without cluttering main content area.
+ * 
+ * SECTIONS (top to bottom):
+ * 
+ * 1. **Assignees**:
+ *    - Shows all assigned colleagues with avatars + names
+ *    - "+ Add" button (placeholder, not yet wired)
+ *    - Empty state: "No one assigned"
+ * 
+ * 2. **Dates**:
+ *    - Due Date with calendar icon
+ *    - Displays formatted date or "No date"
+ * 
+ * 3. **Priority**:
+ *    - Color-coded badge with dot indicator
+ *    - Priority 1 (Urgent): Red
+ *    - Priority 2 (ASAP): Amber/Yellow
+ *    - Priority 3 (Soon): Darker Amber
+ *    - Priority 4+ (Later): Green
+ * 
+ * 4. **Metadata** (below border):
+ *    - Project: Associated project title or "No Project"
+ *    - Created by: Creator's name
+ * 
+ * PRIORITY COLOR SYSTEM:
+ * - **P1 (Urgent)**: Red badge (bg-red-50, text-red-700, red dot)
+ *   - Use case: Immediate blockers, critical bugs
+ * 
+ * - **P2 (ASAP)**: Amber badge (bg-amber-50, text-amber-700, amber dot)
+ *   - Use case: Important features, near-term deadlines
+ * 
+ * - **P3 (Soon)**: Darker Amber (bg-amber-50, text-amber-900, amber dot)
+ *   - Use case: Planned work, medium priority
+ * 
+ * - **P4+ (Later)**: Green badge (bg-green-50, text-green-700, green dot)
+ *   - Use case: Backlog, nice-to-haves
+ * 
+ * LAYOUT:
+ * - Fixed width: 320px (w-80)
+ * - Left border: Separates from main content
+ * - Light gray background (bg-slate-50)
+ * - Scrollable content (overflow-y-auto)
+ * - 8-unit spacing between sections (space-y-8)
+ * 
+ * FUTURE ENHANCEMENTS (Placeholders):
+ * - Assignees "+ Add": Should open AddUserModal or reassignment
+ * - Dates: Click to open RescheduleModal
+ * - Priority: Click to change priority level
+ * - All currently static display only
+ * 
+ * @param {Object} task - Task object with: dueDate, priority
+ * @param {Array<Object>} assignedColleagues - Colleagues assigned to task (id, name, avatar)
+ * @param {Object} project - Associated project (title)
+ * @param {string} creatorName - Name of user who created the task
+ * 
+ * @example
+ * <TaskDetailSidebar
+ *   task={task}
+ *   assignedColleagues={colleagues.filter(c => task.assignedTo.includes(c.id))}
+ *   project={projects.find(p => p.id === task.projectId)}
+ *   creatorName={users.find(u => u.id === task.createdBy)?.name}
+ * />
+ */
 const TaskDetailSidebar = ({ task, assignedColleagues, project, creatorName }) => {
     return (
         <div className="w-80 border-l border-slate-200 bg-slate-50 overflow-y-auto p-6 space-y-8 shrink-0">

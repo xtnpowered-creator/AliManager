@@ -1,6 +1,42 @@
 import React from 'react';
 import { ChevronLeft, Clock } from 'lucide-react';
 
+/**
+ * Task Detail Page Header
+ * 
+ * PURPOSE:
+ * Top navigation bar for task detail page showing task metadata and back navigation.
+ * Provides context and quick status overview while viewing task details.
+ * 
+ * LAYOUT:
+ * - Left: Back button (< chevron)
+ * - Center: Task ID + creation date + title (truncated if long)
+ * - Right: Status badge (color-coded by status)
+ * 
+ * TASK ID FORMAT:
+ * Shows first 4 characters of UUID for human-friendly reference.
+ * Example: "TASK-A3F2" instead of full "a3f2e4d8-..."
+ * 
+ * STATUS COLORS:
+ * - Done: Green (emerald-50/700)
+ * - Doing: Blue (blue-50/700)
+ * - Todo/Other: Gray (slate-100/600)
+ * 
+ * DESIGN:
+ * - Fixed height: 64px (h-16)
+ * - Shadow + border: Elevation effect, separates from content
+ * - Truncate title: Prevents overflow on long task names
+ * - z-10: Stays above scrollable content
+ * 
+ * @param {Object} task - Task object with: id, title, status, created_at/createdAt
+ * @param {Function} onBack - Navigation callback (typically router.back() or navigate('/'))
+ * 
+ * @example
+ * <TaskDetailHeader
+ *   task={task}
+ *   onBack={() => navigate('/tasks')}
+ * />
+ */
 const TaskDetailHeader = ({ task, onBack }) => {
     return (
         <div className="h-16 bg-white border-b border-slate-200 flex items-center px-6 gap-4 shrink-0 shadow-sm z-10">

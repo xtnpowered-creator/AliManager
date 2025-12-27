@@ -6,6 +6,85 @@ import TaskStepsList from './TaskStepsList';
 import TaskDetailHeader from './task/TaskDetailHeader';
 import TaskDetailSidebar from './task/TaskDetailSidebar';
 
+/**
+ * Task Detail - Full Page View
+ * 
+ * PURPOSE:
+ * Complete task detail page with tabbed content, metadata sidebar, and navigation.
+ * Used when navigating to /task/:id route (full-screen dedicated task view).
+ * 
+ * ARCHITECTURE - THREE-COLUMN LAYOUT:
+ * 
+ * 1. **Header** (Top, full-width):
+ *    - TaskDetailHeader component
+ *    - Back button, task ID, title, status badge
+ *    - Fixed height, stays above scrollable content
+ * 
+ * 2. **Main Content** (Center, scrollable):
+ *    - Tab navigation bar (Overview, Steps, Activity, Files)
+ *    - Tab content area (changes based on activeTab)
+ *    - Scrollable content with padding
+ * 
+ * 3. **Sidebar** (Right, fixed width):
+ *    - TaskDetailSidebar component
+ *    - Assignees, dates, priority, metadata
+ *    - Fixed 320px width, scrollable
+ * 
+ * TAB SYSTEM (4 tabs):
+ * 
+ * **1. Overview** (default):
+ *    - Task description (prose styling, whitespace preserved)
+ *    - Empty state: "No description provided" italic placeholder
+ * 
+ * **2. Steps**:
+ *    - TaskStepsList component
+ *    - Checklist of subtasks with progress tracking
+ *    - Inline editing, toggle completion
+ * 
+ * **3. Activity** (placeholder):
+ *    - Future: Audit log of task changes
+ *    - Shows who changed what and when
+ *    - Empty state with icon + description
+ * 
+ * **4. Files** (placeholder):
+ *    - Future: File upload/attachment system
+ *    - Drag-and-drop area
+ *    - Empty state with upload prompt
+ * 
+ * DATA FETCHING:
+ * - Fetches all tasks, colleagues, projects (from API)
+ * - Finds task by ID from tasks array
+ * - Derives assignedColleagues by filtering colleagues array
+ * - Finds project by projectId reference
+ * - Resolves creator name (from colleagues or "Me" if owner)
+ * 
+ * LOADING STATES:
+ * - Loading: "Loading task details..." placeholder
+ * - Not Found: "Task not found." error message (red text)
+ * - Both prevent further rendering until data ready
+ * 
+ * NAVIGATION:
+ * - onBack callback: Typically navigate(-1) or navigate('/tasks')
+ * - Used in header's back button
+ * 
+ * DESIGN RATIONALE:
+ * - Full-page view: Maximum space for task details
+ * - Tabbed content: Organizes different aspects of task
+ * - Fixed sidebar: Always-visible metadata reference
+ * - Prose styling: Description reads like documentation
+ * - Placeholder tabs: Shows future roadmap, prevents surprise
+ * 
+ * @param {string} taskId - ID of task to display
+ * @param {Function} onBack - Navigation callback for back button
+ * 
+ * @example
+ * // Route: /task/:id
+ * const { id } = useParams();
+ * <TaskDetailView
+ *   taskId={id}
+ *   onBack={() => navigate('/tasks')}
+ * />
+ */
 const TaskDetailView = ({ taskId, onBack }) => {
     const { data: tasks, isLoading } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');
