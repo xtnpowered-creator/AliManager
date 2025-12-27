@@ -59,7 +59,7 @@ const MyDashboard = () => {
         const delegated = [];
         const completed = [];
 
-        // Helper: Is Overdue?
+        // Normalize current date to midnight for date-only comparisons
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
@@ -71,7 +71,7 @@ const MyDashboard = () => {
             const isCreatedByMe = task.createdBy === userId;
             const isUnassigned = (!task.assignedTo || task.assignedTo.length === 0);
 
-            // Handle DONE tasks
+            // Track completed tasks for current user; skip rendering done tasks if hidden
             if (task.status === 'done') {
                 if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
                     completed.push(task);
@@ -80,7 +80,7 @@ const MyDashboard = () => {
             }
 
             if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
-                // Check Overdue
+                // Categorize user's tasks: past due date → overdue, otherwise → upcoming
                 if (task.status !== 'done' && task.dueDate) {
                     const d = new Date(task.dueDate);
                     d.setHours(0, 0, 0, 0);
@@ -98,6 +98,7 @@ const MyDashboard = () => {
             }
         });
 
+        // Sort tasks: priority '1' first, then by due date (tasks without dates sorted last)
         const sortFn = (a, b) => {
             if (a.priority === '1' && b.priority !== '1') return -1;
             if (a.priority !== '1' && b.priority === '1') return 1;
@@ -119,6 +120,7 @@ const MyDashboard = () => {
     const handleGoToFirst = () => {
         if (!myTasks || myTasks.length === 0) return;
 
+        // Get the relevant date for scrolling: completion date for done tasks, due date otherwise
         const getEffectiveDate = (t) => {
             if (t.status === 'done' && t.completedAt) return new Date(t.completedAt);
             if (t.dueDate) return new Date(t.dueDate);

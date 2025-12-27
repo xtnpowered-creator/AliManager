@@ -1,3 +1,16 @@
+/**
+ * Determines the Tailwind background color class for a task card based on its status and proximity to due date.
+ * 
+ * Color strategy:
+ * - Completed tasks: Gray/purple bubbles
+ * - Overdue tasks: Red
+ * - Lone tasks (no project): Purple
+ * - Project tasks: Color-coded by proximity (Orange → Amber → Yellow → Green)
+ * - Projects use darker shades than individual tasks
+ * 
+ * @param {Object} task - Task object with status, type, dueDate, projectId
+ * @returns {string} Tailwind CSS background color class
+ */
 export const getTaskCardColor = (task) => {
     // 0. Safe Date Normalization (Local Midnight Comparison)
     const today = new Date();
@@ -15,7 +28,9 @@ export const getTaskCardColor = (task) => {
     }
 
     const isCompleted = task.status === 'done' || task.status === 'completed';
+    // Categorize task: PROJ (project container), PTASK (task within project), LTASK (standalone task)
     const type = task.type === 'project' ? 'PROJ' : (task.projectId ? 'PTASK' : 'LTASK');
+    // Projects use darker, more saturated colors than individual tasks
     const isStrong = type === 'PROJ';
 
     // 1. Completed Tasks (Gray Bubbles)
