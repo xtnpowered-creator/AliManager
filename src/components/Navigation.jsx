@@ -6,6 +6,79 @@ import Toast from './Toast';
 
 import { Link, useLocation } from 'react-router-dom';
 
+/**
+ * Navigation Component
+ * 
+ * Primary left sidebar navigation with grouped menu items, role-based visibility,
+ * and integrated toast notification system.
+ * 
+ * Structure:
+ * - **Fixed width**: 288px (w-72) to match Shell header logo area
+ * - **Grouped menu**: Three sections (Main Views, Management, System)
+ * - **Active indication**: Dark background + white text for current route
+ * - **Toast display**: Stacked notifications at bottom of sidebar
+ * 
+ * Role-Based Rendering:
+ * - **Admin Dashboard**: Only visible to god/admin users
+ * - **Permission check**: Compares user.role + dbUser.role (handles both sources)
+ * - **Fallback**: Non-admins see 8 standard menu items
+ * 
+ * Menu Groups:
+ * 1. **Main Views**:
+ *    - Admin Dashboard (conditional) - System oversight
+ *    - My Dashboard - Personal task view
+ *    - Timelines - Full team timeline
+ *    - Kanban Board - Todo/Doing/Done columns
+ *    - Gantt Chart - Project timeline visualization
+ * 
+ * 2. **Management**:
+ *    - Projects - Project list/management
+ *    - Lone Tasks - Unprojectnon-project tasks
+ *    - Directory - Team member directory
+ * 
+ * 3. **System**:
+ *    - Settings - User preferences/configuration
+ * 
+ * Active Route Detection:
+ * - useLocation() hook tracks current path
+ * - Exact match comparison (currentPath === item.path)
+ * - Active styling: bg-slate-900 text-white shadow-lg
+ * - Inactive styling: text-slate-500 hover:bg-slate-50
+ * 
+ * Toast Integration:
+ * - Toast notifications render at sidebar bottom
+ * - Auto-dismiss after timeout (managed by ToastContext)
+ * - Manual dismiss via X button (calls removeToast)
+ * - Positioned in border-t section (fixed to bottom)
+ * 
+ * Icon System:
+ * - Lucide-react icons at 20px size
+ * - Semantic icons (Calendar for timelines, Columns for kanban, etc.)
+ * - ShieldAlert for admin-only items
+ * - Consistent sizing across all menu items
+ * 
+ * Visual Design:
+ * - Rounded corners (rounded-2xl) for modern aesthetic
+ * - Hover states with bg-slate-50
+ * - Smooth transitions (transition-all)
+ * - Shadow on active item (shadow-lg shadow-slate-200)
+ * - Uppercase tracking-widest group labels
+ * 
+ * Layout Hierarchy:
+ * 1. Sidebar container (w-72 border-r)
+ * 2. Scrollable content area (overflow-y-auto)
+ * 3. Menu groups (space-y-8)
+ * 4. Sticky bottom section (mt-auto border-t)
+ * 5. Toast stack (flex-col gap-2)
+ * 
+ * Accessibility:
+ * - Semantic navigation elements (<nav>)
+ * - Link components for proper routing
+ * - Clear visual hierarchy with group labels
+ * - Focus states (handled by Link component)
+ * 
+ * @component
+ */
 const Navigation = () => {
     const location = useLocation();
     const currentPath = location.pathname;

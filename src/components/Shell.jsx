@@ -5,8 +5,108 @@ import Logo from './Logo';
 import { useAuth, MOCK_USERS } from '../context/AuthContext';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
-import { ChevronDown, RefreshCcw, LogOut } from 'lucide-react'; // Added Icons
+import { ChevronDown, RefreshCcw, LogOut } from 'lucide-react';
 
+/**
+ * Shell Component
+ * 
+ * Main application layout wrapper providing header, sidebar, and content area.
+ * Manages authentication UI, search interface, and user profile menu.
+ * 
+ * Layout Structure:
+ * ```
+ * ┌─────────────────────────────────────────────┐
+ * │ Header (h-16)                                │
+ * │ ┌─────────┬───────────────────────────────┐ │
+ * │ │ Logo    │ Search | Profile              │ │
+ * │ └─────────┴───────────────────────────────┘ │
+ * ├──────────┬──────────────────────────────────┤
+ * │ Nav      │ Main Content                     │
+ * │ Sidebar  │ (children)                       │
+ * │ (w-72)   │                                  │
+ * │          │                                  │
+ * └──────────┴──────────────────────────────────┘
+ * ```
+ * 
+ * Header Components:
+ * 1. **Logo Area** (w-72):
+ *    - Fixed width matching sidebar
+ *    - Logo + "AliManager" branding
+ *    - Teal accent on "Ali", slate on "Manager"
+ *    - Border-right divider matching sidebar
+ * 
+ * 2. **Search Bar**:
+ *    - Placeholder: "Search projects, tasks, or directory..."
+ *    - Focus state: White bg + teal ring
+ *    - Icon transitions: slate-400 → teal-600 on focus
+ *    - Fixed width: w-80 (320px)
+ * 
+ * 3. **Profile Menu**:
+ *    - Bell icon (notifications placeholder)
+ *    - User initials avatar (from displayName/email)
+ *    - Role badge (god/admin/member)
+ *    - Dropdown menu on click
+ * 
+ * Profile Dropdown Features:
+ * - **Dev Mode**: User switcher (MOCK_USERS list)
+ * - **Active indicator**: Teal bg + dot for current user
+ * - **Sign Out**: Clears mockUserId + reloads (dev) or calls Firebase signOut (prod)
+ * - **Auto-close**: Clicking menu items closes dropdown
+ * 
+ * Development Utilities:
+ * - **window.loginGod()**: Console command to authenticate god user
+ * - **MOCK_USERS switcher**: Quick user perspective changes
+ * - **localStorage mockUserId**: Persisted user selection in dev
+ * 
+ * Authentication Integration:
+ * - useAuth hook provides current user
+ * - switchUser() function for dev mode
+ * - signInWithEmailAndPassword / createUserWithEmailAndPassword for production
+ * - Handles both Firebase auth (prod) and mock auth (dev)
+ * 
+ * Layout Behavior:
+ * - **Fixed header**: Sticky top with backdrop blur
+ * - **Sidebar**: Fixed 288px width (w-72) with Navigation component
+ * - **Main content**: Flex-1 (fills remaining space)
+ * - **Overflow**: sidebar + main independently scrollable
+ * 
+ * Z-Index Layering:
+ * - Header: z-[100] (above content)
+ * - Logo area: z-[101] (above header for border clarity)
+ * - Sidebar: z-[90] (below header)
+ * - Dropdown: z-[200] (above everything)
+ * - Main: z-0 (base layer)
+ * 
+ * Responsive Behavior:
+ * - User name hidden on small screens (hidden sm:block)
+ * - Sidebar width fixed (no collapse on mobile in current impl)
+ * - Search bar maintains w-80 (scrollable header on small screens)
+ * 
+ * Visual Design:
+ * - Background: slate-50 (light gray)
+ * - Selection: teal-100 bg + teal-900 text
+ * - Borders: slate-200/300 (subtle dividers)
+ * - Shadows: slate-200 (soft elevation)
+ * - Backdrop blur on header (modern glassmorphism)
+ * 
+ * Helper Functions:
+ * - **getInitials(name)**: Extracts 2-letter initials for avatar
+ * - **handleSignOut()**: Environment-aware logout (dev vs prod)
+ * 
+ * Children Integration:
+ * - {children} rendered in main content area
+ * - Standard pattern: App.jsx → Shell → Page components
+ * - All pages automatically get header + sidebar
+ * 
+ * Auth State Handling:
+ * - User displayed: displayName || email || 'Guest'
+ * - Role displayed: 'System God' for god role, otherwise role value
+ * - Avatar: Uppercase initials in slate-900 circle
+ * 
+ * @param {Object} props
+ * @param {ReactNode} props.children - Page content to render in main area
+ * @component
+ */
 const Shell = ({ children }) => {
     const { user, switchUser } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = React.useState(false);

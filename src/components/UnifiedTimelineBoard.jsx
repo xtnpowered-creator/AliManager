@@ -14,6 +14,175 @@ import { TIMELINE_LAYOUT } from '../config/layoutConstants';
 import HoriScrollTargetPoint from './timeline/HoriScrollTargetPoint';
 import { getPixelOffsetFromStart, getDateFromPixelOffset, getDayWidth } from '../utils/timelineMath';
 
+/**
+ * UnifiedTimelineBoard Component
+ * 
+ * Core horizontal timeline grid for multi-user task visualization and management.
+ * Implements virtualization, scroll synchronization, drag-and-drop, bulk selection,
+ * and modal orchestration for the primary task management interface.
+ * 
+ * Architecture Overview:
+ * 
+ * 1. **Virtual Scrolling Window** (Performance Optimization):
+ *    - Virtual range: ±2 years from today (~1460 days)
+ *    - Only renders visible days + 1000px buffer on each side
+ *    - Dynamically calculates which days to render based on scroll position
+ *    - Content offset shifts rendered columns to match scroll position
+ *    - Prevents rendering 1460+ columns simultaneously (would freeze UI)
+ * 
+ * 2. **Column Width Calculation**:
+ *    - Weekdays: Full scale width (e.g., 120px at 1.25 inches/day)
+ *    - Weekends: 50% width (compressed for space efficiency)
+ *    - Dynamic recalculation on scale change
+ *    - Uses timelineMath utilities for consistent pixel conversions
+ * 
+ * 3. **Scroll Synchronization** (useSyncedTimelineState):
+ *    - Restores scroll position on mount (prevents jump after navigation)
+ *    - Persists scroll per user to TimelineViewContext
+ *    - Red anchor triangle: User-draggable reference point (default 350px from left)
+ *    - All "scrollToDate" operations align target date with anchor position
+ *    - Cross-view sync: Scroll in timeline → updates dashboard day view
+ * 
+ * 4. **Selection System** (useTimelineSelection):
+ *    - Click: Select single task
+ *    - Ctrl/Cmd+Click: Toggle task in/out of selection set
+ *    - Shift+Drag: Box selection (draws teal selection rectangle)
+ *    - Selection box uses pointer capture for smooth dragging
+ *    - Selected tasks get ring outline + bulk actions in context menu
+ * 
+ * 5. **Keyboard Interactions**:
+ *    - Shift key: Changes cursor to crosshair (visual cue for selection mode)
+ *    - Escape: Clears selection, closes all modals, collapses expanded tasks
+ *    - Tracked via window event listeners (works even when timeline unfocused)
+ * 
+ * 6. **Context Menu Integration**:
+ *    - Right-click on tasks: Task-specific actions (edit, delete, reassign, etc.)
+ *    - Right-click on date headers: Date actions (flag, create task for date)
+ *    - Dynamically generates menu based on click target and permissions
+ *    - Delegates to getMenuOptions helper for menu structure
+ * 
+ * 7. **Modal Orchestration**:
+ *    - TimelineModals: Wrapper managing 10+ modal types
+ *    - State hoisted here: showDeleteModal, showMoveDateModal, etc.
+ *    - Modal callbacks trigger refetchTasks or onUpdateTask
+ *    - Escape key closes all modals simultaneously
+ * 
+ * 8. **Drag-and-Drop** (Handled by TimelineBody):
+ *    - Task cards draggable between dates (reschedule)
+ *    - Task cards draggable between colleagues (reassign)
+ *    - Drag ghosting and drop validation in child components
+ * 
+ * 9. **Scroll Arrow Indicators**:
+ *    - Left/right arrows appear when content extends beyond viewport
+ *    - Updated on scroll event (showLeftArrow, showRightArrow)
+ *    - Visual cue that more content exists
+ * 
+ * 10. **Viewport Resize Handling**:
+ *     - ResizeObserver tracks container width/height changes
+ *     - Recalculates visible range on resize (prevents render gaps)
+ *     - Updates on window resize, sidebar toggle, zoom changes
+ * 
+ * Performance Optimizations:
+ * - **Virtualization**: Renders ~30-50 days instead of 1460
+ * - **Buffer Threshold**: Only updates visible range after 500px scroll (prevents thrashing)
+ * - **requestAnimationFrame**: Defers scroll updates to next paint
+ * - **React.memo on TaskCard**: Prevents re-render of unchanged cards
+ * - **useMemo on visibleDays**: Prevents recalculating day list on unrelated state changes
+ * 
+ * State Management:
+ * - **Local State**: UI state (modals, selection, context menu)
+ * - **Synced State**: Scroll position (TimelineViewContext)
+ * - **Parent State**: Tasks, colleagues, scale, filters
+ * - **Ref-based**: Scroll container, selection box (imperative DOM access)
+ * 
+ * Exposed Methods (via controlsRef):
+ * - scrollToDate(date): Programmatic scroll to specific date
+ * - scrollToTarget(target): Scroll to element or pixel position
+ * - setShowCustomScale(bool): Open custom scale modal
+ * 
+ * Date Range Calculation:
+ * - Virtual window: 2 years past → 2 years future
+ * - Total width: Calculated via getPixelOffsetFromStart (accounts for weekend compression)
+ * - Buffer rendering: ±1000px from viewport edges (smooth scrolling)
+ * 
+ * Coordinate Systems:
+ * - **Pixel Offset**: Distance from virtualStartDate in pixels
+ * - **Date**: Midnight-normalized Date objects
+ * - **Scroll Position**: Container scrollLeft value
+ * - **Anchor Position**: User-configurable reference point (red triangle)
+ * 
+ * Anchor Triangle Behavior:
+ * - Draggable via HoriScrollTargetPoint component
+ * - Position persisted to localStorage
+ * - "Today" button scrolls to align current date with anchor
+ * - "First Match" button scrolls to align earliest filtered task with anchor
+ * 
+ * Event Flow Examples:
+ * 
+ * **Scroll to Today**:
+ * 1. TimelineControls calls controlsRef.current.scrollToDate(today)
+ * 2. useTimelineScroll calculates pixel offset for today
+ * 3. Scrolls container so today aligns with anchor position
+ * 4. Triggers handleScroll → updates visible range → re-renders new columns
+ * 
+ * **Task Selection**:
+ * 1. User clicks task → onTaskClick fires
+ * 2. Ctrl held? Toggle task in/out of selectedTaskIds Set
+ * 3. No Ctrl? Replace selection with single task
+ * 4. TaskCard receives isSelected prop → shows ring outline
+ * 
+ * **Context Menu → Delete**:
+ * 1. Right-click task → handleContextMenu
+ * 2. ContextMenu renders with Delete option
+ * 3. Click Delete → getMenuOptions callback sets showDeleteModal(true)
+ * 4. DeleteTaskModal renders, user confirms
+ * 5. Modal calls onDeleteTasks(selectedTaskIds)
+ * 6. Parent deletes tasks, calls refetchTasks
+ * 7. New task list flows down, timeline updates
+ * 
+ * Integration Points:
+ * - **TimelineHeader**: Date column headers (day/date/weekday)
+ * - **TimelineBody**: Colleague rows with task cards
+ * - **ContextMenu**: Right-click actions
+ * - **TimelineModals**: All modal dialogs
+ * - **HoriScrollTargetPoint**: Draggable red anchor triangle
+ * 
+ * Props Categorization:
+ * - **Data**: tasks, colleagues, user, delegationMap
+ * - **Callbacks**: onUpdateTask, onDeleteTasks, onBulkUpdate, refetchTasks
+ * - **View State**: scale, showSidebar, showDoneTasks
+ * - **Config**: viewOffset, minTaskDate, maxTaskDate
+ * - **Refs**: controlsRef (expose scroll methods)
+ * 
+ * @param {Object} props
+ * @param {Object} props.user - Current user object
+ * @param {Array} props.colleagues - Filtered colleague list (rows)
+ * @param {Array} props.tasks - All tasks (filtered by parent)
+ * @param {Function} props.getTasksForColleague - Returns tasks for specific colleague
+ * @param {Function} props.isToday - Date comparison helper
+ * @param {Function} props.isWeekend - Date comparison helper
+ * @param {number} props.scale - Pixels per weekday
+ * @param {Function} props.setScale - Update scale
+ * @param {Function} props.onUpdateTask - Single task update callback
+ * @param {Function} props.onBulkUpdate - Multi-task update callback
+ * @param {Function} props.onDeleteTasks - Delete tasks callback
+ * @param {Function} props.onMoveDate - Reschedule callback
+ * @param {Function} props.refetchTasks - Refresh tasks from API
+ * @param {boolean} [props.showSidebar=false] - Show colleague name sidebar
+ * @param {number} [props.viewOffset=0] - Additional scroll offset
+ * @param {ReactNode} props.headerContent - Optional header above timeline
+ * @param {Map} [props.delegationMap=new Map()] - Temporary admin grants
+ * @param {Function} props.handleRevokeDelegation - Revoke temp admin
+ * @param {Function} props.onDelegateConfig - Configure delegation
+ * @param {boolean} [props.loading=false] - Loading state
+ * @param {Object} props.controlsRef - Ref to expose scroll methods
+ * @param {Date} props.minTaskDate - Earliest task date (unused)
+ * @param {Date} props.maxTaskDate - Latest task date (unused)
+ * @param {Function} props.onDateScroll - Callback when scroll date changes
+ * @param {boolean} props.showDoneTasks - Show completed tasks
+ * @param {Function} props.toggleShowDoneTasks - Toggle done task visibility
+ * @component
+ */
 const UnifiedTimelineBoard = ({
     user,
     colleagues,

@@ -1,3 +1,54 @@
+/**
+ * Design System Module
+ * 
+ * Centralized style constants for consistent UI patterns across the application.
+ * Provides reusable Tailwind class sets for cards, buttons, and context menu types.
+ * 
+ * Purpose:
+ * - **DRY principle**: Define styles once, reuse everywhere
+ * - **Consistency**: Enforce uniform visual language
+ * - **Maintainability**: Single source of truth for design updates
+ * - **Type safety**: Named constants prevent typos
+ * 
+ * Organization:
+ * 1. **CARD_VARIANTS**: Visual card styles for different contexts
+ * 2. **BUTTON_VARIANTS**: Button styles (primary, secondary, ghost, icon)
+ * 3. **CONTEXT_MENU_TYPES**: Right-click menu categories
+ * 
+ * CARD_VARIANTS Breakdown:
+ * - **TIMELINE_DETAILED**: Large dashboard/project cards (formerly MACRO)
+ * - **TIMELINE_BUBBLE**: Standard task cards in timeline grid (formerly MICRO)
+ * - **TIMELINE_CAPSULE**: Collapsed vertical icon stack (23px wide)
+ * - **DAYVIEW_DETAILED**: Dashboard day view task cards (full width/height)
+ * - **GHOST**: Empty state placeholders with dashed borders
+ * 
+ * Naming Convention:
+ * - Variants renamed to reflect usage context vs. size
+ * - TIMELINE_* prefix for timeline-specific styles
+ * - DAYVIEW_* prefix for dashboard day view
+ * - Semantic names improve code readability
+ * 
+ * Usage Pattern:
+ * ```jsx
+ * import { CARD_VARIANTS } from '../styles/designSystem';
+ * <div className={CARD_VARIANTS.TIMELINE_BUBBLE.container}>
+ *   <div className={CARD_VARIANTS.TIMELINE_BUBBLE.interactive}>...</div>
+ * </div>
+ * ```
+ * 
+ * Component Mapping:
+ * - TaskCard.jsx uses TIMELINE_CAPSULE, TIMELINE_BUBBLE, DAYVIEW_DETAILED
+ * - Card.jsx uses TIMELINE_DETAILED (macro cards)
+ * - ContextMenu.jsx uses CONTEXT_MENU_TYPES for type safety
+ * 
+ * Design Principles:
+ * - Border-first approach (border-slate-900 for clear boundaries)
+ * - Rounded corners (rounded-xl, rounded-2xl, rounded-full)
+ * - Hover states (ring-2, shadow-md, color transitions)
+ * - Color-neutral containers (allow bg color override)
+ * 
+ * @module designSystem
+ */
 export const CARD_VARIANTS = {
     // Macro Cards: Dashboard, Projects, Grid Layers
     // Renamed from MACRO to TIMELINE_DETAILED per user request
