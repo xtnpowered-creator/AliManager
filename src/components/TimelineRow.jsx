@@ -32,6 +32,7 @@ const TimelineRow = ({
 
             <div className="flex relative shrink-0">
 
+                {/* Horizontal baseline creates visual connection across timeline days */}
                 <div className="absolute top-1/2 left-0 w-full h-[4px] bg-slate-400/50 -translate-y-1/2 z-0" />
 
                 {days.map((day, dIdx) => (
@@ -54,6 +55,7 @@ const TimelineRow = ({
                     />
                 ))}
 
+                {/* Task overlay: positioned above day cells via z-index, pointer-events-none allows clicks to pass through to grid */}
                 <div className="absolute inset-0 pointer-events-none z-[50]">
                     <TaskColumn
                         tasks={getTasksForColleague(colleague.id)}

@@ -18,6 +18,7 @@ const TaskStepsList = ({ taskId, taskAssigneeId, taskDueDate }) => {
         }
 
         try {
+            // New steps inherit assignee and due date from parent task by default
             await apiClient.post('/steps', {
                 taskId,
                 title: newItemTitle,
