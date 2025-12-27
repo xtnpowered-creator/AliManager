@@ -15,14 +15,14 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
     const [assigneeSearch, setAssigneeSearch] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState(null);
 
-    // Smart Assignee Logic
+    // Smart assignee UX: suggest creating new users when search has no matches
     const [showAddPrompt, setShowAddPrompt] = useState(false);
     const [isAddingUser, setIsAddingUser] = useState(false);
 
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Defensive Date Parsing Helper
+        // Defensive date parsing: convert various date formats to YYYY-MM-DD for input[type="date"]
         const safeToDateString = (val) => {
             if (!val) return '';
             const d = new Date(val);
@@ -56,8 +56,7 @@ const NewTaskModal = ({ isOpen, onClose, onSuccess, initialDate, initialAssignee
 
     const handleCreateUser = async () => {
         if (!assigneeSearch.includes('@')) {
-            showToast("Please enter an email address in the search field to create a new user (Format: Name or Email). Actually, let's just ask for email.", 'info');
-            // For simplicity, let's assume the input is the name, and we prompt for email
+            showToast("Enter an email address to create a new user", 'info');
             const email = prompt(`Enter email for ${assigneeSearch}:`);
             if (!email) return;
 
