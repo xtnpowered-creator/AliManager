@@ -1,6 +1,27 @@
 import { db } from '../firebase';
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 
+/**
+ * Add Vertical Scroll Test Data
+ * 
+ * PURPOSE:
+ * Development utility to test vertical scrolling with many tasks.
+ * Creates a test colleague with 8 tasks to verify timeline row overflow behavior.
+ * 
+ * WHAT IT CREATES:
+ * - 1 Colleague: "Vertical Tester" (QA Engineer)
+ * - 8 Tasks: Assigned only to this colleague, spread over 3 days
+ * - Priority mix: Varies to test priority-based sorting
+ * - All lone tasks (no project) to isolate vertical scroll testing
+ * 
+ * USE CASE:
+ * Verify that timelines with 5+ tasks in a single colleague's row:
+ * - Display vertical scrollbar (not horizontal overflow)
+ * - Maintain proper z-index layering
+ * - Don't clip task cards at row boundaries
+ * 
+ * @returns {Promise<void>}
+ */
 export const addScrollTestData = async () => {
     try {
         console.log("Adding vertical scroll test data...");

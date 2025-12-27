@@ -1,6 +1,29 @@
 import { db } from '../firebase';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
+/**
+ * Remove Duplicate Colleagues Script
+ * 
+ * PURPOSE:
+ * One-time cleanup utility to remove duplicate colleague entries.
+ * Uses name-based deduplication (keeps first occurrence, deletes rest).
+ * 
+ * WHY NEEDED:
+ * Early development had race conditions in seeding scripts.
+ * Multiple runs created duplicate "John Doe", "Jane Smith" etc.
+ * This script cleans up those duplicates.
+ * 
+ * STRATEGY:
+ * - Fetch all colleagues
+ * - Build Map of name -> first occurrence ID
+ * - Delete all subsequent entries with same name
+ * - Log and return count of deleted  duplicates
+ * 
+ * SAFE TO RUN MULTIPLE TIMES:
+ * Idempotent - running again after cleanup does nothing.
+ * 
+ * @returns {Promise<number>} Count of  deleted duplicates
+ */
 export const removeDuplicateColleagues = async () => {
     try {
         const colleaguesRef = collection(db, 'colleagues');

@@ -38,6 +38,41 @@ const projectsData = [
     { title: 'Holiday Event', description: 'Planning the corporate year-end celebration.', status: 'planning' },
 ];
 
+/**
+ * Firebase Database Seeding Script
+ * 
+ * PURPOSE:
+ * Populates Firebase with sample data for development and testing.
+ * Idempotent: Safe to run multiple times (checks for existing data).
+ * 
+ * DATA STRUCTURE:
+ * - Colleagues: 4 sample team members (name, role, department, avatar)
+ * - Projects: 3 sample projects (title, description, status)
+ * - Tasks: 5 sample tasks (linked to projects and colleagues)
+ * 
+ * DUPLICATE PREVENTION:
+ * - Colleagues: Checks by name (skip if exists)
+ * - Projects: Always creates new (no duplicate check)
+ * - Tasks: Checks by title (skip if exists)
+ * 
+ * BATCH OPTIMIZATION:
+ * Uses writeBatch() to minimize network round-trips.
+ * Single commit writes all new documents atomically.
+ * 
+ * TASK RELATIONSHIPS:
+ * - assignedTo: Array of colleague IDs (supports multi-assign)
+ * - projectId: Single project ID (or null for lone tasks)
+ * - dueDate: ISO string, generated relative to now (2-10 days out)
+ * 
+ * USAGE:
+ * Run once per environment setup:
+ * ```
+ * import { seedDatabase } from './utils/seedData.js';
+ * await seedDatabase();
+ * ```
+ * 
+ * @returns {Promise<void>}
+ */
 export const seedDatabase = async () => {
     try {
         console.log("Checking database...");
