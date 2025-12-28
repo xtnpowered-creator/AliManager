@@ -1,0 +1,104 @@
+/* Theme CSS Variables */
+
+/* Light Mode (Current Aesthetic) */
+:root[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F5F9;
+  --bg-elevated: #FFFFFF;
+  
+  /* Text */
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #FFFFFF;
+  
+  /* Borders */
+  --border-primary: #E2E8F0;
+  --border-secondary: #CBD5E1;
+  --border-focus: #14B8A6;
+  
+  /* Accents */
+  --accent-primary: #14B8A6;
+  --accent-secondary: #0D9488;
+  --accent-hover: #0F766E;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+/* Medium Mode (Silvery Gray) */
+:root[data-theme="medium"] {
+  /* Backgrounds */
+  --bg-primary: #F1F5F9;
+  --bg-secondary: #E2E8F0;
+  --bg-tertiary: #CBD5E1;
+  --bg-elevated: #FFFFFF;
+  
+  /* Text */
+  --text-primary: #1F2937;
+  --text-secondary: #374151;
+  --text-tertiary: #6B7280;
+  --text-inverse: #FFFFFF;
+  
+  /* Borders */
+  --border-primary: #CBD5E1;
+  --border-secondary: #94A3B8;
+  --border-focus: #3B82F6;
+  
+  /* Accents */
+  --accent-primary: #3B82F6;
+  --accent-secondary: #2563EB;
+  --accent-hover: #1D4ED8;
+  
+  /* Shadows - Multiple layers for depth */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.15);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+  
+  /* Metallic highlights */
+  --highlight-subtle: rgba(255, 255, 255, 0.6);
+  --highlight-strong: rgba(255, 255, 255, 0.9);
+}
+
+/* Dark Mode (Modern Dark) */
+:root[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  --bg-elevated: #1E293B;
+  
+  /* Text */
+  --text-primary: #E2E8F0;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-inverse: #0F172A;
+  
+  /* Borders */
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-focus: #06B6D4;
+  
+  /* Accents - Vibrant cyan/teal for contrast */
+  --accent-primary: #06B6D4;
+  --accent-secondary: #0891B2;
+  --accent-hover: #0E7490;
+  
+  /* Shadows - Deep blacks with colored glows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 0 8px rgba(6, 182, 212, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.7), 0 0 20px rgba(6, 182, 212, 0.15);
+  
+  /* Neon-like highlights */
+  --highlight-subtle: rgba(6, 182, 212, 0.1);
+  --highlight-strong: rgba(6, 182, 212, 0.3);
+}
+
+/* Smooth theme transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

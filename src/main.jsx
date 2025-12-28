@@ -2,8 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
+import './theme.css'
 import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
+import { ThemeProvider } from './context/ThemeContext'
 
 console.log("[MAIN] Starting App...");
 
@@ -17,11 +19,13 @@ if (!rootElement) {
     ReactDOM.createRoot(rootElement).render(
         <React.StrictMode>
             {console.log("[MAIN] Rendering Providers...")}
-            <ToastProvider>
-                <AuthProvider>
-                    <App />
-                </AuthProvider>
-            </ToastProvider>
+            <ThemeProvider>
+                <ToastProvider>
+                    <AuthProvider>
+                        <App />
+                    </AuthProvider>
+                </ToastProvider>
+            </ThemeProvider>
         </React.StrictMode>
     );
 }

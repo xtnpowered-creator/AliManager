@@ -44,11 +44,11 @@ const Navigation = () => {
     ];
 
     return (
-        <aside className="w-72 border-r border-slate-200 bg-white flex flex-col h-full overflow-y-auto relative">
+        <aside className="w-72 flex flex-col h-full overflow-y-auto relative" style={{ borderRight: '1px solid var(--border-primary)', backgroundColor: 'var(--bg-elevated)' }}>
             <div className="p-8 space-y-8">
                 {menuItems.map((group, idx) => (
                     <div key={idx} className="space-y-3">
-                        <h5 className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                        <h5 className="px-4 text-[10px] font-bold uppercase tracking-widest leading-none" style={{ color: 'var(--text-tertiary)' }}>
                             {group.group}
                         </h5>
                         <nav className="space-y-1">
@@ -56,10 +56,23 @@ const Navigation = () => {
                                 <Link
                                     key={i}
                                     to={item.path}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${currentPath === item.path
-                                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                                        }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${currentPath === item.path ? '' : ''}`}
+                                    style={currentPath === item.path
+                                        ? { backgroundColor: 'var(--accent-primary)', color: 'var(--text-inverse)', boxShadow: 'var(--shadow-lg)' }
+                                        : { color: 'var(--text-secondary)' }
+                                    }
+                                    onMouseEnter={(e) => {
+                                        if (currentPath !== item.path) {
+                                            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                                            e.currentTarget.style.color = 'var(--text-primary)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (currentPath !== item.path) {
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                            e.currentTarget.style.color = 'var(--text-secondary)';
+                                        }
+                                    }}
                                 >
                                     {item.icon}
                                     {item.label}
@@ -70,7 +83,7 @@ const Navigation = () => {
                 ))}
             </div>
 
-            <div className="mt-auto flex flex-col gap-4 p-6 border-t border-slate-100">
+            <div className="mt-auto flex flex-col gap-4 p-6" style={{ borderTop: '1px solid var(--border-primary)' }}>
                 {/* Toasts Stack - Bottom Up */}
                 <div className="flex flex-col gap-2 w-full">
                     {toasts.map(toast => (

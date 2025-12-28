@@ -18,8 +18,8 @@ const ProjectList = React.lazy(() => import('./components/ProjectList'));
 const LoneTasks = React.lazy(() => import('./components/LoneTasks'));
 const Directory = React.lazy(() => import('./components/Directory'));
 const TaskDetailView = React.lazy(() => import('./components/TaskDetailView'));
+const Settings = React.lazy(() => import('./pages/Settings'));
 
-// Wrapper to inject Navigation Props into Shell
 const AppShell = () => {
     return (
         <Shell>
@@ -34,6 +34,7 @@ const AppShell = () => {
                     <Route path="/projects" element={<ProjectList />} />
                     <Route path="/lone-tasks" element={<LoneTasks />} />
                     <Route path="/team" element={<Directory />} />
+                    <Route path="/settings" element={<Settings />} />
                     <Route path="/task/:taskId" element={<TaskDetailPage />} />
                 </Routes>
             </Suspense>
