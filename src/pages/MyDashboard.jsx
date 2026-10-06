@@ -15,6 +15,7 @@ import { useTimelineScale } from '../hooks/useTimelineScale';
 
 const MyDashboard = () => {
     const { user } = useAuth();
+    const isSuperuser = user?.role === 'god';
     const { data: tasks, loading: tasksLoading, refetch: refetchTasks, setData: setTasks } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');
     const { data: projects } = useApiData('/projects');
@@ -73,6 +74,15 @@ const MyDashboard = () => {
             const isCreatedByMe = task.createdBy === userId;
             const isUnassigned = (!task.assignedTo || task.assignedTo.length === 0);
 
+            if (isSuperuser) {
+                if (task.status === 'done') {
+                    completed.push(task);
+                    if (!showDoneTasks) return;
+                }
+                upcoming.push(task);
+                return;
+            }
+
             // Handle DONE tasks
             if (task.status === 'done') {
                 if (isAssignedToMe || (isCreatedByMe && isUnassigned)) {
@@ -119,7 +129,7 @@ const MyDashboard = () => {
             delegatedTasks: delegated.sort(sortFn),
             myCompleted: completed
         };
-    }, [filteredTasks, user, visibleColleagues, showDoneTasks]);
+    }, [filteredTasks, user, visibleColleagues, showDoneTasks, isSuperuser]);
 
     const handleGoToFirst = () => {
         if (!myTasks || myTasks.length === 0) return;
@@ -165,7 +175,16 @@ const MyDashboard = () => {
     return (
         <PageLayout
             title="My Dashboard"
-            subtitle="Your priorities and team delegations."
+            subtitle={isSuperuser ? 'All tasks across all users.' : 'Your priorities and team delegations.'}
+            actions={
+                <TimelineControls
+                    onTodayClick={handleTodayClick}
+                    onGoToFirst={handleGoToFirst}
+                    showGoToFirst={taskFilters.length > 0 || projectFilters.length > 0 || colleagueFilters.length > 0}
+                    scale={scale}
+                    onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
+                />
+            }
             filters={
                 <div className="flex items-end justify-between gap-4 w-full">
                     <div className="flex-1 min-w-0">
@@ -196,15 +215,6 @@ const MyDashboard = () => {
 
                             showProjectControls={true}
                             showPeopleControls={true} // Enable people filtering for delegations
-                        />
-                    </div>
-                    <div className="shrink-0">
-                        <TimelineControls
-                            onTodayClick={handleTodayClick}
-                            onGoToFirst={handleGoToFirst}
-                            showGoToFirst={taskFilters.length > 0 || projectFilters.length > 0 || colleagueFilters.length > 0}
-                            scale={scale}
-                            onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
                         />
                     </div>
                 </div>
@@ -248,7 +258,7 @@ const MyDashboard = () => {
 
                     {/* My Priorities Column */}
                     <TaskColumn
-                        title="My Priorities"
+                        title={isSuperuser ? 'All Tasks' : 'My Priorities'}
                         count={myTasks.length}
                         tasks={myTasks}
                         loading={tasksLoading}

@@ -5,10 +5,22 @@ import { useApiData } from '../hooks/useApiData';
 import { MoreHorizontal, Plus, Clock, Users } from 'lucide-react';
 import { getTaskCardColor } from '../utils/cardStyles';
 import NewTaskModal from './NewTaskModal';
+import { useBoardFilters } from '../hooks/useBoardFilters';
+import FilterAndSortToolbar from './shared/filters/FilterAndSortToolbar';
 
 const KanbanBoard = () => {
     const { data: tasks, loading: tasksLoading, refetch: refetchTasks } = useApiData('/tasks');
     const { data: colleagues } = useApiData('/colleagues');
+    const { data: projects } = useApiData('/projects');
+    const filters = useBoardFilters(tasks, colleagues, projects);
+    const cardRefs = React.useRef(new Map());
+    const [highlightedId, setHighlightedId] = useState(null);
+    const firstMatch = () => {
+        const task = filters.visibleTasks[0];
+        if (!task) return;
+        setHighlightedId(task.id);
+        cardRefs.current.get(task.id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    };
 
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
@@ -18,7 +30,7 @@ const KanbanBoard = () => {
         { id: 'done', title: 'Completed', color: 'bg-teal-100 text-teal-700' },
     ];
 
-    const getTasksByStatus = (status) => tasks.filter(t => t.status === status);
+    const getTasksByStatus = (status) => filters.visibleTasks.filter(t => t.status === status);
 
     return (
         <PageLayout
@@ -26,9 +38,10 @@ const KanbanBoard = () => {
             subtitle="Manage task progression and bottlenecks."
             actions={
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-                        Filters
+                    <button onClick={() => filters.setTaskFilters([...filters.taskFilters.filter(f => f.type !== 'due date'), { type: 'due date', value: 'Today' }])} className="px-4 py-2 bg-teal-50 border border-teal-300 rounded-lg text-xs font-black text-teal-900">
+                        DUE TODAY
                     </button>
+                    <button onClick={firstMatch} disabled={!filters.hasFilters || !filters.visibleTasks.length} className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-black disabled:opacity-40">FIRST MATCH</button>
                     <button
                         onClick={() => setShowNewTaskModal(true)}
                         className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
@@ -38,6 +51,7 @@ const KanbanBoard = () => {
                     </button>
                 </div>
             }
+            filters={<FilterAndSortToolbar tasks={tasks} colleagues={colleagues} projectsData={projects} {...filters} showProjectControls showSortControls={false} />}
         >
             {/* Modal */}
             <NewTaskModal
@@ -47,7 +61,7 @@ const KanbanBoard = () => {
             />
 
             <div className="flex-1 flex gap-6 overflow-x-auto pb-4 invisible-scrollbar">
-                {columns.map(column => (
+                {columns.filter(column => !filters.hideEmptyRows || getTasksByStatus(column.id).length).map(column => (
                     <div key={column.id} className="min-w-[350px] flex-1 flex flex-col bg-slate-50/50 rounded-3xl border border-slate-300/70 p-4">
                         <div className="flex items-center justify-between mb-6 px-2">
                             <div className="flex items-center gap-3">
@@ -68,7 +82,9 @@ const KanbanBoard = () => {
                                 </div>
                             ) : (
                                 getTasksByStatus(column.id).map(task => (
-                                    <KanbanCard key={task.id} task={task} colleagues={colleagues} />
+                                    <div key={task.id} ref={element => element ? cardRefs.current.set(task.id, element) : cardRefs.current.delete(task.id)} className={highlightedId === task.id ? 'ring-4 ring-teal-500 rounded-2xl' : ''}>
+                                        <KanbanCard task={task} colleagues={colleagues} />
+                                    </div>
                                 ))
                             )}
 

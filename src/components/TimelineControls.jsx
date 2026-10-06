@@ -3,7 +3,7 @@ import { Calendar } from 'lucide-react';
 
 const TimelineControls = ({ onTodayClick, onGoToFirst, showGoToFirst, scale, onScaleClick, className = "" }) => {
     return (
-        <div className={`flex flex-col gap-1 shrink-0 ${className}`}>
+        <div className={`flex items-end gap-2 shrink-0 ${className}`}>
             <button
                 onClick={onTodayClick}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-teal-50 border border-teal-300 rounded-lg text-xs font-black text-teal-900 hover:bg-teal-100 transition-all shadow-sm group"

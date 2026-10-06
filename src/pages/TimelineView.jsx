@@ -100,8 +100,8 @@ const TimelineView = () => {
             // Scroll Pattern
             if (controlsRef.current) {
                 // Find Assignment (Visual Row)
-                // Use the assignment logic: 
-                // If user filtered -> use that logic? 
+                // Use the assignment logic:
+                // If user filtered -> use that logic?
                 // The task card finds the "Row" by `assignedTo`.
                 // We need to find which "Row" this task sits in.
                 // If "Me" view -> My Row.
@@ -120,7 +120,7 @@ const TimelineView = () => {
                 // Standard Logic: Find first visible assignee.
                 // We have `visibleColleagues` passed to Board.
                 // Here `handleGoToFirst` only has `filteredTasks`.
-                // We need `visibleColleagues` here? 
+                // We need `visibleColleagues` here?
                 // Actually `TimelineView` has `colleagues` from `useTimelineState`.
 
                 // User Request: "I don't want any up/down scrolling... only necessary left/right"
@@ -141,78 +141,25 @@ const TimelineView = () => {
         }
     };
 
-    // Prepare Toolbar for Injection
-    const filterToolbar = (
-        <div className="flex justify-start w-full">
-            <FilterAndSortToolbar
-                tasks={tasks}
-                colleagues={visibleColleagues}
-                projectsData={projectsData}
-
-                colleagueFilters={colleagueFilters}
-                setColleagueFilters={setColleagueFilters}
-
-                taskFilters={taskFilters}
-                setTaskFilters={setTaskFilters}
-
-                projectFilters={projectFilters}
-                setProjectFilters={setProjectFilters}
-
-                sortConfig={sortConfig}
-                setSortConfig={setSortConfig}
-
-                hideEmptyRows={hideEmptyRows}
-                setHideEmptyRows={setHideEmptyRows}
-                resetAll={resetAll}
-
-                showProjectControls={true}
-            />
-        </div>
-    );
-
-    // Update Header with click handler
-    const headerWithClick = (
-        <header className="flex items-center justify-between gap-8 relative h-[50px] shrink-0">
-            <div className="shrink-0">
-                {user?.isDelegated && (
-                    <div className="absolute -top-12 left-0 right-0 flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-bold text-amber-900 shadow-sm animate-in slide-in-from-top-2 fade-in">
-                        <Shield size={14} className="text-amber-600" />
-                        <span>You are acting as a Temporary Admin. Access expires on {new Date(user.delegationExpiresAt).toLocaleDateString()}.</span>
-                    </div>
-                )}
-                <div className="flex items-baseline gap-4">
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Timelines</h2>
-                    <p className="text-slate-500 text-lg">Manage assignments and schedules.</p>
-                </div>
-            </div>
-            <div className="flex items-end gap-4 shrink-0 translate-y-[42px] z-50"> {/* Changed items-center to items-end */}
-                <TimelineControls
-                    onTodayClick={handleTodayClick}
-                    onGoToFirst={handleGoToFirst}
-                    showGoToFirst={taskFilters.length > 0}
-                    scale={scale}
-                    onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
-                />
-            </div>
-        </header>
-    );
-
-    // Initial Load Only - Show Skeleton if we have no data yet
-    // if (loading && (!tasks || tasks.length === 0)) return <TimelineSkeleton />;
-
     return (
         <PageLayout
             title="Timelines"
             subtitle="Manage assignments and schedules."
             actions={
-                <div className="flex items-center gap-4">
+                <div className="flex items-end gap-4">
                     {user?.isDelegated && (
                         <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-bold text-amber-900 shadow-sm animate-in slide-in-from-top-2 fade-in mr-4">
                             <Shield size={14} className="text-amber-600" />
                             <span>Acting as Temp Admin (Expires {new Date(user.delegationExpiresAt).toLocaleDateString()})</span>
                         </div>
                     )}
-                    {/* TimelineControls moved to filters area for vertical alignment */}
+                    <TimelineControls
+                        onTodayClick={handleTodayClick}
+                        onGoToFirst={handleGoToFirst}
+                        showGoToFirst={taskFilters.length > 0 || projectFilters.length > 0 || colleagueFilters.length > 0}
+                        scale={scale}
+                        onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
+                    />
                 </div>
             }
             filters={
@@ -240,16 +187,6 @@ const TimelineView = () => {
                             resetAll={resetAll}
 
                             showProjectControls={true}
-                        />
-                    </div>
-                    {/* Controls aligned with bottom of filters */}
-                    <div className="shrink-0">
-                        <TimelineControls
-                            onTodayClick={handleTodayClick}
-                            onGoToFirst={handleGoToFirst}
-                            showGoToFirst={taskFilters.length > 0}
-                            scale={scale}
-                            onScaleClick={() => controlsRef.current?.setShowCustomScale?.(true)}
                         />
                     </div>
                 </div>

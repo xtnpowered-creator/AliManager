@@ -231,11 +231,11 @@ const FilterAndSortToolbar = ({
                     },
                     {
                         id: 'sort',
-                        show: showSortControls,
+                        show: true,
                         buttons: [
                             {
                                 id: 'sort-rows',
-                                show: true, // Always show if the section is shown
+                                show: showSortControls,
                                 component: FilterCommandButton,
                                 props: {
                                     label: "Sort Rows",

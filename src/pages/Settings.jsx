@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sun, Moon, Sparkles } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import PageLayout from '../components/layout/PageLayout';
 
 const Settings = () => {
     const { theme, setTheme } = useTheme();
@@ -30,15 +31,8 @@ const Settings = () => {
     ];
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    Settings
-                </h1>
-                <p style={{ color: 'var(--text-secondary)' }}>
-                    Customize your AliManager experience
-                </p>
-            </header>
+        <PageLayout title="Settings" subtitle="Customize your AliManager experience">
+            <div className="w-full max-w-4xl overflow-y-auto">
 
             <section className="mb-12">
                 <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -109,7 +103,8 @@ const Settings = () => {
                     All themes are designed for optimal readability and visual hierarchy.
                 </p>
             </section>
-        </div>
+            </div>
+        </PageLayout>
     );
 };
 

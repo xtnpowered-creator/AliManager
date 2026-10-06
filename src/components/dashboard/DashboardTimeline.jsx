@@ -26,6 +26,7 @@ const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, 
     // Adapter for UnifiedBoard to get tasks
     // Match the logic from useTimelineState's getTasksForColleague
     const getTasksAdapter = useCallback((colleagueId) => {
+        if (user?.role === 'god') return initialTasks;
         return initialTasks.filter(t => {
             // 1. Explicit Assignment (assignedTo is an array)
             if (t.assignedTo && t.assignedTo.includes(colleagueId)) return true;
@@ -36,7 +37,7 @@ const DashboardTimeline = ({ initialTasks, user, refetchTasks, setTasks, scale, 
 
             return false;
         });
-    }, [initialTasks]);
+    }, [initialTasks, user?.role]);
 
     if (!user) return null;
 
